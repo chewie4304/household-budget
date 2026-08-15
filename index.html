@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Household Budget</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="bg-gray-100 text-gray-900 antialiased min-h-screen pb-10">
+
+  <!-- Main View -->
+  <div id="accounts-view">
+    <!-- Header -->
+    <div class="bg-blue-600 text-white p-4 font-bold text-lg flex justify-between items-center shadow-md">
+      <span>Household Budget</span>
+      <button onclick="openAccountModal()" class="bg-white text-blue-600 px-3 py-1 rounded-full text-sm font-semibold shadow">
+        + New Account
+      </button>
+    </div>
+
+    <!-- Content Container -->
+    <div class="max-w-md mx-auto p-4 space-y-4">
+      <div class="space-y-3">
+        <h2 class="text-xl font-bold text-gray-800">Your Accounts</h2>
+        <div id="accounts-list" class="space-y-3">
+          <p class="text-sm text-gray-500">Loading accounts...</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Transactions View -->
+  <div id="transactions-view" class="hidden">
+    <!-- Header -->
+    <div class="bg-blue-600 text-white p-4 flex items-center justify-between shadow-md">
+      <button onclick="showAccountsView()" class="text-white font-semibold text-sm flex items-center gap-1">
+        &larr; Accounts
+      </button>
+      <span id="tx-header-title" class="font-bold text-lg">Account Details</span>
+      <button onclick="openTxModal()" class="bg-white text-blue-600 px-3 py-1 rounded-full text-sm font-semibold shadow">
+        + Add Tx
+      </button>
+    </div>
+
+    <div class="max-w-md mx-auto p-4 space-y-4">
+      <!-- Account Overview Card -->
+      <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex justify-between items-center">
+        <div>
+          <h2 id="tx-acc-name" class="text-lg font-bold text-gray-900"></h2>
+          <p id="tx-acc-sub" class="text-xs text-gray-500 uppercase tracking-wider"></p>
+        </div>
+        <div class="text-right space-y-1">
+          <div>
+            <div id="tx-acc-balance" class="text-lg font-extrabold text-gray-900">$0.00</div>
+            <div class="text-[10px] text-gray-500 font-semibold uppercase tracking-wider">Current Balance</div>
+          </div>
+          <div>
+            <div id="tx-acc-cleared" class="text-sm font-bold text-emerald-600">$0.00</div>
+            <div class="text-[10px] text-emerald-700 font-semibold uppercase tracking-wider">Cleared Balance</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Transactions List -->
+      <div class="space-y-3">
+        <h3 class="text-md font-bold text-gray-800">Transaction History</h3>
+        <div id="transactions-list" class="space-y-2">
+          <p class="text-sm text-gray-500">Loading transactions...</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add/Edit Account Modal -->
+  <div id="account-modal" class="fixed inset-0 bg-black/50 hidden flex items-end sm:items-center justify-center p-0 sm:p-4 z-50">
+    <div class="bg-white w-full max-w-md rounded-t-2xl sm:rounded-2xl p-6 space-y-4">
+      <div class="flex justify-between items-center">
+        <h3 id="modal-title" class="font-bold text-lg">Add New Account</h3>
+        <button onclick="toggleAccountModal(false)" class="text-gray-400 text-2xl">&times;</button>
+      </div>
+      <form id="account-form" onsubmit="handleAccountSubmit(event)" class="space-y-3">
+        <input type="hidden" id="editingAccId" value="" />
+        <div>
+          <label class="text-xs font-semibold text-gray-600">Account Name</label>
+          <input type="text" id="accName" placeholder="e.g., Main Checking, Freedom Card" required class="w-full border p-2 rounded-lg mt-1" />
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="text-xs font-semibold text-gray-600">Account Type</label>
+            <select id="accType" class="w-full border p-2 rounded-lg mt-1 bg-white">
+              <option value="checking">Checking</option>
+              <option value="savings">Savings</option>
+              <option value="credit">Credit Card</option>
+              <option value="cash">Cash</option>
+            </select>
+          </div>
+          <div>
+            <label class="text-xs font-semibold text-gray-600">Initial Balance ($)</label>
+            <input type="number" step="0.01" id="accBalance" placeholder="0.00" value="0.00" class="w-full border p-2 rounded-lg mt-1" />
+          </div>
+        </div>
+        <div>
+          <label class="text-xs font-semibold text-gray-600">Institution / Bank</label>
+          <input type="text" id="accInstitution" placeholder="e.g., Chase, Wells Fargo, Local CU" class="w-full border p-2 rounded-lg mt-1" />
+        </div>
+        <div>
+          <label class="text-xs font-semibold text-gray-600">Account Number (or Last 4 Digits)</label>
+          <input type="text" id="accNumber" placeholder="e.g., ****1234" class="w-full border p-2 rounded-lg mt-1" />
+        </div>
+        <div class="pt-2 space-y-2">
+          <button type="submit" id="submitBtn" class="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold shadow">
+            Create Account
+          </button>
+          <button type="button" id="deleteBtn" onclick="handleDeleteFromModal()" class="w-full bg-red-50 text-red-600 border border-red-200 py-2 rounded-lg font-semibold shadow-sm hidden">
+            Delete Account
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Add/Edit Transaction Modal -->
+  <div id="tx-modal" class="fixed inset-0 bg-black/50 hidden flex items-end sm:items-center justify-center p-0 sm:p-4 z-50">
+    <div class="bg-white w-full max-w-md rounded-t-2xl sm:rounded-2xl p-6 space-y-4">
+      <div class="flex justify-between items-center">
+        <h3 id="tx-modal-title" class="font-bold text-lg">Add Transaction</h3>
+        <button onclick="toggleTxModal(false)" class="text-gray-400 text-2xl">&times;</button>
+      </div>
+      <form id="tx-form" onsubmit="handleTxSubmit(event)" class="space-y-3">
+        <input type="hidden" id="editingTxId" value="" />
+        <div>
+          <label class="text-xs font-semibold text-gray-600">Description</label>
+          <input type="text" id="txDesc" placeholder="e.g., Grocery Store, Paycheck" required class="w-full border p-2 rounded-lg mt-1" />
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="text-xs font-semibold text-gray-600">Type</label>
+            <select id="txType" class="w-full border p-2 rounded-lg mt-1 bg-white">
+              <option value="expense">Expense (-)</option>
+              <option value="income">Income (+)</option>
+            </select>
+          </div>
+          <div>
+            <label class="text-xs font-semibold text-gray-600">Amount ($)</label>
+            <input type="number" step="0.01" id="txAmount" placeholder="0.00" required class="w-full border p-2 rounded-lg mt-1" />
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="text-xs font-semibold text-gray-600">Date</label>
+            <input type="date" id="txDate" required class="w-full border p-2 rounded-lg mt-1" />
+          </div>
+          <div>
+            <label class="text-xs font-semibold text-gray-600">Status</label>
+            <select id="txStatus" class="w-full border p-2 rounded-lg mt-1 bg-white">
+              <option value="pending">Pending</option>
+              <option value="reconciled">Reconciled</option>
+            </select>
+          </div>
+        </div>
+        <div class="pt-2 space-y-2">
+          <button type="submit" id="txSubmitBtn" class="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold shadow">
+            Save Transaction
+          </button>
+          <button type="button" id="txDeleteBtn" onclick="handleDeleteTxFromModal()" class="w-full bg-red-50 text-red-600 border border-red-200 py-2 rounded-lg font-semibold shadow-sm hidden">
+            Delete Transaction
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    const SUPABASE_URL = "https://raujjskhrprnyigfmkwq.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJhdWpqc2tocnBybnlpZ2Zta3dxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY3Njk0NzEsImV4cCI6MjEwMjM0NTQ3MX0.jEjU9BOmzpQpm-A4UlD8xrP2dpeQSiIEjj7-IuMbiVE";
+    const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    let accounts = [];
+    let transactions = [];
+    let activeAccountId = null;
+
+    async function init() {
+      await fetchAccounts();
+      try {
+        sb.channel('db-changes')
+          .on('postgres_changes', { event: '*', schema: 'public', table: 'accounts' }, () => fetchAccounts())
+          .on('postgres_changes', { event: '*', schema: 'public', table: 'transactions' }, () => {
+            if (activeAccountId) fetchTransactions(activeAccountId);
+            fetchAccounts();
+          })
+          .subscribe();
+      } catch (err) {
+        console.warn("Realtime subscription warning:", err);
+      }
+    }
+
+    async function fetchAccounts() {
+      const list = document.getElementById('accounts-list');
+      try {
+        let { data, error } = await sb.from('accounts').select('*, transactions(amount, status)').order('created_at', { ascending: true });
+        if (error) {
+          const simple = await sb.from('accounts').select('*').order('created_at', { ascending: true });
+          if (simple.error) throw simple.error;
+          data = simple.data;
+        }
+
+        accounts = data || [];
+        renderAccounts();
+      } catch (err) {
+        console.error("Error fetching accounts:", err);
+        list.innerHTML = `
+          <div class="bg-red-50 p-4 rounded-xl border border-red-200 text-center space-y-2">
+            <p class="text-red-700 font-semibold text-sm">Error loading accounts</p>
+            <p class="text-xs text-red-500">${err.message || 'Check database connection'}</p>
+            <button onclick="fetchAccounts()" class="text-xs bg-red-600 text-white px-3 py-1 rounded-md font-semibold mt-1">Try Again</button>
+          </div>
+        `;
+      }
+    }
+
+    function renderAccounts() {
+      const list = document.getElementById('accounts-list');
+      if (accounts.length === 0) {
+        list.innerHTML = `
+          <div class="bg-white p-6 rounded-xl border border-gray-200 text-center space-y-2">
+            <p class="text-gray-600 font-medium">No accounts found.</p>
+            <p class="text-xs text-gray-400">Tap "+ New Account" at the top to add your checking, savings, or credit card!</p>
+          </div>
+        `;
+        return;
+      }
+      list.innerHTML = accounts.map(acc => {
+        const initialBal = parseFloat(acc.initial_balance || 0);
+        const txList = Array.isArray(acc.transactions) ? acc.transactions : [];
+        
+        // Current balance includes all transactions
+        const totalTxSum = txList.reduce((sum, tx) => sum + parseFloat(tx.amount || 0), 0);
+        const currentBal = initialBal + totalTxSum;
+
+        // Cleared balance includes only reconciled transactions
+        const clearedTxSum = txList.reduce((sum, tx) => {
+          return tx.status === 'reconciled' ? sum + parseFloat(tx.amount || 0) : sum;
+        }, 0);
+        const clearedBal = initialBal + clearedTxSum;
+
+        const instText = acc.institution ? acc.institution : '';
+        const numText = acc.account_number ? `(${acc.account_number})` : '';
+        const subDetails = [instText, numText].filter(Boolean).join(' ');
+
+        return `
+          <div onclick="showTransactionsView('${acc.id}')" class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex justify-between items-center cursor-pointer hover:border-blue-300 transition-all">
+            <div>
+              <p class="font-semibold text-gray-900">${acc.name}</p>
+              <p class="text-xs text-gray-500 uppercase tracking-wider">${acc.type} ${subDetails ? '• ' + subDetails : ''}</p>
+              <div class="mt-2 text-xs">
+                <button onclick="event.stopPropagation(); openAccountModal('${acc.id}')" class="text-blue-600 font-semibold hover:underline">Edit Account</button>
+              </div>
+            </div>
+            <div class="text-right space-y-1">
+              <div>
+                <div class="text-base font-extrabold text-gray-900">$${currentBal.toFixed(2)}</div>
+                <div class="text-[10px] text-gray-500 font-semibold uppercase tracking-wider">Current</div>
+              </div>
+              <div>
+                <div class="text-xs font-bold text-emerald-600">$${clearedBal.toFixed(2)}</div>
+                <div class="text-[10px] text-emerald-700 font-semibold uppercase tracking-wider">Cleared</div>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    async function showTransactionsView(accId) {
+      activeAccountId = accId;
+      const acc = accounts.find(a => a.id === accId);
+      if (!acc) return;
+
+      document.getElementById('accounts-view').classList.add('hidden');
+      document.getElementById('transactions-view').classList.remove('hidden');
+
+      const instText = acc.institution ? acc.institution : '';
+      const numText = acc.account_number ? `(${acc.account_number})` : '';
+      
+      document.getElementById('tx-acc-name').textContent = acc.name;
+      document.getElementById('tx-acc-sub').textContent = `${acc.type} ${[instText, numText].filter(Boolean).join(' • ')}`;
+      
+      await fetchTransactions(accId);
+    }
+
+    function showAccountsView() {
+      activeAccountId = null;
+      document.getElementById('transactions-view').classList.add('hidden');
+      document.getElementById('accounts-view').classList.remove('hidden');
+    }
+
+    async function fetchTransactions(accId) {
+      const list = document.getElementById('transactions-list');
+      try {
+        const { data, error } = await sb.from('transactions').select('*').eq('account_id', accId).order('date', { ascending: false });
+        if (error) throw error;
+        
+        transactions = data || [];
+
+        const acc = accounts.find(a => a.id === accId);
+        const initialBal = parseFloat(acc ? acc.initial_balance : 0);
+        
+        // Calculate Total/Current Balance
+        const totalTxSum = transactions.reduce((sum, tx) => sum + parseFloat(tx.amount || 0), 0);
+        document.getElementById('tx-acc-balance').textContent = `$${(initialBal + totalTxSum).toFixed(2)}`;
+
+        // Calculate Cleared/Reconciled Balance
+        const clearedTxSum = transactions.reduce((sum, tx) => {
+          return tx.status === 'reconciled' ? sum + parseFloat(tx.amount || 0) : sum;
+        }, 0);
+        document.getElementById('tx-acc-cleared').textContent = `$${(initialBal + clearedTxSum).toFixed(2)}`;
+
+        renderTransactions();
+      } catch (err) {
+        console.error("Error fetching transactions:", err);
+        list.innerHTML = `
+          <div class="bg-red-50 p-4 rounded-xl border border-red-200 text-center space-y-2">
+            <p class="text-red-700 font-semibold text-sm">Error loading transactions</p>
+            <p class="text-xs text-red-500">${err.message || 'Check database connection'}</p>
+          </div>
+        `;
+      }
+    }
+
+    function renderTransactions() {
+      const list = document.getElementById('transactions-list');
+      if (transactions.length === 0) {
+        list.innerHTML = `
+          <div class="bg-white p-6 rounded-xl border border-gray-200 text-center space-y-2">
+            <p class="text-gray-600 font-medium">No transactions yet.</p>
+            <p class="text-xs text-gray-400">Tap "+ Add Tx" above to log a deposit or spending.</p>
+          </div>
+        `;
+        return;
+      }
+
+      list.innerHTML = transactions.map(tx => {
+        const amt = parseFloat(tx.amount || 0);
+        const isPositive = amt >= 0;
+        const status = tx.status || 'pending';
+        const isPending = status === 'pending';
+
+        return `
+          <div onclick="openTxModal('${tx.id}')" class="bg-white p-3 rounded-xl shadow-sm border border-gray-100 flex justify-between items-center cursor-pointer hover:border-blue-300 transition-all">
+            <div>
+              <p class="font-semibold text-gray-900 text-sm">${tx.description}</p>
+              <p class="text-xs text-gray-400">${tx.date}</p>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="font-bold text-sm ${isPositive ? 'text-emerald-600' : 'text-gray-900'}">
+                ${isPositive ? '+' : ''}$${amt.toFixed(2)}
+              </span>
+              <button 
+                onclick="event.stopPropagation(); toggleTxStatus('${tx.id}', '${status}')" 
+                title="Status: ${status}. Click to toggle"
+                class="px-2 py-0.5 text-xs font-bold rounded-full transition-colors ${
+                  isPending 
+                    ? 'bg-amber-100 text-amber-700 hover:bg-amber-200' 
+                    : 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200'
+                }">
+                ${isPending ? 'P' : 'R'}
+              </button>
+              <button onclick="event.stopPropagation(); deleteTx('${tx.id}', '${tx.description}')" class="text-red-400 hover:text-red-600 text-base font-bold px-1">&times;</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    async function toggleTxStatus(id, currentStatus) {
+      const newStatus = currentStatus === 'pending' ? 'reconciled' : 'pending';
+      const { error } = await sb.from('transactions').update({ status: newStatus }).eq('id', id);
+      if (error) {
+        alert("Error updating status: " + error.message);
+        return;
+      }
+      fetchTransactions(activeAccountId);
+      fetchAccounts();
+    }
+
+    function openTxModal(txId = null) {
+      const form = document.getElementById('tx-form');
+      form.reset();
+      const deleteBtn = document.getElementById('txDeleteBtn');
+
+      if (txId) {
+        const tx = transactions.find(t => t.id === txId);
+        if (!tx) return;
+
+        const amt = parseFloat(tx.amount || 0);
+        document.getElementById('tx-modal-title').textContent = "Edit Transaction";
+        document.getElementById('txSubmitBtn').textContent = "Update Transaction";
+        document.getElementById('editingTxId').value = tx.id;
+        document.getElementById('txDesc').value = tx.description || '';
+        document.getElementById('txType').value = amt >= 0 ? 'income' : 'expense';
+        document.getElementById('txAmount').value = Math.abs(amt);
+        document.getElementById('txDate').value = tx.date || new Date().toISOString().split('T')[0];
+        document.getElementById('txStatus').value = tx.status || 'pending';
+
+        deleteBtn.classList.remove('hidden');
+      } else {
+        document.getElementById('tx-modal-title').textContent = "Add Transaction";
+        document.getElementById('txSubmitBtn').textContent = "Save Transaction";
+        document.getElementById('editingTxId').value = "";
+        document.getElementById('txDate').value = new Date().toISOString().split('T')[0];
+        document.getElementById('txStatus').value = 'pending';
+
+        deleteBtn.classList.add('hidden');
+      }
+
+      toggleTxModal(true);
+    }
+
+    async function handleTxSubmit(e) {
+      e.preventDefault();
+      const editId = document.getElementById('editingTxId').value;
+      const description = document.getElementById('txDesc').value;
+      const txType = document.getElementById('txType').value;
+      let amount = parseFloat(document.getElementById('txAmount').value) || 0;
+      const date = document.getElementById('txDate').value;
+      const status = document.getElementById('txStatus').value;
+
+      if (txType === 'expense' && amount > 0) {
+        amount = -amount;
+      }
+
+      const payload = {
+        account_id: activeAccountId,
+        description,
+        amount,
+        date,
+        status
+      };
+
+      let error;
+      if (editId) {
+        ({ error } = await sb.from('transactions').update(payload).eq('id', editId));
+      } else {
+        ({ error } = await sb.from('transactions').insert([payload]));
+      }
+
+      if (error) {
+        alert("Error saving transaction: " + error.message);
+        return;
+      }
+
+      toggleTxModal(false);
+      fetchTransactions(activeAccountId);
+      fetchAccounts();
+    }
+
+    async function handleDeleteTxFromModal() {
+      const id = document.getElementById('editingTxId').value;
+      const desc = document.getElementById('txDesc').value;
+      if (!id) return;
+
+      if (!confirm(`Are you sure you want to delete transaction "${desc}"?`)) return;
+
+      const { error } = await sb.from('transactions').delete().eq('id', id);
+      if (error) {
+        alert("Error deleting transaction: " + error.message);
+        return;
+      }
+
+      toggleTxModal(false);
+      fetchTransactions(activeAccountId);
+      fetchAccounts();
+    }
+
+    async function deleteTx(id, description = 'this transaction') {
+      if (!confirm(`Delete "${description}"?`)) return;
+      const { error } = await sb.from('transactions').delete().eq('id', id);
+      if (error) {
+        alert("Error deleting transaction: " + error.message);
+        return;
+      }
+      fetchTransactions(activeAccountId);
+      fetchAccounts();
+    }
+
+    function openAccountModal(accountId = null) {
+      const form = document.getElementById('account-form');
+      form.reset();
+      const deleteBtn = document.getElementById('deleteBtn');
+
+      if (accountId) {
+        const acc = accounts.find(a => a.id === accountId);
+        if (!acc) return;
+        document.getElementById('modal-title').textContent = "Edit Account";
+        document.getElementById('submitBtn').textContent = "Update Account";
+        document.getElementById('editingAccId').value = acc.id;
+        document.getElementById('accName').value = acc.name || '';
+        document.getElementById('accType').value = acc.type || 'checking';
+        document.getElementById('accBalance').value = acc.initial_balance || 0;
+        document.getElementById('accInstitution').value = acc.institution || '';
+        document.getElementById('accNumber').value = acc.account_number || '';
+        deleteBtn.classList.remove('hidden');
+      } else {
+        document.getElementById('modal-title').textContent = "Add New Account";
+        document.getElementById('submitBtn').textContent = "Create Account";
+        document.getElementById('editingAccId').value = "";
+        deleteBtn.classList.add('hidden');
+      }
+
+      toggleAccountModal(true);
+    }
+
+    async function handleAccountSubmit(e) {
+      e.preventDefault();
+      const editId = document.getElementById('editingAccId').value;
+      const name = document.getElementById('accName').value;
+      const type = document.getElementById('accType').value;
+      const initial_balance = parseFloat(document.getElementById('accBalance').value) || 0;
+      const institution = document.getElementById('accInstitution').value;
+      const account_number = document.getElementById('accNumber').value;
+
+      const payload = { name, type, initial_balance, institution, account_number };
+
+      let error;
+      if (editId) {
+        ({ error } = await sb.from('accounts').update(payload).eq('id', editId));
+      } else {
+        ({ error } = await sb.from('accounts').insert([payload]));
+      }
+
+      if (error) {
+        alert("Error saving account: " + error.message);
+        return;
+      }
+
+      toggleAccountModal(false);
+      fetchAccounts();
+    }
+
+    async function handleDeleteFromModal() {
+      const id = document.getElementById('editingAccId').value;
+      const name = document.getElementById('accName').value;
+      if (!id) return;
+
+      if (!confirm(`Are you sure you want to delete "${name}"?`)) return;
+
+      const { error } = await sb.from('accounts').delete().eq('id', id);
+      if (error) {
+        alert("Error deleting account: " + error.message);
+        return;
+      }
+
+      toggleAccountModal(false);
+      fetchAccounts();
+    }
+
+    function toggleAccountModal(show) {
+      document.getElementById('account-modal').classList.toggle('hidden', !show);
+    }
+
+    function toggleTxModal(show) {
+      document.getElementById('tx-modal').classList.toggle('hidden', !show);
+    }
+
+    init();
+  </script>
+</body>
+</html>
