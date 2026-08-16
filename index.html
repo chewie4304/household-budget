@@ -11,7 +11,6 @@
 
   <!-- Main View -->
   <div id="accounts-view">
-    <!-- Header -->
     <div class="bg-blue-600 text-white p-4 font-bold text-lg flex justify-between items-center shadow-md">
       <span>Household Budget</span>
       <button onclick="openAccountModal()" class="bg-white text-blue-600 px-3 py-1 rounded-full text-sm font-semibold shadow">
@@ -19,7 +18,6 @@
       </button>
     </div>
 
-    <!-- Content Container -->
     <div class="max-w-md mx-auto p-4 space-y-4">
       <div class="space-y-3">
         <h2 class="text-xl font-bold text-gray-800">Your Accounts</h2>
@@ -32,7 +30,6 @@
 
   <!-- Transactions View -->
   <div id="transactions-view" class="hidden">
-    <!-- Header -->
     <div class="bg-blue-600 text-white p-4 flex items-center justify-between shadow-md">
       <button onclick="showAccountsView()" class="text-white font-semibold text-sm flex items-center gap-1">
         &larr; Accounts
@@ -44,7 +41,6 @@
     </div>
 
     <div class="max-w-md mx-auto p-4 space-y-4">
-      <!-- Account Overview Card -->
       <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex justify-between items-center">
         <div>
           <h2 id="tx-acc-name" class="text-lg font-bold text-gray-900"></h2>
@@ -62,13 +58,11 @@
         </div>
       </div>
 
-      <!-- Tag Filter Bar -->
       <div id="tag-filter-container" class="hidden flex flex-wrap items-center gap-1.5 bg-white p-3 rounded-xl border border-gray-100 shadow-sm">
         <span class="text-xs font-semibold text-gray-500 mr-1">Filter by Tag:</span>
         <div id="tag-filter-chips" class="flex flex-wrap gap-1"></div>
       </div>
 
-      <!-- Transactions List -->
       <div class="space-y-3">
         <h3 class="text-md font-bold text-gray-800">Transaction History</h3>
         <div id="transactions-list" class="space-y-2">
@@ -108,7 +102,7 @@
         </div>
         <div>
           <label class="text-xs font-semibold text-gray-600">Institution / Bank</label>
-          <input type="text" id="accInstitution" placeholder="e.g., Chase, Wells Fargo, Local CU" class="w-full border p-2 rounded-lg mt-1" />
+          <input type="text" id="accInstitution" placeholder="e.g., Chase, Wells Fargo" class="w-full border p-2 rounded-lg mt-1" />
         </div>
         <div>
           <label class="text-xs font-semibold text-gray-600">Account Number (or Last 4 Digits)</label>
@@ -127,22 +121,19 @@
   </div>
 
   <!-- Add/Edit Transaction Modal -->
-  <div id="tx-modal" class="fixed inset-0 bg-black/50 hidden flex items-end sm:items-center justify-center p-0 sm:p-4 z-50">
-    <div class="bg-white w-full max-w-md rounded-t-2xl sm:rounded-2xl p-6 space-y-4">
+  <div id="tx-modal" class="fixed inset-0 bg-black/50 hidden flex items-end sm:items-center justify-center p-0 sm:p-4 z-50 overflow-y-auto">
+    <div class="bg-white w-full max-w-md rounded-t-2xl sm:rounded-2xl p-6 space-y-4 my-auto">
       <div class="flex justify-between items-center">
         <h3 id="tx-modal-title" class="font-bold text-lg">Add Transaction</h3>
         <button onclick="toggleTxModal(false)" class="text-gray-400 text-2xl">&times;</button>
       </div>
       <form id="tx-form" onsubmit="handleTxSubmit(event)" class="space-y-3">
         <input type="hidden" id="editingTxId" value="" />
-        <div>
-          <label class="text-xs font-semibold text-gray-600">Description</label>
-          <input type="text" id="txDesc" placeholder="e.g., Grocery Store, Paycheck" required class="w-full border p-2 rounded-lg mt-1" />
-        </div>
+        
         <div class="grid grid-cols-2 gap-2">
           <div>
             <label class="text-xs font-semibold text-gray-600">Type</label>
-            <select id="txType" class="w-full border p-2 rounded-lg mt-1 bg-white">
+            <select id="txType" onchange="updatePayeeLabel()" class="w-full border p-2 rounded-lg mt-1 bg-white">
               <option value="expense">Expense (-)</option>
               <option value="income">Income (+)</option>
             </select>
@@ -152,10 +143,28 @@
             <input type="number" step="0.01" id="txAmount" placeholder="0.00" required class="w-full border p-2 rounded-lg mt-1" />
           </div>
         </div>
+
+        <div>
+          <label id="payeeLabel" class="text-xs font-semibold text-gray-600">Payee</label>
+          <input type="text" id="txPayee" placeholder="e.g., Target, Utility Co." class="w-full border p-2 rounded-lg mt-1" />
+        </div>
+
+        <div>
+          <label class="text-xs font-semibold text-gray-600">Description</label>
+          <input type="text" id="txDesc" placeholder="e.g., Weekly groceries (Optional)" class="w-full border p-2 rounded-lg mt-1" />
+        </div>
+
         <div class="grid grid-cols-2 gap-2">
           <div>
-            <label class="text-xs font-semibold text-gray-600">Date</label>
-            <input type="date" id="txDate" required class="w-full border p-2 rounded-lg mt-1" />
+            <label class="text-xs font-semibold text-gray-600">Payment Type</label>
+            <select id="txPaymentType" class="w-full border p-2 rounded-lg mt-1 bg-white">
+              <option value="">-- Select --</option>
+              <option value="debit card">Debit Card</option>
+              <option value="credit card">Credit Card</option>
+              <option value="cash">Cash</option>
+              <option value="check">Check</option>
+              <option value="bank transfer">Bank Transfer</option>
+            </select>
           </div>
           <div>
             <label class="text-xs font-semibold text-gray-600">Status</label>
@@ -165,10 +174,26 @@
             </select>
           </div>
         </div>
-        <div>
-          <label class="text-xs font-semibold text-gray-600">Tags (comma-separated)</label>
-          <input type="text" id="txTags" placeholder="e.g., groceries, vacation, tax" class="w-full border p-2 rounded-lg mt-1" />
+
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="text-xs font-semibold text-gray-600">Date</label>
+            <input type="date" id="txDate" required class="w-full border p-2 rounded-lg mt-1" />
+          </div>
+          <div>
+            <label class="text-xs font-semibold text-gray-600">Tags (comma-separated)</label>
+            <input type="text" id="txTags" placeholder="e.g., groceries, tax" class="w-full border p-2 rounded-lg mt-1" />
+          </div>
         </div>
+
+        <!-- Attachments Section (Photos, Receipts, Warranties, Bills, PDFs) -->
+        <div>
+          <label class="text-xs font-semibold text-gray-600">Attachments (Receipts, Warranties, Invoices, PDFs)</label>
+          <input type="file" id="txAttachments" accept="image/*,application/pdf" multiple class="w-full text-xs text-gray-500 border p-2 rounded-lg mt-1 file:mr-2 file:py-1 file:px-2 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" />
+          
+          <div id="attachmentsPreviewList" class="mt-2 space-y-1"></div>
+        </div>
+
         <div class="pt-2 space-y-2">
           <button type="submit" id="txSubmitBtn" class="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold shadow">
             Save Transaction
@@ -190,6 +215,7 @@
     let transactions = [];
     let activeAccountId = null;
     let selectedTagFilter = null;
+    let currentExistingAttachments = [];
 
     async function init() {
       await fetchAccounts();
@@ -203,6 +229,19 @@
           .subscribe();
       } catch (err) {
         console.warn("Realtime subscription warning:", err);
+      }
+    }
+
+    function updatePayeeLabel() {
+      const type = document.getElementById('txType').value;
+      const label = document.getElementById('payeeLabel');
+      const input = document.getElementById('txPayee');
+      if (type === 'income') {
+        label.textContent = "Payer";
+        input.placeholder = "e.g., Employer, Client";
+      } else {
+        label.textContent = "Payee";
+        input.placeholder = "e.g., Target, Utility Co.";
       }
     }
 
@@ -400,6 +439,13 @@
         const status = tx.status || 'pending';
         const isPending = status === 'pending';
         const tags = Array.isArray(tx.tags) ? tx.tags : [];
+        const files = Array.isArray(tx.attachments) ? tx.attachments : [];
+
+        const titleText = tx.payee || tx.description || (isPositive ? 'Income' : 'Expense');
+        const subDetails = [
+          tx.payee && tx.description ? tx.description : '',
+          tx.payment_type ? tx.payment_type.toUpperCase() : ''
+        ].filter(Boolean).join(' • ');
 
         const tagsHtml = tags.length > 0 ? `
           <div class="flex flex-wrap gap-1 mt-1">
@@ -407,14 +453,26 @@
           </div>
         ` : '';
 
+        const attachmentsHtml = files.length > 0 ? `
+          <div class="flex items-center gap-1">
+            ${files.map((url, i) => `
+              <a href="${url}" target="_blank" onclick="event.stopPropagation()" title="View Attachment ${i+1}" class="text-xs bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded font-semibold hover:bg-blue-100">
+                📎 ${files.length > 1 ? i+1 : ''}
+              </a>
+            `).join('')}
+          </div>
+        ` : '';
+
         return `
           <div onclick="openTxModal('${tx.id}')" class="bg-white p-3 rounded-xl shadow-sm border border-gray-100 flex justify-between items-center cursor-pointer hover:border-blue-300 transition-all">
-            <div>
-              <p class="font-semibold text-gray-900 text-sm">${tx.description}</p>
-              <p class="text-xs text-gray-400">${tx.date}</p>
+            <div class="max-w-[60%]">
+              <p class="font-semibold text-gray-900 text-sm truncate">${titleText}</p>
+              ${subDetails ? `<p class="text-xs text-gray-500 truncate">${subDetails}</p>` : ''}
+              <p class="text-[10px] text-gray-400">${tx.date}</p>
               ${tagsHtml}
             </div>
             <div class="flex items-center gap-2">
+              ${attachmentsHtml}
               <span class="font-bold text-sm ${isPositive ? 'text-emerald-600' : 'text-gray-900'}">
                 ${isPositive ? '+' : ''}$${amt.toFixed(2)}
               </span>
@@ -428,7 +486,7 @@
                 }">
                 ${isPending ? 'P' : 'R'}
               </button>
-              <button onclick="event.stopPropagation(); deleteTx('${tx.id}', '${tx.description}')" class="text-red-400 hover:text-red-600 text-base font-bold px-1">&times;</button>
+              <button onclick="event.stopPropagation(); deleteTx('${tx.id}', '${titleText}')" class="text-red-400 hover:text-red-600 text-base font-bold px-1">&times;</button>
             </div>
           </div>
         `;
@@ -446,9 +504,30 @@
       fetchAccounts();
     }
 
+    function renderAttachmentsPreview() {
+      const container = document.getElementById('attachmentsPreviewList');
+      if (currentExistingAttachments.length === 0) {
+        container.innerHTML = '';
+        return;
+      }
+
+      container.innerHTML = currentExistingAttachments.map((url, idx) => `
+        <div class="flex items-center justify-between bg-gray-50 p-1.5 rounded-lg border text-xs">
+          <a href="${url}" target="_blank" class="text-blue-600 font-semibold underline truncate max-w-[200px]">Attachment ${idx + 1}</a>
+          <button type="button" onclick="removeSingleAttachment(${idx})" class="text-red-500 font-semibold hover:underline">Remove</button>
+        </div>
+      `).join('');
+    }
+
+    function removeSingleAttachment(index) {
+      currentExistingAttachments.splice(index, 1);
+      renderAttachmentsPreview();
+    }
+
     function openTxModal(txId = null) {
       const form = document.getElementById('tx-form');
       form.reset();
+      currentExistingAttachments = [];
       const deleteBtn = document.getElementById('txDeleteBtn');
 
       if (txId) {
@@ -459,12 +538,16 @@
         document.getElementById('tx-modal-title').textContent = "Edit Transaction";
         document.getElementById('txSubmitBtn').textContent = "Update Transaction";
         document.getElementById('editingTxId').value = tx.id;
-        document.getElementById('txDesc').value = tx.description || '';
         document.getElementById('txType').value = amt >= 0 ? 'income' : 'expense';
         document.getElementById('txAmount').value = Math.abs(amt);
+        document.getElementById('txPayee').value = tx.payee || '';
+        document.getElementById('txDesc').value = tx.description || '';
+        document.getElementById('txPaymentType').value = tx.payment_type || '';
         document.getElementById('txDate').value = tx.date || new Date().toISOString().split('T')[0];
         document.getElementById('txStatus').value = tx.status || 'pending';
         document.getElementById('txTags').value = Array.isArray(tx.tags) ? tx.tags.join(', ') : '';
+
+        currentExistingAttachments = Array.isArray(tx.attachments) ? [...tx.attachments] : [];
 
         deleteBtn.classList.remove('hidden');
       } else {
@@ -473,62 +556,107 @@
         document.getElementById('editingTxId').value = "";
         document.getElementById('txDate').value = new Date().toISOString().split('T')[0];
         document.getElementById('txStatus').value = 'pending';
+        document.getElementById('txType').value = 'expense';
+        document.getElementById('txPaymentType').value = '';
         document.getElementById('txTags').value = '';
 
         deleteBtn.classList.add('hidden');
       }
 
+      renderAttachmentsPreview();
+      updatePayeeLabel();
       toggleTxModal(true);
     }
 
     async function handleTxSubmit(e) {
       e.preventDefault();
-      const editId = document.getElementById('editingTxId').value;
-      const description = document.getElementById('txDesc').value;
-      const txType = document.getElementById('txType').value;
-      let amount = parseFloat(document.getElementById('txAmount').value) || 0;
-      const date = document.getElementById('txDate').value;
-      const status = document.getElementById('txStatus').value;
-      
-      const rawTags = document.getElementById('txTags').value;
-      const tags = rawTags
-        .split(',')
-        .map(t => t.trim().toLowerCase())
-        .filter(t => t.length > 0);
+      const submitBtn = document.getElementById('txSubmitBtn');
+      submitBtn.disabled = true;
+      submitBtn.textContent = "Saving...";
 
-      if (txType === 'expense' && amount > 0) {
-        amount = -amount;
+      try {
+        const editId = document.getElementById('editingTxId').value;
+        const payee = document.getElementById('txPayee').value.trim();
+        const description = document.getElementById('txDesc').value.trim();
+        const txType = document.getElementById('txType').value;
+        let amount = parseFloat(document.getElementById('txAmount').value) || 0;
+        const payment_type = document.getElementById('txPaymentType').value;
+        const date = document.getElementById('txDate').value;
+        const status = document.getElementById('txStatus').value;
+        
+        const rawTags = document.getElementById('txTags').value;
+        const tags = rawTags
+          .split(',')
+          .map(t => t.trim().toLowerCase())
+          .filter(t => t.length > 0);
+
+        if (txType === 'expense' && amount > 0) {
+          amount = -amount;
+        }
+
+        let attachments = [...currentExistingAttachments];
+        const fileInput = document.getElementById('txAttachments');
+
+        if (fileInput.files && fileInput.files.length > 0) {
+          for (let i = 0; i < fileInput.files.length; i++) {
+            const file = fileInput.files[i];
+            const fileExt = file.name.split('.').pop();
+            const fileName = `${Date.now()}_${Math.random().toString(36).substring(2)}.${fileExt}`;
+
+            const { error: uploadError } = await sb.storage
+              .from('receipts')
+              .upload(fileName, file);
+
+            if (uploadError) {
+              alert(`Error uploading file "${file.name}": ` + uploadError.message);
+              submitBtn.disabled = false;
+              submitBtn.textContent = "Save Transaction";
+              return;
+            }
+
+            const { data: publicUrlData } = sb.storage.from('receipts').getPublicUrl(fileName);
+            attachments.push(publicUrlData.publicUrl);
+          }
+        }
+
+        const payload = {
+          account_id: activeAccountId,
+          payee: payee || null,
+          description: description || null,
+          amount,
+          payment_type: payment_type || null,
+          date,
+          status,
+          tags,
+          attachments
+        };
+
+        let error;
+        if (editId) {
+          ({ error } = await sb.from('transactions').update(payload).eq('id', editId));
+        } else {
+          ({ error } = await sb.from('transactions').insert([payload]));
+        }
+
+        if (error) {
+          alert("Error saving transaction: " + error.message);
+          return;
+        }
+
+        toggleTxModal(false);
+        fetchTransactions(activeAccountId);
+        fetchAccounts();
+      } catch (err) {
+        alert("An unexpected error occurred: " + err.message);
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = "Save Transaction";
       }
-
-      const payload = {
-        account_id: activeAccountId,
-        description,
-        amount,
-        date,
-        status,
-        tags
-      };
-
-      let error;
-      if (editId) {
-        ({ error } = await sb.from('transactions').update(payload).eq('id', editId));
-      } else {
-        ({ error } = await sb.from('transactions').insert([payload]));
-      }
-
-      if (error) {
-        alert("Error saving transaction: " + error.message);
-        return;
-      }
-
-      toggleTxModal(false);
-      fetchTransactions(activeAccountId);
-      fetchAccounts();
     }
 
     async function handleDeleteTxFromModal() {
       const id = document.getElementById('editingTxId').value;
-      const desc = document.getElementById('txDesc').value;
+      const desc = document.getElementById('txDesc').value || document.getElementById('txPayee').value || 'this transaction';
       if (!id) return;
 
       if (!confirm(`Are you sure you want to delete transaction "${desc}"?`)) return;
