@@ -538,8 +538,10 @@
         // Main Title: Payer/Payee
         const displayTitle = tx.payee || 'Transaction';
         
-        // Subtitle: ONLY rendered if Description was explicitly entered
-        const subTitle = (tx.description && tx.description.trim() !== '') ? tx.description.trim() : '';
+        // Subtitle: ONLY render if description exists AND isn't identical to the payee
+        const rawDesc = (tx.description || '').trim();
+        const rawPayee = (tx.payee || '').trim();
+        const subTitle = (rawDesc && rawDesc.toLowerCase() !== rawPayee.toLowerCase()) ? rawDesc : '';
 
         const tagsHtml = tags.length > 0 ? `
           <div class="flex flex-wrap gap-1 mt-1">
