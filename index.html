@@ -235,18 +235,21 @@
         <!-- Receipt Attachments Section -->
         <div>
           <label class="text-xs font-semibold text-gray-600 block mb-1">Attach Receipts / Screenshots</label>
-          
+
           <div class="grid grid-cols-2 gap-2 mt-1">
             <!-- Option A: Choose Existing Files -->
-            <label class="flex items-center justify-center gap-1.5 bg-gray-100 hover:bg-gray-200 border border-gray-300 text-gray-700 text-xs font-semibold py-2 px-3 rounded-lg cursor-pointer text-center">
+            <label
+              class="flex items-center justify-center gap-1.5 bg-gray-100 hover:bg-gray-200 border border-gray-300 text-gray-700 text-xs font-semibold py-2 px-3 rounded-lg cursor-pointer text-center">
               <span>📁 Upload File</span>
               <input type="file" id="txReceiptFile" accept="image/*" class="hidden" onchange="handleImageInput(this)" />
             </label>
 
             <!-- Option B: Direct Camera Capture -->
-            <label class="flex items-center justify-center gap-1.5 bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-700 text-xs font-semibold py-2 px-3 rounded-lg cursor-pointer text-center">
+            <label
+              class="flex items-center justify-center gap-1.5 bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-700 text-xs font-semibold py-2 px-3 rounded-lg cursor-pointer text-center">
               <span>📷 Take Photo</span>
-              <input type="file" id="txCameraFile" accept="image/*" capture="environment" class="hidden" onchange="handleImageInput(this)" />
+              <input type="file" id="txCameraFile" accept="image/*" capture="environment" class="hidden"
+                onchange="handleImageInput(this)" />
             </label>
           </div>
 
@@ -286,8 +289,10 @@
         <img id="imageToCrop" src="" alt="Source" class="max-w-full block">
       </div>
       <div class="flex justify-end gap-2 pt-2">
-        <button type="button" onclick="cancelCrop()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-semibold text-sm">Cancel</button>
-        <button type="button" onclick="confirmCrop()" class="px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold text-sm shadow">Crop & Add</button>
+        <button type="button" onclick="cancelCrop()"
+          class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-semibold text-sm">Cancel</button>
+        <button type="button" onclick="confirmCrop()"
+          class="px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold text-sm shadow">Crop & Add</button>
       </div>
     </div>
   </div>
@@ -298,7 +303,7 @@
   <script>
     const SUPABASE_URL = "https://raujjskhrprnyigfmkwq.supabase.co";
     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJhdWpqc2tocnBybnlpZ2Zta3dxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY3Njk0NzEsImV4cCI6MjEwMjM0NTQ3MX0.jEjU9BOmzpQpm-A4UlD8xrP2dpeQSiIEjj7-IuMbiVE";
-    
+
     // Standard initialization without custom global headers override
     const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
@@ -315,8 +320,8 @@
       await fetchAccounts();
       try {
         sb.channel('db-changes')
-          .on('postgres_changes', { event: '*', schema: 'public', table: 'accounts' }, () => fetchAccounts())
-          .on('postgres_changes', { event: '*', schema: 'public', table: 'transactions' }, () => {
+          .on('postgres_changes', {event: '*', schema: 'public', table: 'accounts'}, () => fetchAccounts())
+          .on('postgres_changes', {event: '*', schema: 'public', table: 'transactions'}, () => {
             if (activeAccountId) fetchTransactions(activeAccountId);
             fetchAccounts();
           })
@@ -329,9 +334,9 @@
     async function fetchAccounts() {
       const list = document.getElementById('accounts-list');
       try {
-        let { data, error } = await sb.from('accounts').select('*, transactions(amount, status)').order('created_at', { ascending: true });
+        let {data, error} = await sb.from('accounts').select('*, transactions(amount, status)').order('created_at', {ascending: true});
         if (error) {
-          const simple = await sb.from('accounts').select('*').order('created_at', { ascending: true });
+          const simple = await sb.from('accounts').select('*').order('created_at', {ascending: true});
           if (simple.error) throw simple.error;
           data = simple.data;
         }
@@ -430,7 +435,7 @@
       if (!accId) return;
       const list = document.getElementById('transactions-list');
       try {
-        const { data, error } = await sb.from('transactions').select('*').eq('account_id', accId).order('date', { ascending: false });
+        const {data, error} = await sb.from('transactions').select('*').eq('account_id', accId).order('date', {ascending: false});
         if (error) throw error;
 
         transactions = data || [];
@@ -495,37 +500,37 @@
       renderTransactions();
     }
 
-function renderTransactions() {
-  const list = document.getElementById('transactions-list');
+    function renderTransactions() {
+      const list = document.getElementById('transactions-list');
 
-  let filteredTx = transactions;
-  if (selectedTagFilter) {
-    filteredTx = transactions.filter(tx => Array.isArray(tx.tags) && tx.tags.includes(selectedTagFilter));
-  }
+      let filteredTx = transactions;
+      if (selectedTagFilter) {
+        filteredTx = transactions.filter(tx => Array.isArray(tx.tags) && tx.tags.includes(selectedTagFilter));
+      }
 
-  if (filteredTx.length === 0) {
-    list.innerHTML = `
+      if (filteredTx.length === 0) {
+        list.innerHTML = `
       <div class="bg-white p-6 rounded-xl border border-gray-200 text-center space-y-2">
         <p class="text-gray-600 font-medium">${selectedTagFilter ? 'No transactions with this tag.' : 'No transactions yet.'}</p>
         <p class="text-xs text-gray-400">${selectedTagFilter ? 'Try picking a different tag filter above.' : 'Tap "+ Add Tx" above to log a deposit or spending.'}</p>
       </div>
     `;
-    return;
-  }
+        return;
+      }
 
-  list.innerHTML = filteredTx.map(t => {
-    const isIncome = Number(t.amount) >= 0;
-    const amtFormatted = `${isIncome ? '+' : ''}$${Number(t.amount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-    const hasReceipt = t.receipt_url && t.receipt_url.trim() !== '';
-    const receiptUrls = hasReceipt ? t.receipt_url.split(',').map(u => u.trim()).filter(Boolean) : [];
+      list.innerHTML = filteredTx.map(t => {
+        const isIncome = Number(t.amount) >= 0;
+        const amtFormatted = `${isIncome ? '+' : ''}$${Number(t.amount).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+        const hasReceipt = t.receipt_url && t.receipt_url.trim() !== '';
+        const receiptUrls = hasReceipt ? t.receipt_url.split(',').map(u => u.trim()).filter(Boolean) : [];
 
-    // Top Line: Always shows Payee/Payer (defaults to 'Uncategorized' if left empty)
-    const payeeText = t.payee ? t.payee.trim() : 'Uncategorized';
-    
-    // Second Line: Shows Description ONLY if filled out
-    const descText = t.description ? t.description.trim() : '';
+        // Top Line: Always shows Payee/Payer (defaults to 'Uncategorized' if left empty)
+        const payeeText = t.payee ? t.payee.trim() : 'Uncategorized';
 
-    return `
+        // Second Line: Shows Description ONLY if filled out
+        const descText = t.description ? t.description.trim() : '';
+
+        return `
       <div class="bg-white rounded-2xl p-4 sm:p-5 shadow-sm border border-stone-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 hover:border-stone-300 transition">
         <div class="flex items-start gap-4">
           <div class="w-10 h-10 rounded-xl ${isIncome ? 'bg-emerald-50 text-emerald-600' : 'bg-stone-100 text-stone-600'} flex items-center justify-center font-bold flex-shrink-0 mt-0.5">
@@ -544,7 +549,7 @@ function renderTransactions() {
                   <i class="fa-solid fa-receipt text-brand-700"></i>
                   <span>Receipt</span>
                   <div class="flex gap-1 ml-1.5">
-                    ${receiptUrls.map((url, idx) => `<button onclick="openImageModal('${url}')" class="underline hover:text-brand-700">#${idx+1}</button>`).join('')}
+                    ${receiptUrls.map((url, idx) => `<button onclick="openImageModal('${url}')" class="underline hover:text-brand-700">#${idx + 1}</button>`).join('')}
                   </div>
                 </div>
               ` : ''}
@@ -568,27 +573,27 @@ function renderTransactions() {
         </div>
       </div>
     `;
-  }).join('');
-}
+      }).join('');
+    }
 
-      list.innerHTML = filteredTx.map(tx => {
-        const amt = parseFloat(tx.amount || 0);
-        const isPositive = amt >= 0;
-        const status = tx.status || 'pending';
-        const isPending = status === 'pending';
-        const tags = Array.isArray(tx.tags) ? tx.tags : [];
+    list.innerHTML = filteredTx.map(tx => {
+      const amt = parseFloat(tx.amount || 0);
+      const isPositive = amt >= 0;
+      const status = tx.status || 'pending';
+      const isPending = status === 'pending';
+      const tags = Array.isArray(tx.tags) ? tx.tags : [];
 
-        const displayTitle = tx.description || tx.payee || 'Transaction';
-        const subTitle = (tx.description && tx.payee) ? tx.payee : '';
+      const displayTitle = tx.description || tx.payee || 'Transaction';
+      const subTitle = (tx.description && tx.payee) ? tx.payee : '';
 
-        const tagsHtml = tags.length > 0 ? `
+      const tagsHtml = tags.length > 0 ? `
           <div class="flex flex-wrap gap-1 mt-1">
             ${tags.map(t => `<span class="text-[10px] bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded font-medium">#${t}</span>`).join('')}
           </div>
         ` : '';
 
-        const receiptUrls = tx.receipt_url ? tx.receipt_url.split(',').map(u => u.trim()).filter(Boolean) : [];
-        const receiptBtn = receiptUrls.length > 0 ? `
+      const receiptUrls = tx.receipt_url ? tx.receipt_url.split(',').map(u => u.trim()).filter(Boolean) : [];
+      const receiptBtn = receiptUrls.length > 0 ? `
           <div class="flex gap-1 flex-wrap mt-0.5">
             ${receiptUrls.map((url, idx) => `
               <a href="${url}" target="_blank" onclick="event.stopPropagation()" class="text-[11px] bg-gray-100 hover:bg-gray-200 text-gray-600 px-1.5 py-0.5 rounded flex items-center gap-1 font-medium border border-gray-200">
@@ -598,7 +603,7 @@ function renderTransactions() {
           </div>
         ` : '';
 
-        return `
+      return `
           <div onclick="openTxModal('${tx.id}')" class="bg-white p-3 rounded-xl shadow-sm border border-gray-100 flex justify-between items-center cursor-pointer hover:border-blue-300 transition-all">
             <div>
               <div class="flex items-center gap-2">
@@ -617,21 +622,21 @@ function renderTransactions() {
                 onclick="event.stopPropagation(); toggleTxStatus('${tx.id}', '${status}')" 
                 title="Status: ${status}. Click to toggle"
                 class="px-2 py-0.5 text-xs font-bold rounded-full transition-colors ${isPending
-            ? 'bg-amber-100 text-amber-700 hover:bg-amber-200'
-            : 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200'
-          }">
+          ? 'bg-amber-100 text-amber-700 hover:bg-amber-200'
+          : 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200'
+        }">
                 ${isPending ? 'P' : 'R'}
               </button>
               <button onclick="event.stopPropagation(); deleteTx('${tx.id}', '${displayTitle}')" class="text-red-400 hover:text-red-600 text-base font-bold px-1">&times;</button>
             </div>
           </div>
         `;
-      }).join('');
+    }).join('');
     }
 
     async function toggleTxStatus(id, currentStatus) {
       const newStatus = currentStatus === 'pending' ? 'reconciled' : 'pending';
-      const { error } = await sb.from('transactions').update({ status: newStatus }).eq('id', id);
+      const {error} = await sb.from('transactions').update({status: newStatus}).eq('id', id);
       if (error) {
         alert("Error updating status: " + error.message);
         return;
@@ -703,7 +708,7 @@ function renderTransactions() {
       });
 
       canvas.toBlob((blob) => {
-        const croppedFile = new File([blob], `receipt_${Date.now()}.jpg`, { type: 'image/jpeg' });
+        const croppedFile = new File([blob], `receipt_${Date.now()}.jpg`, {type: 'image/jpeg'});
         activeReceiptFiles.push(croppedFile);
 
         cancelCrop();
@@ -865,7 +870,7 @@ function renderTransactions() {
           const fileExt = file.name.split('.').pop();
           const fileName = `${Date.now()}_${Math.random().toString(36).substring(2, 7)}.${fileExt}`;
 
-          const { error: uploadError } = await sb.storage
+          const {error: uploadError} = await sb.storage
             .from('receipts')
             .upload(fileName, file);
 
@@ -876,7 +881,7 @@ function renderTransactions() {
             return;
           }
 
-          const { data: publicUrlData } = sb.storage
+          const {data: publicUrlData} = sb.storage
             .from('receipts')
             .getPublicUrl(fileName);
 
@@ -898,9 +903,9 @@ function renderTransactions() {
 
       let error;
       if (editId) {
-        ({ error } = await sb.from('transactions').update(payload).eq('id', editId));
+        ({error} = await sb.from('transactions').update(payload).eq('id', editId));
       } else {
-        ({ error } = await sb.from('transactions').insert([payload]));
+        ({error} = await sb.from('transactions').insert([payload]));
       }
 
       submitBtn.disabled = false;
@@ -925,7 +930,7 @@ function renderTransactions() {
 
       if (!confirm(`Are you sure you want to delete transaction "${desc}"?`)) return;
 
-      const { error } = await sb.from('transactions').delete().eq('id', id);
+      const {error} = await sb.from('transactions').delete().eq('id', id);
       if (error) {
         alert("Error deleting transaction: " + error.message);
         return;
@@ -940,7 +945,7 @@ function renderTransactions() {
 
     async function deleteTx(id, description = 'this transaction') {
       if (!confirm(`Delete "${description}"?`)) return;
-      const { error } = await sb.from('transactions').delete().eq('id', id);
+      const {error} = await sb.from('transactions').delete().eq('id', id);
       if (error) {
         alert("Error deleting transaction: " + error.message);
         return;
@@ -994,9 +999,9 @@ function renderTransactions() {
 
       let error;
       if (editId) {
-        ({ error } = await sb.from('accounts').update(payload).eq('id', editId));
+        ({error} = await sb.from('accounts').update(payload).eq('id', editId));
       } else {
-        ({ error } = await sb.from('accounts').insert([payload]));
+        ({error} = await sb.from('accounts').insert([payload]));
       }
 
       submitBtn.disabled = false;
@@ -1017,7 +1022,7 @@ function renderTransactions() {
 
       if (!confirm(`Are you sure you want to delete "${name}"? This will also remove associated transactions.`)) return;
 
-      const { error } = await sb.from('accounts').delete().eq('id', id);
+      const {error} = await sb.from('accounts').delete().eq('id', id);
       if (error) {
         alert("Error deleting account: " + error.message);
         return;
