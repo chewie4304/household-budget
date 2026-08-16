@@ -20,10 +20,16 @@
     <!-- Header -->
     <div class="bg-blue-600 text-white p-4 font-bold text-lg flex justify-between items-center shadow-md">
       <span>Household Budget</span>
-      <button onclick="openAccountModal()"
-        class="bg-white text-blue-600 px-3 py-1 rounded-full text-sm font-semibold shadow">
-        + New Account
-      </button>
+      <div class="flex gap-2">
+        <button onclick="openTxModal()"
+          class="bg-blue-500 hover:bg-blue-400 text-white px-3 py-1 rounded-full text-sm font-semibold shadow border border-blue-400">
+          + Add Tx
+        </button>
+        <button onclick="openAccountModal()"
+          class="bg-white text-blue-600 px-3 py-1 rounded-full text-sm font-semibold shadow">
+          + New Account
+        </button>
+      </div>
     </div>
 
     <!-- Content Container -->
@@ -152,6 +158,14 @@
       <form id="tx-form" onsubmit="handleTxSubmit(event)" class="space-y-3">
         <input type="hidden" id="editingTxId" value="" />
 
+        <!-- Account Selection (Required) -->
+        <div>
+          <label class="text-xs font-semibold text-gray-600">Account</label>
+          <select id="txAccount" required class="w-full border p-2 rounded-lg mt-1 bg-white font-medium text-gray-800">
+            <!-- Dynamically populated -->
+          </select>
+        </div>
+
         <!-- Description (Optional) -->
         <div>
           <label class="text-xs font-semibold text-gray-600">Description</label>
@@ -246,7 +260,7 @@
 
   <script>
     const SUPABASE_URL = "https://raujjskhrprnyigfmkwq.supabase.co";
-    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJhdWpqc2tocnBybnlpZ2Zta3dxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY3Njk0NzEsImV4cCI6MjEwMjM0NTQ3MX0.jEjU9BOmzpQpm-A4UlD8xrP2dpeQSiIEjj7-IuMbiVE";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInRefiI6InJhdWpqc2tocnBybnlpZ2Zta3dxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY3Njk0NzEsImV4cCI6MjEwMjM0NTQ3MX0.jEjU9BOmzpQpm-A4UlD8xrP2dpeQSiIEjj7-IuMbiVEe";
     const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     let accounts = [];
@@ -534,6 +548,19 @@
       }
     }
 
+    function populateAccountDropdown(selectedId = null) {
+      const select = document.getElementById('txAccount');
+      if (!accounts || accounts.length === 0) {
+        select.innerHTML = `<option value="">No accounts available</option>`;
+        return;
+      }
+
+      select.innerHTML = accounts.map(acc => {
+        const isSelected = (selectedId && acc.id === selectedId) || (!selectedId && activeAccountId && acc.id === activeAccountId);
+        return `<option value="${acc.id}" ${isSelected ? 'selected' : ''}>${acc.name} (${acc.type})</option>`;
+      }).join('');
+    }
+
     function renderModalReceiptList() {
       const preview = document.getElementById('receiptPreview');
       const container = document.getElementById('receiptLinksList');
@@ -563,6 +590,11 @@
     }
 
     function openTxModal(txId = null) {
+      if (accounts.length === 0) {
+        alert("Please create an account first before adding transactions.");
+        return;
+      }
+
       const form = document.getElementById('tx-form');
       form.reset();
       const deleteBtn = document.getElementById('txDeleteBtn');
@@ -577,6 +609,7 @@
         document.getElementById('tx-modal-title').textContent = "Edit Transaction";
         document.getElementById('txSubmitBtn').textContent = "Update Transaction";
         document.getElementById('editingTxId').value = tx.id;
+        populateAccountDropdown(tx.account_id);
         document.getElementById('txDesc').value = tx.description || '';
         document.getElementById('txPayee').value = tx.payee || '';
         document.getElementById('txType').value = amt >= 0 ? 'income' : 'expense';
@@ -595,6 +628,7 @@
         document.getElementById('tx-modal-title').textContent = "Add Transaction";
         document.getElementById('txSubmitBtn').textContent = "Save Transaction";
         document.getElementById('editingTxId').value = "";
+        populateAccountDropdown(activeAccountId);
         document.getElementById('txPayee').value = "";
         document.getElementById('txPaymentMethod').value = "debit";
         document.getElementById('txDate').value = new Date().toISOString().split('T')[0];
@@ -616,6 +650,7 @@
       submitBtn.textContent = "Saving...";
 
       const editId = document.getElementById('editingTxId').value;
+      const targetAccountId = document.getElementById('txAccount').value;
       const description = document.getElementById('txDesc').value;
       const payee = document.getElementById('txPayee').value;
       const payment_method = document.getElementById('txPaymentMethod').value;
@@ -623,6 +658,13 @@
       let amount = parseFloat(document.getElementById('txAmount').value) || 0;
       const date = document.getElementById('txDate').value;
       const status = document.getElementById('txStatus').value;
+
+      if (!targetAccountId) {
+        alert("Please select an account.");
+        submitBtn.disabled = false;
+        submitBtn.textContent = editId ? "Update Transaction" : "Save Transaction";
+        return;
+      }
 
       const rawTags = document.getElementById('txTags').value;
       const tags = rawTags
@@ -667,7 +709,7 @@
       }
 
       const payload = {
-        account_id: activeAccountId,
+        account_id: targetAccountId,
         description: description || payee || 'Transaction',
         payee,
         payment_method,
@@ -694,7 +736,9 @@
       }
 
       toggleTxModal(false);
-      fetchTransactions(activeAccountId);
+      if (activeAccountId) {
+        fetchTransactions(activeAccountId);
+      }
       fetchAccounts();
     }
 
@@ -712,7 +756,9 @@
       }
 
       toggleTxModal(false);
-      fetchTransactions(activeAccountId);
+      if (activeAccountId) {
+        fetchTransactions(activeAccountId);
+      }
       fetchAccounts();
     }
 
@@ -723,7 +769,9 @@
         alert("Error deleting transaction: " + error.message);
         return;
       }
-      fetchTransactions(activeAccountId);
+      if (activeAccountId) {
+        fetchTransactions(activeAccountId);
+      }
       fetchAccounts();
     }
 
