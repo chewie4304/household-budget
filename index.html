@@ -638,7 +638,6 @@
         amount = -amount;
       }
 
-      // Handle multiple receipt attachment URLs
       let receipt_urls = currentReceiptUrl ? currentReceiptUrl.split(', ') : [];
 
       if (removeReceiptFlag) {
@@ -672,7 +671,6 @@
           uploadedUrls.push(publicUrlData.publicUrl);
         }
 
-        // Combine existing and newly uploaded receipt URLs
         receipt_urls = [...receipt_urls, ...uploadedUrls];
       }
 
@@ -685,7 +683,7 @@
         date,
         status,
         tags,
-        receipt_url: receipt_urls.join(', ') // Stores multiple URLs separated by commas
+        receipt_url: receipt_urls.join(', ')
       };
 
       let error;
@@ -750,7 +748,7 @@
         document.getElementById('editingAccId').value = acc.id;
         document.getElementById('accName').value = acc.name || '';
         document.getElementById('accType').value = acc.type || 'checking';
-        document.getElementById('accBalance').value = acc.initial_balance || 0;
+        document.getElementById('accBalance').value = acc.initial_balance || '0.00';
         document.getElementById('accInstitution').value = acc.institution || '';
         document.getElementById('accNumber').value = acc.account_number || '';
         deleteBtn.classList.remove('hidden');
@@ -766,21 +764,26 @@
 
     async function handleAccountSubmit(e) {
       e.preventDefault();
-      const editId = document.getElementById('editingAccId').value;
-      const name = document.getElementById('accName').value;
-      const type = document.getElementById('accType').value;
-      const initial_balance = parseFloat(document.getElementById('accBalance').value) || 0;
-      const institution = document.getElementById('accInstitution').value;
-      const account_number = document.getElementById('accNumber').value;
+      const submitBtn = document.getElementById('submitBtn');
+      submitBtn.disabled = true;
 
-      const payload = {name, type, initial_balance, institution, account_number};
+      const editId = document.getElementById('editingAccId').value;
+      const payload = {
+        name: document.getElementById('accName').value,
+        type: document.getElementById('accType').value,
+        initial_balance: parseFloat(document.getElementById('accBalance').value) || 0,
+        institution: document.getElementById('accInstitution').value,
+        account_number: document.getElementById('accNumber').value
+      };
 
       let error;
       if (editId) {
-        ({error} = await sb.from('accounts').update(payload).eq('id', editId));
+        ({ error } = await sb.from('accounts').update(payload).eq('id', editId));
       } else {
-        ({error} = await sb.from('accounts').insert([payload]));
+        ({ error } = await sb.from('accounts').insert([payload]));
       }
+
+      submitBtn.disabled = false;
 
       if (error) {
         alert("Error saving account: " + error.message);
@@ -793,12 +796,12 @@
 
     async function handleDeleteFromModal() {
       const id = document.getElementById('editingAccId').value;
-      const name = document.getElementById('accName').value;
+      const name = document.getElementById('accName').value || 'this account';
       if (!id) return;
 
-      if (!confirm(`Are you sure you want to delete "${name}"?`)) return;
+      if (!confirm(`Are you sure you want to delete "${name}"? This will also remove associated transactions.`)) return;
 
-      const {error} = await sb.from('transactions').delete().eq('id', id);
+      const { error } = await sb.from('accounts').delete().eq('id', id);
       if (error) {
         alert("Error deleting account: " + error.message);
         return;
@@ -809,16 +812,18 @@
     }
 
     function toggleAccountModal(show) {
-      document.getElementById('account-modal').classList.toggle('hidden', !show);
+      const modal = document.getElementById('account-modal');
+      if (show) modal.classList.remove('hidden');
+      else modal.classList.add('hidden');
     }
 
     function toggleTxModal(show) {
-      document.getElementById('tx-modal').classList.toggle('hidden', !show);
+      const modal = document.getElementById('tx-modal');
+      if (show) modal.classList.remove('hidden');
+      else modal.classList.add('hidden');
     }
 
-    document.addEventListener('DOMContentLoaded', () => {
-      init();
-    });
+    window.onload = init;
   </script>
 </body>
 
