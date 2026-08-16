@@ -477,10 +477,15 @@
           </div>
         ` : '';
 
-        const receiptBtn = tx.receipt_url ? `
-          <a href="${tx.receipt_url}" target="_blank" onclick="event.stopPropagation()" class="text-xs bg-gray-100 hover:bg-gray-200 text-gray-600 px-1.5 py-0.5 rounded flex items-center gap-1 font-medium">
-            📎 Receipt
-          </a>
+        const receiptUrls = tx.receipt_url ? tx.receipt_url.split(', ').filter(Boolean) : [];
+        const receiptBtn = receiptUrls.length > 0 ? `
+          <div class="flex gap-1 flex-wrap">
+            ${receiptUrls.map((url, idx) => `
+              <a href="${url}" target="_blank" onclick="event.stopPropagation()" class="text-xs bg-gray-100 hover:bg-gray-200 text-gray-600 px-1.5 py-0.5 rounded flex items-center gap-1 font-medium">
+                📎 Receipt ${receiptUrls.length > 1 ? idx + 1 : ''}
+              </a>
+            `).join('')}
+          </div>
         ` : '';
 
         return `
@@ -585,7 +590,11 @@
 
         if (tx.receipt_url) {
           currentReceiptUrl = tx.receipt_url;
-          link.href = tx.receipt_url;
+          const urls = tx.receipt_url.split(', ').filter(Boolean);
+          const linkContainer = document.getElementById('receiptPreview');
+          linkContainer.innerHTML = urls.map((url, idx) => 
+            `<a href="${url}" target="_blank" class="text-xs text-blue-600 font-semibold underline block">View Receipt ${urls.length > 1 ? idx + 1 : ''}</a>`
+          ).join('');
           preview.classList.remove('hidden');
           removeBtn.classList.remove('hidden');
         } else {
@@ -638,7 +647,7 @@
         amount = -amount;
       }
 
-      let receipt_urls = currentReceiptUrl ? currentReceiptUrl.split(', ') : [];
+      let receipt_urls = currentReceiptUrl ? currentReceiptUrl.split(', ').map(u => u.trim()).filter(Boolean) : [];
 
       if (removeReceiptFlag) {
         receipt_urls = [];
