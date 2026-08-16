@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
@@ -10,6 +11,7 @@
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
 </head>
+
 <body class="bg-gray-100 text-gray-900 antialiased min-h-screen pb-10">
 
   <!-- Main View -->
@@ -17,7 +19,8 @@
     <!-- Header -->
     <div class="bg-blue-600 text-white p-4 font-bold text-lg flex justify-between items-center shadow-md">
       <span>Household Budget</span>
-      <button onclick="openAccountModal()" class="bg-white text-blue-600 px-3 py-1 rounded-full text-sm font-semibold shadow">
+      <button onclick="openAccountModal()"
+        class="bg-white text-blue-600 px-3 py-1 rounded-full text-sm font-semibold shadow">
         + New Account
       </button>
     </div>
@@ -41,7 +44,8 @@
         &larr; Accounts
       </button>
       <span id="tx-header-title" class="font-bold text-lg">Account Details</span>
-      <button onclick="openTxModal()" class="bg-white text-blue-600 px-3 py-1 rounded-full text-sm font-semibold shadow">
+      <button onclick="openTxModal()"
+        class="bg-white text-blue-600 px-3 py-1 rounded-full text-sm font-semibold shadow">
         + Add Tx
       </button>
     </div>
@@ -66,7 +70,8 @@
       </div>
 
       <!-- Tag Filter Bar -->
-      <div id="tag-filter-container" class="hidden flex flex-wrap items-center gap-1.5 bg-white p-3 rounded-xl border border-gray-100 shadow-sm">
+      <div id="tag-filter-container"
+        class="hidden flex flex-wrap items-center gap-1.5 bg-white p-3 rounded-xl border border-gray-100 shadow-sm">
         <span class="text-xs font-semibold text-gray-500 mr-1">Filter by Tag:</span>
         <div id="tag-filter-chips" class="flex flex-wrap gap-1"></div>
       </div>
@@ -82,7 +87,8 @@
   </div>
 
   <!-- Add/Edit Account Modal -->
-  <div id="account-modal" class="fixed inset-0 bg-black/50 hidden flex items-end sm:items-center justify-center p-0 sm:p-4 z-50">
+  <div id="account-modal"
+    class="fixed inset-0 bg-black/50 hidden flex items-end sm:items-center justify-center p-0 sm:p-4 z-50">
     <div class="bg-white w-full max-w-md rounded-t-2xl sm:rounded-2xl p-6 space-y-4">
       <div class="flex justify-between items-center">
         <h3 id="modal-title" class="font-bold text-lg">Add New Account</h3>
@@ -92,7 +98,8 @@
         <input type="hidden" id="editingAccId" value="" />
         <div>
           <label class="text-xs font-semibold text-gray-600">Account Name</label>
-          <input type="text" id="accName" placeholder="e.g., Main Checking, Freedom Card" required class="w-full border p-2 rounded-lg mt-1" />
+          <input type="text" id="accName" placeholder="e.g., Main Checking, Freedom Card" required
+            class="w-full border p-2 rounded-lg mt-1" />
         </div>
         <div class="grid grid-cols-2 gap-2">
           <div>
@@ -106,22 +113,26 @@
           </div>
           <div>
             <label class="text-xs font-semibold text-gray-600">Initial Balance ($)</label>
-            <input type="number" step="0.01" id="accBalance" placeholder="0.00" value="0.00" class="w-full border p-2 rounded-lg mt-1" />
+            <input type="number" step="0.01" id="accBalance" placeholder="0.00" value="0.00"
+              class="w-full border p-2 rounded-lg mt-1" />
           </div>
         </div>
         <div>
           <label class="text-xs font-semibold text-gray-600">Institution / Bank</label>
-          <input type="text" id="accInstitution" placeholder="e.g., Chase, Wells Fargo, Local CU" class="w-full border p-2 rounded-lg mt-1" />
+          <input type="text" id="accInstitution" placeholder="e.g., Chase, Wells Fargo, Local CU"
+            class="w-full border p-2 rounded-lg mt-1" />
         </div>
         <div>
           <label class="text-xs font-semibold text-gray-600">Account Number (or Last 4 Digits)</label>
           <input type="text" id="accNumber" placeholder="e.g., ****1234" class="w-full border p-2 rounded-lg mt-1" />
         </div>
         <div class="pt-2 space-y-2">
-          <button type="submit" id="submitBtn" class="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold shadow">
+          <button type="submit" id="submitBtn"
+            class="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold shadow">
             Create Account
           </button>
-          <button type="button" id="deleteBtn" onclick="handleDeleteFromModal()" class="w-full bg-red-50 text-red-600 border border-red-200 py-2 rounded-lg font-semibold shadow-sm hidden">
+          <button type="button" id="deleteBtn" onclick="handleDeleteFromModal()"
+            class="w-full bg-red-50 text-red-600 border border-red-200 py-2 rounded-lg font-semibold shadow-sm hidden">
             Delete Account
           </button>
         </div>
@@ -130,7 +141,8 @@
   </div>
 
   <!-- Add/Edit Transaction Modal -->
-  <div id="tx-modal" class="fixed inset-0 bg-black/50 hidden flex items-end sm:items-center justify-center p-0 sm:p-4 z-50">
+  <div id="tx-modal"
+    class="fixed inset-0 bg-black/50 hidden flex items-end sm:items-center justify-center p-0 sm:p-4 z-50">
     <div class="bg-white w-full max-w-md rounded-t-2xl sm:rounded-2xl p-6 space-y-4 max-h-[90vh] overflow-y-auto">
       <div class="flex justify-between items-center">
         <h3 id="tx-modal-title" class="font-bold text-lg">Add Transaction</h3>
@@ -142,13 +154,15 @@
         <!-- Description (Optional) -->
         <div>
           <label class="text-xs font-semibold text-gray-600">Description</label>
-          <input type="text" id="txDesc" placeholder="e.g., Grocery Store, Paycheck" class="w-full border p-2 rounded-lg mt-1" />
+          <input type="text" id="txDesc" placeholder="e.g., Grocery Store, Paycheck"
+            class="w-full border p-2 rounded-lg mt-1" />
         </div>
 
         <!-- Dynamic Payer / Payee Field (Optional) -->
         <div>
           <label id="txPayeeLabel" class="text-xs font-semibold text-gray-600">Payee</label>
-          <input type="text" id="txPayee" placeholder="e.g., Walmart, Employer" class="w-full border p-2 rounded-lg mt-1" />
+          <input type="text" id="txPayee" placeholder="e.g., Walmart, Employer"
+            class="w-full border p-2 rounded-lg mt-1" />
         </div>
 
         <!-- Type & Amount -->
@@ -162,7 +176,8 @@
           </div>
           <div>
             <label class="text-xs font-semibold text-gray-600">Amount ($)</label>
-            <input type="number" step="0.01" id="txAmount" placeholder="0.00" required class="w-full border p-2 rounded-lg mt-1" />
+            <input type="number" step="0.01" id="txAmount" placeholder="0.00" required
+              class="w-full border p-2 rounded-lg mt-1" />
           </div>
         </div>
 
@@ -196,29 +211,35 @@
         <!-- Tags -->
         <div>
           <label class="text-xs font-semibold text-gray-600">Tags (comma-separated)</label>
-          <input type="text" id="txTags" placeholder="e.g., groceries, vacation, tax" class="w-full border p-2 rounded-lg mt-1" />
+          <input type="text" id="txTags" placeholder="e.g., groceries, vacation, tax"
+            class="w-full border p-2 rounded-lg mt-1" />
         </div>
 
         <!-- Receipt Upload with Remove Attachment Button -->
         <div>
           <label class="text-xs font-semibold text-gray-600">Receipt Image / Screenshot</label>
           <div class="flex items-center gap-2 mt-1">
-            <input type="file" id="txReceiptFile" accept="image/*" multiple onchange="handleReceiptSelectionChange()" class="w-full border p-2 rounded-lg text-xs text-gray-600" />
-            <button type="button" id="btnRemoveReceipt" onclick="removeReceiptAttachment()" class="hidden bg-red-100 hover:bg-red-200 text-red-700 text-xs font-semibold px-3 py-2 rounded-lg transition-colors border border-red-200 whitespace-nowrap">
+            <input type="file" id="txReceiptFile" accept="image/*" multiple onchange="handleReceiptSelectionChange()"
+              class="w-full border p-2 rounded-lg text-xs text-gray-600" />
+            <button type="button" id="btnRemoveReceipt" onclick="removeReceiptAttachment()"
+              class="hidden bg-red-100 hover:bg-red-200 text-red-700 text-xs font-semibold px-3 py-2 rounded-lg transition-colors border border-red-200 whitespace-nowrap">
               Remove
             </button>
           </div>
           <div id="receiptPreview" class="mt-2 hidden">
-            <a id="receiptLink" href="#" target="_blank" class="text-xs text-blue-600 font-semibold underline block">View Current Receipt</a>
+            <a id="receiptLink" href="#" target="_blank"
+              class="text-xs text-blue-600 font-semibold underline block">View Current Receipt</a>
           </div>
         </div>
 
         <!-- Submit Buttons -->
         <div class="pt-2 space-y-2">
-          <button type="submit" id="txSubmitBtn" class="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold shadow">
+          <button type="submit" id="txSubmitBtn"
+            class="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold shadow">
             Save Transaction
           </button>
-          <button type="button" id="txDeleteBtn" onclick="handleDeleteTxFromModal()" class="w-full bg-red-50 text-red-600 border border-red-200 py-2 rounded-lg font-semibold shadow-sm hidden">
+          <button type="button" id="txDeleteBtn" onclick="handleDeleteTxFromModal()"
+            class="w-full bg-red-50 text-red-600 border border-red-200 py-2 rounded-lg font-semibold shadow-sm hidden">
             Delete Transaction
           </button>
         </div>
@@ -228,8 +249,8 @@
 
   <script>
     const SUPABASE_URL = "https://raujjskhrprnyigfmkwq.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJhdWpqc2tocnBybnlpZ2Zta3dxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY3Njk0NzEsImV4cCI6MjEwMjM0NTQ3MX0.jEjU9BOmzpQpm-A4UlD8xrP2dpeQSiIEjj7-IuMbiVEe";
-const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJhdWpqc2tocnBybnlpZ2Zta3dxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY3Njk0NzEsImV4cCI6MjEwMjM0NTQ3MX0.jEjU9BOmzpQpm-A4UlD8xrP2dpeQSiIEjj7-IuMbiVEe";
+    const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     let accounts = [];
     let transactions = [];
@@ -242,8 +263,8 @@ const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
       await fetchAccounts();
       try {
         sb.channel('db-changes')
-          .on('postgres_changes', { event: '*', schema: 'public', table: 'accounts' }, () => fetchAccounts())
-          .on('postgres_changes', { event: '*', schema: 'public', table: 'transactions' }, () => {
+          .on('postgres_changes', {event: '*', schema: 'public', table: 'accounts'}, () => fetchAccounts())
+          .on('postgres_changes', {event: '*', schema: 'public', table: 'transactions'}, () => {
             if (activeAccountId) fetchTransactions(activeAccountId);
             fetchAccounts();
           })
@@ -256,9 +277,9 @@ const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     async function fetchAccounts() {
       const list = document.getElementById('accounts-list');
       try {
-        let { data, error } = await sb.from('accounts').select('*, transactions(amount, status)').order('created_at', { ascending: true });
+        let {data, error} = await sb.from('accounts').select('*, transactions(amount, status)').order('created_at', {ascending: true});
         if (error) {
-          const simple = await sb.from('accounts').select('*').order('created_at', { ascending: true });
+          const simple = await sb.from('accounts').select('*').order('created_at', {ascending: true});
           if (simple.error) throw simple.error;
           data = simple.data;
         }
@@ -291,7 +312,7 @@ const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
       list.innerHTML = accounts.map(acc => {
         const initialBal = parseFloat(acc.initial_balance || 0);
         const txList = Array.isArray(acc.transactions) ? acc.transactions : [];
-        
+
         const totalTxSum = txList.reduce((sum, tx) => sum + parseFloat(tx.amount || 0), 0);
         const currentBal = initialBal + totalTxSum;
 
@@ -339,10 +360,10 @@ const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
       const instText = acc.institution ? acc.institution : '';
       const numText = acc.account_number ? `(${acc.account_number})` : '';
-      
+
       document.getElementById('tx-acc-name').textContent = acc.name;
       document.getElementById('tx-acc-sub').textContent = `${acc.type} ${[instText, numText].filter(Boolean).join(' • ')}`;
-      
+
       await fetchTransactions(accId);
     }
 
@@ -357,14 +378,14 @@ const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
       if (!accId) return;
       const list = document.getElementById('transactions-list');
       try {
-        const { data, error } = await sb.from('transactions').select('*').eq('account_id', accId).order('date', { ascending: false });
+        const {data, error} = await sb.from('transactions').select('*').eq('account_id', accId).order('date', {ascending: false});
         if (error) throw error;
-        
+
         transactions = data || [];
 
         const acc = accounts.find(a => a.id === accId);
         const initialBal = parseFloat(acc ? acc.initial_balance : 0);
-        
+
         const totalTxSum = transactions.reduce((sum, tx) => sum + parseFloat(tx.amount || 0), 0);
         document.getElementById('tx-acc-balance').textContent = `$${(initialBal + totalTxSum).toFixed(2)}`;
 
@@ -404,15 +425,13 @@ const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
       filterContainer.classList.remove('hidden');
 
-      let html = `<button onclick="setTagFilter(null)" class="px-2 py-0.5 text-xs font-medium rounded-full ${
-        selectedTagFilter === null ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-      }">All</button>`;
+      let html = `<button onclick="setTagFilter(null)" class="px-2 py-0.5 text-xs font-medium rounded-full ${selectedTagFilter === null ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+        }">All</button>`;
 
       allTags.forEach(tag => {
         const isSelected = selectedTagFilter === tag;
-        html += `<button onclick="setTagFilter('${tag}')" class="px-2 py-0.5 text-xs font-medium rounded-full ${
-          isSelected ? 'bg-blue-600 text-white' : 'bg-blue-50 text-blue-700 hover:bg-blue-100'
-        }">#${tag}</button>`;
+        html += `<button onclick="setTagFilter('${tag}')" class="px-2 py-0.5 text-xs font-medium rounded-full ${isSelected ? 'bg-blue-600 text-white' : 'bg-blue-50 text-blue-700 hover:bg-blue-100'
+          }">#${tag}</button>`;
       });
 
       chipsContainer.innerHTML = html;
@@ -426,7 +445,7 @@ const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     function renderTransactions() {
       const list = document.getElementById('transactions-list');
-      
+
       let filteredTx = transactions;
       if (selectedTagFilter) {
         filteredTx = transactions.filter(tx => Array.isArray(tx.tags) && tx.tags.includes(selectedTagFilter));
@@ -482,11 +501,10 @@ const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
               <button 
                 onclick="event.stopPropagation(); toggleTxStatus('${tx.id}', '${status}')" 
                 title="Status: ${status}. Click to toggle"
-                class="px-2 py-0.5 text-xs font-bold rounded-full transition-colors ${
-                  isPending 
-                    ? 'bg-amber-100 text-amber-700 hover:bg-amber-200' 
-                    : 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200'
-                }">
+                class="px-2 py-0.5 text-xs font-bold rounded-full transition-colors ${isPending
+            ? 'bg-amber-100 text-amber-700 hover:bg-amber-200'
+            : 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200'
+          }">
                 ${isPending ? 'P' : 'R'}
               </button>
               <button onclick="event.stopPropagation(); deleteTx('${tx.id}', '${displayTitle}')" class="text-red-400 hover:text-red-600 text-base font-bold px-1">&times;</button>
@@ -498,7 +516,7 @@ const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     async function toggleTxStatus(id, currentStatus) {
       const newStatus = currentStatus === 'pending' ? 'reconciled' : 'pending';
-      const { error } = await sb.from('transactions').update({ status: newStatus }).eq('id', id);
+      const {error} = await sb.from('transactions').update({status: newStatus}).eq('id', id);
       if (error) {
         alert("Error updating status: " + error.message);
         return;
@@ -544,7 +562,7 @@ const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
       const preview = document.getElementById('receiptPreview');
       const link = document.getElementById('receiptLink');
       const removeBtn = document.getElementById('btnRemoveReceipt');
-      
+
       currentReceiptUrl = null;
       removeReceiptFlag = false;
 
@@ -595,7 +613,7 @@ const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
       toggleTxModal(true);
     }
 
-async function handleTxSubmit(e) {
+    async function handleTxSubmit(e) {
       e.preventDefault();
       const submitBtn = document.getElementById('txSubmitBtn');
       submitBtn.disabled = true;
@@ -609,7 +627,7 @@ async function handleTxSubmit(e) {
       let amount = parseFloat(document.getElementById('txAmount').value) || 0;
       const date = document.getElementById('txDate').value;
       const status = document.getElementById('txStatus').value;
-      
+
       const rawTags = document.getElementById('txTags').value;
       const tags = rawTags
         .split(',')
@@ -636,7 +654,7 @@ async function handleTxSubmit(e) {
           const fileExt = file.name.split('.').pop();
           const fileName = `${Date.now()}_${Math.random().toString(36).substring(2, 7)}.${fileExt}`;
 
-          const { data: uploadData, error: uploadError } = await sb.storage
+          const {data: uploadData, error: uploadError} = await sb.storage
             .from('receipts')
             .upload(fileName, file);
 
@@ -647,7 +665,7 @@ async function handleTxSubmit(e) {
             return;
           }
 
-          const { data: publicUrlData } = sb.storage
+          const {data: publicUrlData} = sb.storage
             .from('receipts')
             .getPublicUrl(fileName);
 
@@ -672,9 +690,9 @@ async function handleTxSubmit(e) {
 
       let error;
       if (editId) {
-        ({ error } = await sb.from('transactions').update(payload).eq('id', editId));
+        ({error} = await sb.from('transactions').update(payload).eq('id', editId));
       } else {
-        ({ error } = await sb.from('transactions').insert([payload]));
+        ({error} = await sb.from('transactions').insert([payload]));
       }
 
       submitBtn.disabled = false;
@@ -689,7 +707,7 @@ async function handleTxSubmit(e) {
       fetchTransactions(activeAccountId);
       fetchAccounts();
     }
-    
+
     async function handleDeleteTxFromModal() {
       const id = document.getElementById('editingTxId').value;
       const desc = document.getElementById('txDesc').value || 'this transaction';
@@ -697,7 +715,7 @@ async function handleTxSubmit(e) {
 
       if (!confirm(`Are you sure you want to delete transaction "${desc}"?`)) return;
 
-      const { error } = await sb.from('transactions').delete().eq('id', id);
+      const {error} = await sb.from('transactions').delete().eq('id', id);
       if (error) {
         alert("Error deleting transaction: " + error.message);
         return;
@@ -710,7 +728,7 @@ async function handleTxSubmit(e) {
 
     async function deleteTx(id, description = 'this transaction') {
       if (!confirm(`Delete "${description}"?`)) return;
-      const { error } = await sb.from('transactions').delete().eq('id', id);
+      const {error} = await sb.from('transactions').delete().eq('id', id);
       if (error) {
         alert("Error deleting transaction: " + error.message);
         return;
@@ -755,13 +773,13 @@ async function handleTxSubmit(e) {
       const institution = document.getElementById('accInstitution').value;
       const account_number = document.getElementById('accNumber').value;
 
-      const payload = { name, type, initial_balance, institution, account_number };
+      const payload = {name, type, initial_balance, institution, account_number};
 
       let error;
       if (editId) {
-        ({ error } = await sb.from('accounts').update(payload).eq('id', editId));
+        ({error} = await sb.from('accounts').update(payload).eq('id', editId));
       } else {
-        ({ error } = await sb.from('accounts').insert([payload]));
+        ({error} = await sb.from('accounts').insert([payload]));
       }
 
       if (error) {
@@ -780,7 +798,7 @@ async function handleTxSubmit(e) {
 
       if (!confirm(`Are you sure you want to delete "${name}"?`)) return;
 
-      const { error } = await sb.from('transactions').delete().eq('id', id);
+      const {error} = await sb.from('transactions').delete().eq('id', id);
       if (error) {
         alert("Error deleting account: " + error.message);
         return;
@@ -803,4 +821,5 @@ async function handleTxSubmit(e) {
     });
   </script>
 </body>
+
 </html>
