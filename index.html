@@ -1,399 +1,543 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Household Budget</title>
-  <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <!-- Cropper.js CSS -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
-  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
-  <meta http-equiv="Pragma" content="no-cache" />
-  <meta http-equiv="Expires" content="0" />
-  <link rel="icon" href="data:;base64,iVBORw0KGgo=" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#fdf8f6',
+              100: '#f2e8e5',
+              200: '#eaddd7',
+              600: '#8c4a32',
+              700: '#733b27',
+              800: '#5c2f1f',
+            }
+          }
+        }
+      }
+    }
+  </script>
 </head>
+<body class="bg-stone-100 text-stone-800 min-h-screen flex flex-col font-sans">
 
-<body class="bg-gray-100 text-gray-900 antialiased min-h-screen pb-10">
-
-  <!-- Main View -->
-  <div id="accounts-view">
-    <!-- Header -->
-    <div class="bg-blue-600 text-white p-4 font-bold text-lg flex justify-between items-center shadow-md">
-      <span>Household Budget</span>
-      <div class="flex gap-2">
-        <button onclick="openTxModal()"
-          class="bg-blue-500 hover:bg-blue-400 text-white px-3 py-1 rounded-full text-sm font-semibold shadow border border-blue-400">
-          + Add Tx
-        </button>
-        <button onclick="openAccountModal()"
-          class="bg-white text-blue-600 px-3 py-1 rounded-full text-sm font-semibold shadow">
-          + New Account
-        </button>
-      </div>
-    </div>
-
-    <!-- Content Container -->
-    <div class="max-w-md mx-auto p-4 space-y-4">
-      <div class="space-y-3">
-        <h2 class="text-xl font-bold text-gray-800">Your Accounts</h2>
-        <div id="accounts-list" class="space-y-3">
-          <p class="text-sm text-gray-500">Loading accounts...</p>
+  <!-- Header / Navigation -->
+  <header class="bg-brand-700 text-white shadow-md">
+    <div class="max-w-7xl mx-auto px-4 py-4 flex flex-col sm:flex-row justify-between items-center gap-4">
+      <div class="flex items-center space-x-3 cursor-pointer" onclick="showAccountsView()">
+        <div class="bg-white/10 p-2 rounded-xl">
+          <i class="fa-solid fa-wallet text-2xl"></i>
         </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Transactions View -->
-  <div id="transactions-view" class="hidden">
-    <!-- Header -->
-    <div class="bg-blue-600 text-white p-4 flex items-center justify-between shadow-md">
-      <button onclick="showAccountsView()" class="text-white font-semibold text-sm flex items-center gap-1">
-        &larr; Accounts
-      </button>
-      <span id="tx-header-title" class="font-bold text-lg">Account Details</span>
-      <button onclick="openTxModal()"
-        class="bg-white text-blue-600 px-3 py-1 rounded-full text-sm font-semibold shadow">
-        + Add Tx
-      </button>
-    </div>
-
-    <div class="max-w-md mx-auto p-4 space-y-4">
-      <!-- Account Overview Card -->
-      <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex justify-between items-center">
         <div>
-          <h2 id="tx-acc-name" class="text-lg font-bold text-gray-900"></h2>
-          <p id="tx-acc-sub" class="text-xs text-gray-500 uppercase tracking-wider"></p>
-        </div>
-        <div class="text-right space-y-1">
-          <div>
-            <div id="tx-acc-balance" class="text-lg font-extrabold text-gray-900">$0.00</div>
-            <div class="text-[10px] text-gray-500 font-semibold uppercase tracking-wider">Current Balance</div>
-          </div>
-          <div>
-            <div id="tx-acc-cleared" class="text-sm font-bold text-emerald-600">$0.00</div>
-            <div class="text-[10px] text-emerald-700 font-semibold uppercase tracking-wider">Cleared Balance</div>
-          </div>
+          <h1 class="text-xl font-bold tracking-tight">Household Budget</h1>
+          <p class="text-xs text-stone-200">Financial Tracking & Accounts</p>
         </div>
       </div>
-
-      <!-- Tag Filter Bar -->
-      <div id="tag-filter-container"
-        class="hidden flex flex-wrap items-center gap-1.5 bg-white p-3 rounded-xl border border-gray-100 shadow-sm">
-        <span class="text-xs font-semibold text-gray-500 mr-1">Filter by Tag:</span>
-        <div id="tag-filter-chips" class="flex flex-wrap gap-1"></div>
-      </div>
-
-      <!-- Transactions List -->
-      <div class="space-y-3">
-        <h3 class="text-md font-bold text-gray-800">Transaction History</h3>
-        <div id="transactions-list" class="space-y-2">
-          <p class="text-sm text-gray-500">Loading transactions...</p>
-        </div>
+      
+      <div class="flex items-center gap-3">
+        <button onclick="showAccountsView()" id="nav-accounts-btn" class="px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-sm font-medium transition flex items-center gap-2">
+          <i class="fa-solid fa-building-columns"></i> Accounts
+        </button>
+        <button onclick="openAccountModal()" class="px-4 py-2 rounded-lg bg-white text-brand-700 hover:bg-stone-100 text-sm font-semibold transition flex items-center gap-2 shadow-sm">
+          <i class="fa-solid fa-plus"></i> Add Account
+        </button>
       </div>
     </div>
-  </div>
+  </header>
 
-  <!-- Add/Edit Account Modal -->
-  <div id="account-modal"
-    class="fixed inset-0 bg-black/50 hidden flex items-end sm:items-center justify-center p-0 sm:p-4 z-50">
-    <div class="bg-white w-full max-w-md rounded-t-2xl sm:rounded-2xl p-6 space-y-4">
+  <!-- Main Container -->
+  <main class="max-w-7xl mx-auto px-4 py-6 flex-1 w-full">
+
+    <!-- View 1: Accounts Dashboard -->
+    <section id="view-accounts" class="space-y-6">
       <div class="flex justify-between items-center">
-        <h3 id="modal-title" class="font-bold text-lg">Add New Account</h3>
-        <button onclick="toggleAccountModal(false)" class="text-gray-400 text-2xl">&times;</button>
-      </div>
-      <form id="account-form" onsubmit="handleAccountSubmit(event)" class="space-y-3">
-        <input type="hidden" id="editingAccId" value="" />
         <div>
-          <label class="text-xs font-semibold text-gray-600">Account Name</label>
-          <input type="text" id="accName" placeholder="e.g., Main Checking, Freedom Card" required
-            class="w-full border p-2 rounded-lg mt-1" />
+          <h2 class="text-2xl font-bold text-stone-900">Your Accounts</h2>
+          <p class="text-sm text-stone-500">Select an account to view and manage transactions.</p>
         </div>
-        <div class="grid grid-cols-2 gap-2">
+        <div id="total-net-worth" class="text-right">
+          <span class="text-xs text-stone-500 block">Total Net Worth</span>
+          <span class="text-xl font-bold text-stone-900" id="net-worth-amount">$0.00</span>
+        </div>
+      </div>
+
+      <!-- Accounts Grid -->
+      <div id="accounts-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- Skeleton loader -->
+        <div class="bg-white rounded-2xl p-6 shadow-sm border border-stone-200 animate-pulse h-40"></div>
+        <div class="bg-white rounded-2xl p-6 shadow-sm border border-stone-200 animate-pulse h-40"></div>
+      </div>
+    </section>
+
+    <!-- View 2: Transaction Ledger -->
+    <section id="view-transactions" class="hidden space-y-6">
+      <!-- Back & Account Header -->
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-6 rounded-2xl shadow-sm border border-stone-200">
+        <div class="flex items-center gap-4">
+          <button onclick="showAccountsView()" class="p-2 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-600 transition">
+            <i class="fa-solid fa-arrow-left"></i>
+          </button>
           <div>
-            <label class="text-xs font-semibold text-gray-600">Account Type</label>
-            <select id="accType" class="w-full border p-2 rounded-lg mt-1 bg-white">
+            <div class="flex items-center gap-2">
+              <h2 id="active-account-name" class="text-2xl font-bold text-stone-900">Account Name</h2>
+              <span id="active-account-badge" class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-stone-100 text-stone-600 uppercase">Checking</span>
+            </div>
+            <p id="active-account-institution" class="text-sm text-stone-500">Institution • ****1234</p>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end">
+          <div class="text-right">
+            <span class="text-xs text-stone-500 block">Current Balance</span>
+            <span id="active-account-balance" class="text-xl font-bold text-stone-900">$0.00</span>
+          </div>
+          <div class="flex gap-2">
+            <button onclick="openAccountModal(activeAccountId)" class="p-2.5 rounded-xl border border-stone-300 hover:bg-stone-50 text-stone-700 transition" title="Edit Account">
+              <i class="fa-solid fa-gear"></i>
+            </button>
+            <button onclick="openTxModal()" class="px-4 py-2.5 rounded-xl bg-brand-700 hover:bg-brand-800 text-white font-medium text-sm transition flex items-center gap-2 shadow-sm">
+              <i class="fa-solid fa-plus"></i> Add Transaction
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Search & Filters -->
+      <div class="flex flex-col sm:flex-row gap-3">
+        <div class="relative flex-1">
+          <i class="fa-solid fa-search absolute left-3.5 top-3.5 text-stone-400 text-sm"></i>
+          <input type="text" id="tx-search" placeholder="Search payee, description, or tags..." oninput="filterTransactions()" class="w-full pl-10 pr-4 py-2.5 bg-white border border-stone-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-600 focus:border-transparent">
+        </div>
+        <div class="flex gap-2">
+          <select id="tx-filter-tag" onchange="filterTransactions()" class="px-4 py-2.5 bg-white border border-stone-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-600">
+            <option value="">All Tags</option>
+          </select>
+          <select id="tx-filter-status" onchange="filterTransactions()" class="px-4 py-2.5 bg-white border border-stone-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-600">
+            <option value="">All Statuses</option>
+            <option value="cleared">Cleared</option>
+            <option value="pending">Pending</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Transaction List -->
+      <div class="space-y-3" id="transaction-list">
+        <!-- Transactions loaded dynamically -->
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Account Modal (Add/Edit) -->
+  <div id="account-modal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl border border-stone-200">
+      <div class="flex justify-between items-center mb-4">
+        <h3 id="modal-title" class="text-lg font-bold text-stone-900">Add New Account</h3>
+        <button onclick="toggleAccountModal(false)" class="text-stone-400 hover:text-stone-600">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <form id="account-form" onsubmit="handleAccountSubmit(event)" class="space-y-4">
+        <input type="hidden" id="editingAccId">
+        
+        <div>
+          <label class="block text-xs font-semibold text-stone-600 uppercase mb-1">Account Name</label>
+          <input type="text" id="accName" required placeholder="e.g., Chase Checking" class="w-full px-3 py-2 border border-stone-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-600">
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-stone-600 uppercase mb-1">Type</label>
+            <select id="accType" class="w-full px-3 py-2 border border-stone-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-600">
               <option value="checking">Checking</option>
               <option value="savings">Savings</option>
               <option value="credit">Credit Card</option>
               <option value="cash">Cash</option>
+              <option value="investment">Investment</option>
+              <option value="loan">Loan</option>
             </select>
           </div>
           <div>
-            <label class="text-xs font-semibold text-gray-600">Initial Balance ($)</label>
-            <input type="number" step="0.01" id="accBalance" placeholder="0.00" value="0.00"
-              class="w-full border p-2 rounded-lg mt-1" />
+            <label class="block text-xs font-semibold text-stone-600 uppercase mb-1">Initial Balance ($)</label>
+            <input type="number" step="0.01" id="accBalance" required value="0.00" class="w-full px-3 py-2 border border-stone-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-600">
           </div>
         </div>
-        <div>
-          <label class="text-xs font-semibold text-gray-600">Institution / Bank</label>
-          <input type="text" id="accInstitution" placeholder="e.g., Chase, Wells Fargo, Local CU"
-            class="w-full border p-2 rounded-lg mt-1" />
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-stone-600 uppercase mb-1">Institution (Optional)</label>
+            <input type="text" id="accInstitution" placeholder="e.g., Chase" class="w-full px-3 py-2 border border-stone-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-600">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-stone-600 uppercase mb-1">Account # (Last 4)</label>
+            <input type="text" id="accNumber" maxlength="4" placeholder="1234" class="w-full px-3 py-2 border border-stone-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-600">
+          </div>
         </div>
-        <div>
-          <label class="text-xs font-semibold text-gray-600">Account Number (or Last 4 Digits)</label>
-          <input type="text" id="accNumber" placeholder="e.g., ****1234" class="w-full border p-2 rounded-lg mt-1" />
-        </div>
-        <div class="pt-2 space-y-2">
-          <button type="submit" id="submitBtn"
-            class="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold shadow">
-            Create Account
-          </button>
-          <button type="button" id="deleteBtn" onclick="handleDeleteFromModal()"
-            class="w-full bg-red-50 text-red-600 border border-red-200 py-2 rounded-lg font-semibold shadow-sm hidden">
+
+        <div class="flex justify-between items-center pt-4 border-t border-stone-100">
+          <button type="button" id="deleteBtn" onclick="handleDeleteFromModal()" class="hidden px-4 py-2 bg-red-50 text-red-600 hover:bg-red-100 rounded-xl text-sm font-medium transition">
             Delete Account
           </button>
+          <div class="flex gap-2 ml-auto">
+            <button type="button" onclick="toggleAccountModal(false)" class="px-4 py-2 border border-stone-300 hover:bg-stone-50 rounded-xl text-sm font-medium text-stone-700 transition">Cancel</button>
+            <button type="submit" id="submitBtn" class="px-4 py-2 bg-brand-700 hover:bg-brand-800 text-white rounded-xl text-sm font-medium transition shadow-sm">Save Account</button>
+          </div>
         </div>
       </form>
     </div>
   </div>
 
-  <!-- Add/Edit Transaction Modal -->
-  <div id="tx-modal"
-    class="fixed inset-0 bg-black/50 hidden flex items-end sm:items-center justify-center p-0 sm:p-4 z-50">
-    <div class="bg-white w-full max-w-md rounded-t-2xl sm:rounded-2xl p-6 space-y-4 max-h-[90vh] overflow-y-auto">
-      <div class="flex justify-between items-center">
-        <h3 id="tx-modal-title" class="font-bold text-lg">Add Transaction</h3>
-        <button onclick="toggleTxModal(false)" class="text-gray-400 text-2xl">&times;</button>
+  <!-- Transaction Modal (Add/Edit) -->
+  <div id="tx-modal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
+    <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl border border-stone-200 my-8">
+      <div class="flex justify-between items-center mb-4">
+        <h3 id="tx-modal-title" class="text-lg font-bold text-stone-900">Add Transaction</h3>
+        <button onclick="toggleTxModal(false)" class="text-stone-400 hover:text-stone-600">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
       </div>
-      <form id="tx-form" onsubmit="handleTxSubmit(event)" class="space-y-3">
-        <input type="hidden" id="editingTxId" value="" />
 
-        <!-- Account Selection (Required) -->
-        <div>
-          <label class="text-xs font-semibold text-gray-600">Account</label>
-          <select id="txAccount" required class="w-full border p-2 rounded-lg mt-1 bg-white font-medium text-gray-800">
-            <!-- Dynamically populated -->
-          </select>
-        </div>
+      <form id="tx-form" onsubmit="handleTxSubmit(event)" class="space-y-4">
+        <input type="hidden" id="editingTxId">
 
-        <!-- Description (Optional) -->
-        <div>
-          <label class="text-xs font-semibold text-gray-600">Description</label>
-          <input type="text" id="txDesc" placeholder="e.g., Grocery Store, Paycheck"
-            class="w-full border p-2 rounded-lg mt-1" />
-        </div>
-
-        <!-- Dynamic Payer / Payee Field (Optional) -->
-        <div>
-          <label id="txPayeeLabel" class="text-xs font-semibold text-gray-600">Payee</label>
-          <input type="text" id="txPayee" placeholder="e.g., Walmart, Employer"
-            class="w-full border p-2 rounded-lg mt-1" />
-        </div>
-
-        <!-- Type & Amount -->
-        <div class="grid grid-cols-2 gap-2">
+        <div class="grid grid-cols-2 gap-3">
           <div>
-            <label class="text-xs font-semibold text-gray-600">Type</label>
-            <select id="txType" onchange="updatePayeeLabel()" class="w-full border p-2 rounded-lg mt-1 bg-white">
+            <label class="block text-xs font-semibold text-stone-600 uppercase mb-1">Account</label>
+            <select id="txAccount" required class="w-full px-3 py-2 border border-stone-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-600">
+              <!-- Populated dynamically -->
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-stone-600 uppercase mb-1">Type</label>
+            <select id="txType" onchange="updatePayeeLabel()" class="w-full px-3 py-2 border border-stone-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-600">
               <option value="expense">Expense (-)</option>
               <option value="income">Income (+)</option>
             </select>
           </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
           <div>
-            <label class="text-xs font-semibold text-gray-600">Amount ($)</label>
-            <input type="number" step="0.01" id="txAmount" placeholder="0.00" required
-              class="w-full border p-2 rounded-lg mt-1" />
+            <label id="txPayeeLabel" class="block text-xs font-semibold text-stone-600 uppercase mb-1">Payee / Merchant</label>
+            <input type="text" id="txPayee" placeholder="e.g., Amazon, Grocery Store" class="w-full px-3 py-2 border border-stone-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-600">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-stone-600 uppercase mb-1">Amount ($)</label>
+            <input type="number" step="0.01" id="txAmount" required placeholder="0.00" class="w-full px-3 py-2 border border-stone-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-600">
           </div>
         </div>
 
-        <!-- Payment Type Dropdown -->
         <div>
-          <label class="text-xs font-semibold text-gray-600">Payment Type</label>
-          <select id="txPaymentMethod" class="w-full border p-2 rounded-lg mt-1 bg-white">
-            <option value="debit">Debit Card</option>
-            <option value="credit">Credit Card</option>
-            <option value="cash">Cash</option>
-            <option value="check">Check</option>
-            <option value="bank_transfer">Bank Transfer</option>
-          </select>
+          <label class="block text-xs font-semibold text-stone-600 uppercase mb-1">Description (Optional)</label>
+          <input type="text" id="txDesc" placeholder="e.g., Weekly groceries, visit with Joanee" class="w-full px-3 py-2 border border-stone-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-600">
         </div>
 
-        <!-- Date & Status -->
-        <div class="grid grid-cols-2 gap-2">
+        <div class="grid grid-cols-3 gap-3">
           <div>
-            <label class="text-xs font-semibold text-gray-600">Date</label>
-            <input type="date" id="txDate" required class="w-full border p-2 rounded-lg mt-1" />
+            <label class="block text-xs font-semibold text-stone-600 uppercase mb-1">Date</label>
+            <input type="date" id="txDate" required class="w-full px-3 py-2 border border-stone-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-600">
           </div>
           <div>
-            <label class="text-xs font-semibold text-gray-600">Status</label>
-            <select id="txStatus" class="w-full border p-2 rounded-lg mt-1 bg-white">
+            <label class="block text-xs font-semibold text-stone-600 uppercase mb-1">Payment Method</label>
+            <select id="txPaymentMethod" class="w-full px-3 py-2 border border-stone-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-600">
+              <option value="debit">Debit Card</option>
+              <option value="credit">Credit Card</option>
+              <option value="ach">ACH / Transfer</option>
+              <option value="cash">Cash</option>
+              <option value="check">Check</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-stone-600 uppercase mb-1">Status</label>
+            <select id="txStatus" class="w-full px-3 py-2 border border-stone-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-600">
+              <option value="cleared">Cleared</option>
               <option value="pending">Pending</option>
-              <option value="reconciled">Reconciled</option>
             </select>
           </div>
         </div>
 
-        <!-- Tags -->
         <div>
-          <label class="text-xs font-semibold text-gray-600">Tags (comma-separated)</label>
-          <input type="text" id="txTags" placeholder="e.g., groceries, vacation, tax"
-            class="w-full border p-2 rounded-lg mt-1" />
+          <label class="block text-xs font-semibold text-stone-600 uppercase mb-1">Tags (comma separated)</label>
+          <input type="text" id="txTags" placeholder="groceries, household, utilities" class="w-full px-3 py-2 border border-stone-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-600">
         </div>
 
-        <!-- Receipt Attachments Section -->
+        <!-- Receipt Attachment Section -->
         <div>
-          <label class="text-xs font-semibold text-gray-600 block mb-1">Attach Receipts / Screenshots</label>
-          
-          <div class="grid grid-cols-2 gap-2 mt-1">
-            <!-- Option A: Choose Existing Files -->
-            <label class="flex items-center justify-center gap-1.5 bg-gray-100 hover:bg-gray-200 border border-gray-300 text-gray-700 text-xs font-semibold py-2 px-3 rounded-lg cursor-pointer text-center">
-              <span>📁 Upload File</span>
-              <input type="file" id="txReceiptFile" accept="image/*" class="hidden" onchange="handleImageInput(this)" />
-            </label>
-
-            <!-- Option B: Direct Camera Capture -->
-            <label class="flex items-center justify-center gap-1.5 bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-700 text-xs font-semibold py-2 px-3 rounded-lg cursor-pointer text-center">
-              <span>📷 Take Photo</span>
-              <input type="file" id="txCameraFile" accept="image/*" capture="environment" class="hidden" onchange="handleImageInput(this)" />
-            </label>
+          <label class="block text-xs font-semibold text-stone-600 uppercase mb-1">Receipt Image (Optional)</label>
+          <div id="receipt-dropzone" class="border-2 border-dashed border-stone-300 rounded-xl p-4 text-center hover:border-brand-600 transition cursor-pointer bg-stone-50">
+            <input type="file" id="txReceiptFile" accept="image/*" class="hidden" onchange="handleReceiptFileSelect(event)">
+            <div onclick="document.getElementById('txReceiptFile').click()" class="space-y-1">
+              <i class="fa-solid fa-cloud-arrow-up text-stone-400 text-xl"></i>
+              <p class="text-xs text-stone-600 font-medium">Click to upload receipt or drag & drop</p>
+              <p class="text-[10px] text-stone-400">PNG, JPG up to 5MB</p>
+            </div>
           </div>
-
-          <!-- Selection Status Text -->
-          <p id="fileSelectionStatus" class="text-[11px] text-gray-500 mt-1.5 font-medium hidden"></p>
-
-          <!-- Container for Existing Individual Receipts -->
-          <div id="receiptPreview" class="mt-3 hidden space-y-1.5">
-            <span class="text-xs font-semibold text-gray-500 block">Existing Attachments:</span>
-            <div id="receiptLinksList" class="space-y-1"></div>
-          </div>
+          <div id="receipt-preview-container" class="mt-2 flex flex-wrap gap-2"></div>
         </div>
 
-        <!-- Submit Buttons -->
-        <div class="pt-2 space-y-2">
-          <button type="submit" id="txSubmitBtn"
-            class="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold shadow">
-            Save Transaction
+        <div class="flex justify-between items-center pt-4 border-t border-stone-100">
+          <button type="button" id="txDeleteBtn" onclick="handleDeleteTxFromModal()" class="hidden px-4 py-2 bg-red-50 text-red-600 hover:bg-red-100 rounded-xl text-sm font-medium transition">
+            Delete
           </button>
-          <button type="button" id="txDeleteBtn" onclick="handleDeleteTxFromModal()"
-            class="w-full bg-red-50 text-red-600 border border-red-200 py-2 rounded-lg font-semibold shadow-sm hidden">
-            Delete Transaction
-          </button>
+          <div class="flex gap-2 ml-auto">
+            <button type="button" onclick="toggleTxModal(false)" class="px-4 py-2 border border-stone-300 hover:bg-stone-50 rounded-xl text-sm font-medium text-stone-700 transition">Cancel</button>
+            <button type="submit" id="txSubmitBtn" class="px-4 py-2 bg-brand-700 hover:bg-brand-800 text-white rounded-xl text-sm font-medium transition shadow-sm">Save Transaction</button>
+          </div>
         </div>
       </form>
     </div>
   </div>
 
-  <!-- Image Cropper Modal -->
-  <div id="cropModal" class="fixed inset-0 bg-black/75 hidden flex items-center justify-center p-4 z-50">
-    <div class="bg-white w-full max-w-lg rounded-2xl p-4 space-y-3 flex flex-col">
-      <div class="flex justify-between items-center">
-        <h3 class="font-bold text-lg text-gray-800">Crop Image / Receipt</h3>
-        <button type="button" onclick="cancelCrop()" class="text-gray-400 text-2xl">&times;</button>
-      </div>
-      <div class="max-h-[60vh] overflow-hidden flex justify-center bg-gray-100 rounded-lg">
-        <img id="imageToCrop" src="" alt="Source" class="max-w-full block">
-      </div>
-      <div class="flex justify-end gap-2 pt-2">
-        <button type="button" onclick="cancelCrop()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-semibold text-sm">Cancel</button>
-        <button type="button" onclick="confirmCrop()" class="px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold text-sm shadow">Crop & Add</button>
-      </div>
+  <!-- Fullscreen Image Preview Modal -->
+  <div id="image-modal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4" onclick="closeImageModal()">
+    <div class="relative max-w-4xl max-h-[90vh]">
+      <button onclick="closeImageModal()" class="absolute -top-10 right-0 text-white hover:text-stone-300 text-2xl p-2">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+      <img id="fullscreen-image" src="" alt="Receipt Fullscreen" class="max-w-full max-h-[85vh] rounded-xl object-contain shadow-2xl">
     </div>
   </div>
 
-  <!-- Cropper.js Script -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
-
+  <!-- JavaScript Application Logic -->
   <script>
-    const SUPABASE_URL = "https://raujjskhrprnyigfmkwq.supabase.co";
-    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJhdWpqc2tocnBybnlpZ2Zta3dxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY3Njk0NzEsImV4cCI6MjEwMjM0NTQ3MX0.jEjU9BOmzpQpm-A4UlD8xrP2dpeQSiIEjj7-IuMbiVE";
-    
-    // Standard initialization without custom global headers override
-    const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    // Supabase Configuration
+    const SUPABASE_URL = 'https://xrwkujbyubmggwuxuqbz.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhyd3VramJ5dWJtbWd3dXh1cWJ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjktNTE0OTU0LCJzdHJpbmc5YW5nZXN0ZXItc0VqZ1MiLCJvY2Vq4Vz50Vz5v0Vz5v0Vz5v0Vz5v0Vz5v0Vz5v0Vz5v0Vz5v0Vz5v0Vz5v0Vz';
+    const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
     let accounts = [];
     let transactions = [];
     let activeAccountId = null;
-    let selectedTagFilter = null;
     let activeReceiptFiles = [];
     let activeReceiptUrls = [];
 
-    let cropper = null;
-
+    // Initialize App
     async function init() {
       await fetchAccounts();
-      try {
-        sb.channel('db-changes')
-          .on('postgres_changes', { event: '*', schema: 'public', table: 'accounts' }, () => fetchAccounts())
-          .on('postgres_changes', { event: '*', schema: 'public', table: 'transactions' }, () => {
-            if (activeAccountId) fetchTransactions(activeAccountId);
-            fetchAccounts();
-          })
-          .subscribe();
-      } catch (err) {
-        console.warn("Realtime subscription warning:", err);
+      setupEventListeners();
+    }
+
+    function setupEventListeners() {
+      // Drag and drop for receipts
+      const dropzone = document.getElementById('receipt-dropzone');
+      if (dropzone) {
+        dropzone.addEventListener('dragover', (e) => { e.preventDefault(); dropzone.classList.add('border-brand-600', 'bg-brand-50'); });
+        dropzone.addEventListener('dragleave', () => { dropzone.classList.remove('border-brand-600', 'bg-brand-50'); });
+        dropzone.addEventListener('drop', (e) => {
+          e.preventDefault();
+          dropzone.classList.remove('border-brand-600', 'bg-brand-50');
+          if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+            handleFiles(e.dataTransfer.files);
+          }
+        });
       }
     }
 
+    // --- Data Fetching ---
     async function fetchAccounts() {
-      const list = document.getElementById('accounts-list');
       try {
-        let { data, error } = await sb.from('accounts').select('*, transactions(amount, status)').order('created_at', { ascending: true });
-        if (error) {
-          const simple = await sb.from('accounts').select('*').order('created_at', { ascending: true });
-          if (simple.error) throw simple.error;
-          data = simple.data;
-        }
+        const { data: accs, error: accErr } = await sb.from('accounts').select('*').order('name');
+        if (accErr) throw accErr;
 
-        accounts = data || [];
-        renderAccounts();
+        // Fetch all transactions to compute balances accurately
+        const { data: txs, error: txErr } = await sb.from('transactions').select('*');
+        if (txErr) throw txErr;
+
+        accounts = accs || [];
+        const allTxs = txs || [];
+
+        renderAccountsGrid(accounts, allTxs);
+        updateNetWorth(accounts, allTxs);
+        populateAccountDropdown();
+
+        if (activeAccountId) {
+          const activeAcc = accounts.find(a => a.id === activeAccountId);
+          if (activeAcc) {
+            updateActiveAccountHeader(activeAcc, allTxs);
+          }
+        }
       } catch (err) {
         console.error("Error fetching accounts:", err);
-        list.innerHTML = `
-          <div class="bg-red-50 p-4 rounded-xl border border-red-200 text-center space-y-2">
-            <p class="text-red-700 font-semibold text-sm">Error loading accounts</p>
-            <p class="text-xs text-red-500">${err.message || 'Check database connection'}</p>
-            <button onclick="fetchAccounts()" class="text-xs bg-red-600 text-white px-3 py-1 rounded-md font-semibold mt-1">Try Again</button>
-          </div>
-        `;
       }
     }
 
-    function renderAccounts() {
-      const list = document.getElementById('accounts-list');
-      if (accounts.length === 0) {
-        list.innerHTML = `
-          <div class="bg-white p-6 rounded-xl border border-gray-200 text-center space-y-2">
-            <p class="text-gray-600 font-medium">No accounts found.</p>
-            <p class="text-xs text-gray-400">Tap "+ New Account" at the top to add your checking, savings, or credit card!</p>
+    async function fetchTransactions(accountId) {
+      activeAccountId = accountId;
+      try {
+        const { data, error } = await sb
+          .from('transactions')
+          .select('*')
+          .eq('account_id', accountId)
+          .order('date', { ascending: false });
+
+        if (error) throw error;
+        transactions = data || [];
+        
+        const activeAcc = accounts.find(a => a.id === accountId);
+        if (activeAcc) {
+          const allTxsForNet = await sb.from('transactions').select('*');
+          updateActiveAccountHeader(activeAcc, allTxsForNet.data || []);
+        }
+
+        populateTagFilter();
+        renderTransactions(transactions);
+        showTransactionsView();
+      } catch (err) {
+        console.error("Error fetching transactions:", err);
+      }
+    }
+
+    // --- Rendering Views ---
+    function showAccountsView() {
+      activeAccountId = null;
+      document.getElementById('view-accounts').classList.remove('hidden');
+      document.getElementById('view-transactions').classList.add('hidden');
+      document.getElementById('nav-accounts-btn').classList.add('bg-white/20');
+      fetchAccounts();
+    }
+
+    function showTransactionsView() {
+      document.getElementById('view-accounts').classList.add('hidden');
+      document.getElementById('view-transactions').classList.remove('hidden');
+      document.getElementById('nav-accounts-btn').classList.remove('bg-white/20');
+    }
+
+    function renderAccountsGrid(accs, allTxs) {
+      const grid = document.getElementById('accounts-grid');
+      if (!accs || accs.length === 0) {
+        grid.innerHTML = `
+          <div class="col-span-full bg-white rounded-2xl p-12 text-center border border-stone-200">
+            <i class="fa-solid fa-wallet text-4xl text-stone-300 mb-3"></i>
+            <h3 class="text-lg font-bold text-stone-700">No accounts found</h3>
+            <p class="text-sm text-stone-500 mb-4">Get started by creating your first account.</p>
+            <button onclick="openAccountModal()" class="px-4 py-2 bg-brand-700 text-white rounded-xl text-sm font-medium">Add Account</button>
           </div>
         `;
         return;
       }
-      list.innerHTML = accounts.map(acc => {
-        const initialBal = parseFloat(acc.initial_balance || 0);
-        const txList = Array.isArray(acc.transactions) ? acc.transactions : [];
 
-        const totalTxSum = txList.reduce((sum, tx) => sum + parseFloat(tx.amount || 0), 0);
-        const currentBal = initialBal + totalTxSum;
-
-        const clearedTxSum = txList.reduce((sum, tx) => {
-          return tx.status === 'reconciled' ? sum + parseFloat(tx.amount || 0) : sum;
-        }, 0);
-        const clearedBal = initialBal + clearedTxSum;
-
-        const instText = acc.institution ? acc.institution : '';
-        const numText = acc.account_number ? `(${acc.account_number})` : '';
-        const subDetails = [instText, numText].filter(Boolean).join(' ');
+      grid.innerHTML = accs.map(acc => {
+        const accTxs = allTxs.filter(t => t.account_id === acc.id);
+        const txSum = accTxs.reduce((sum, t) => sum + Number(t.amount || 0), 0);
+        const currentBalance = Number(acc.initial_balance || 0) + txSum;
+        
+        let typeColor = 'bg-blue-50 text-blue-700';
+        if (acc.type === 'savings') typeColor = 'bg-emerald-50 text-emerald-700';
+        if (acc.type === 'credit') typeColor = 'bg-amber-50 text-amber-700';
+        if (acc.type === 'loan') typeColor = 'bg-rose-50 text-rose-700';
 
         return `
-          <div onclick="showTransactionsView('${acc.id}')" class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex justify-between items-center cursor-pointer hover:border-blue-300 transition-all">
+          <div onclick="fetchTransactions('${acc.id}')" class="bg-white rounded-2xl p-6 shadow-sm border border-stone-200 hover:border-brand-600 hover:shadow-md transition cursor-pointer flex flex-col justify-between">
             <div>
-              <p class="font-semibold text-gray-900">${acc.name}</p>
-              <p class="text-xs text-gray-500 uppercase tracking-wider">${acc.type} ${subDetails ? '• ' + subDetails : ''}</p>
-              <div class="mt-2 text-xs">
-                <button onclick="event.stopPropagation(); openAccountModal('${acc.id}')" class="text-blue-600 font-semibold hover:underline">Edit Account</button>
+              <div class="flex justify-between items-start mb-3">
+                <span class="px-2.5 py-1 rounded-full text-xs font-semibold uppercase ${typeColor}">${acc.type}</span>
+                <span class="text-xs text-stone-400 font-mono">${acc.institution || ''} ${acc.account_number ? '****' + acc.account_number : ''}</span>
+              </div>
+              <h3 class="text-lg font-bold text-stone-900 mb-1">${escapeHtml(acc.name)}</h3>
+            </div>
+            <div class="mt-4 pt-4 border-t border-stone-100 flex justify-between items-end">
+              <span class="text-xs text-stone-500">Balance</span>
+              <span class="text-xl font-extrabold ${currentBalance < 0 ? 'text-red-600' : 'text-stone-900'}">$${currentBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function updateNetWorth(accs, allTxs) {
+      let total = 0;
+      accs.forEach(acc => {
+        const accTxs = allTxs.filter(t => t.account_id === acc.id);
+        const txSum = accTxs.reduce((sum, t) => sum + Number(t.amount || 0), 0);
+        total += Number(acc.initial_balance || 0) + txSum;
+      });
+      document.getElementById('net-worth-amount').textContent = `$${total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    }
+
+    function updateActiveAccountHeader(acc, allTxs) {
+      document.getElementById('active-account-name').textContent = acc.name;
+      const badge = document.getElementById('active-account-badge');
+      badge.textContent = acc.type;
+      document.getElementById('active-account-institution').textContent = `${acc.institution || 'Personal'} ${acc.account_number ? '• ****' + acc.account_number : ''}`;
+
+      const accTxs = allTxs.filter(t => t.account_id === acc.id);
+      const txSum = accTxs.reduce((sum, t) => sum + Number(t.amount || 0), 0);
+      const balance = Number(acc.initial_balance || 0) + txSum;
+      document.getElementById('active-account-balance').textContent = `$${balance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    }
+
+    function renderTransactions(txs) {
+      const list = document.getElementById('transaction-list');
+      if (!txs || txs.length === 0) {
+        list.innerHTML = `
+          <div class="bg-white rounded-2xl p-12 text-center border border-stone-200">
+            <i class="fa-solid fa-receipt text-4xl text-stone-300 mb-3"></i>
+            <h3 class="text-lg font-bold text-stone-700">No transactions found</h3>
+            <p class="text-sm text-stone-500 mb-4">Add your first transaction to this account.</p>
+            <button onclick="openTxModal()" class="px-4 py-2 bg-brand-700 text-white rounded-xl text-sm font-medium">Add Transaction</button>
+          </div>
+        `;
+        return;
+      }
+
+      list.innerHTML = txs.map(t => {
+        const isIncome = Number(t.amount) >= 0;
+        const amtFormatted = `${isIncome ? '+' : ''}$${Number(t.amount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        const hasReceipt = t.receipt_url && t.receipt_url.trim() !== '';
+        const receiptUrls = hasReceipt ? t.receipt_url.split(',').map(u => u.trim()).filter(Boolean) : [];
+
+        // Formatting per user request:
+        // Payee/Payer is large text on top (if description exists). 
+        // If description exists, description is smaller on the second line.
+        // If NO description, leave the second line blank rather than repeating the Payee.
+        const payeeText = t.payee || t.description || 'Transaction';
+        const descText = t.description && t.payee ? t.description : '';
+
+        return `
+          <div class="bg-white rounded-2xl p-4 sm:p-5 shadow-sm border border-stone-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 hover:border-stone-300 transition">
+            <div class="flex items-start gap-4">
+              <div class="w-10 h-10 rounded-xl ${isIncome ? 'bg-emerald-50 text-emerald-600' : 'bg-stone-100 text-stone-600'} flex items-center justify-center font-bold flex-shrink-0 mt-0.5">
+                ${isIncome ? '<i class="fa-solid fa-arrow-down"></i>' : '<i class="fa-solid fa-arrow-up"></i>'}
+              </div>
+              <div>
+                <h4 class="text-base font-bold text-stone-900">${escapeHtml(payeeText)}</h4>
+                ${descText ? `<p class="text-xs text-stone-500 mt-0.5">${escapeHtml(descText)}</p>` : ''}
+                
+                <div class="flex flex-wrap items-center gap-2 mt-2">
+                  ${hasReceipt ? `
+                    <div class="flex items-center gap-1 bg-stone-100 text-stone-700 px-2.5 py-1 rounded-lg text-xs font-medium">
+                      <i class="fa-solid fa-receipt text-brand-700"></i>
+                      <span>Receipt</span>
+                      <div class="flex gap-1 ml-1.5">
+                        ${receiptUrls.map((url, idx) => `<button onclick="openImageModal('${url}')" class="underline hover:text-brand-700">#${idx+1}</button>`).join('')}
+                      </div>
+                    </div>
+                  ` : ''}
+                  <span class="text-xs text-stone-400">${t.date}</span>
+                  ${t.status === 'pending' ? '<span class="px-2 py-0.5 bg-amber-50 text-amber-700 rounded text-[10px] font-semibold uppercase">Pending</span>' : ''}
+                  ${Array.isArray(t.tags) ? t.tags.map(tag => `<span class="px-2 py-0.5 bg-brand-50 text-brand-700 rounded text-[10px] font-semibold">#${escapeHtml(tag)}</span>`).join('') : ''}
+                </div>
               </div>
             </div>
-            <div class="text-right space-y-1">
-              <div>
-                <div class="text-base font-extrabold text-gray-900">$${currentBal.toFixed(2)}</div>
-                <div class="text-[10px] text-gray-500 font-semibold uppercase tracking-wider">Current</div>
-              </div>
-              <div>
-                <div class="text-xs font-bold text-emerald-600">$${clearedBal.toFixed(2)}</div>
-                <div class="text-[10px] text-emerald-700 font-semibold uppercase tracking-wider">Cleared</div>
+
+            <div class="flex items-center gap-4 w-full sm:w-auto justify-between sm:justify-end pt-3 sm:pt-0 border-t sm:border-t-0 border-stone-100">
+              <span class="text-lg font-extrabold ${isIncome ? 'text-emerald-600' : 'text-stone-900'}">${amtFormatted}</span>
+              <div class="flex items-center gap-1">
+                <button onclick="openTxModal('${t.id}')" class="p-2 text-stone-400 hover:text-stone-700 rounded-lg transition" title="Edit">
+                  <i class="fa-solid fa-pen text-xs"></i>
+                </button>
+                <button onclick="deleteTx('${t.id}', '${escapeHtml(payeeText)}')" class="p-2 text-stone-400 hover:text-red-600 rounded-lg transition" title="Delete">
+                  <i class="fa-solid fa-trash text-xs"></i>
+                </button>
               </div>
             </div>
           </div>
@@ -401,299 +545,112 @@
       }).join('');
     }
 
-    async function showTransactionsView(accId) {
-      activeAccountId = accId;
-      selectedTagFilter = null;
-      const acc = accounts.find(a => a.id === accId);
-      if (!acc) return;
-
-      document.getElementById('accounts-view').classList.add('hidden');
-      document.getElementById('transactions-view').classList.remove('hidden');
-
-      const instText = acc.institution ? acc.institution : '';
-      const numText = acc.account_number ? `(${acc.account_number})` : '';
-
-      document.getElementById('tx-acc-name').textContent = acc.name;
-      document.getElementById('tx-acc-sub').textContent = `${acc.type} ${[instText, numText].filter(Boolean).join(' • ')}`;
-
-      await fetchTransactions(accId);
-    }
-
-    function showAccountsView() {
-      activeAccountId = null;
-      selectedTagFilter = null;
-      document.getElementById('transactions-view').classList.add('hidden');
-      document.getElementById('accounts-view').classList.remove('hidden');
-    }
-
-    async function fetchTransactions(accId) {
-      if (!accId) return;
-      const list = document.getElementById('transactions-list');
-      try {
-        const { data, error } = await sb.from('transactions').select('*').eq('account_id', accId).order('date', { ascending: false });
-        if (error) throw error;
-
-        transactions = data || [];
-
-        const acc = accounts.find(a => a.id === accId);
-        const initialBal = parseFloat(acc ? acc.initial_balance : 0);
-
-        const totalTxSum = transactions.reduce((sum, tx) => sum + parseFloat(tx.amount || 0), 0);
-        document.getElementById('tx-acc-balance').textContent = `$${(initialBal + totalTxSum).toFixed(2)}`;
-
-        const clearedTxSum = transactions.reduce((sum, tx) => {
-          return tx.status === 'reconciled' ? sum + parseFloat(tx.amount || 0) : sum;
-        }, 0);
-        document.getElementById('tx-acc-cleared').textContent = `$${(initialBal + clearedTxSum).toFixed(2)}`;
-
-        renderTagFilters();
-        renderTransactions();
-      } catch (err) {
-        console.error("Error fetching transactions:", err);
-        list.innerHTML = `
-          <div class="bg-red-50 p-4 rounded-xl border border-red-200 text-center space-y-2">
-            <p class="text-red-700 font-semibold text-sm">Error loading transactions</p>
-            <p class="text-xs text-red-500">${err.message || 'Check database connection'}</p>
-          </div>
-        `;
-      }
-    }
-
-    function renderTagFilters() {
-      const filterContainer = document.getElementById('tag-filter-container');
-      const chipsContainer = document.getElementById('tag-filter-chips');
-
-      const allTags = new Set();
-      transactions.forEach(tx => {
-        if (Array.isArray(tx.tags)) {
-          tx.tags.forEach(t => allTags.add(t));
+    function populateTagFilter() {
+      const select = document.getElementById('tx-filter-tag');
+      const currentVal = select.value;
+      const tagsSet = new Set();
+      transactions.forEach(t => {
+        if (Array.isArray(t.tags)) {
+          t.tags.forEach(tag => tagsSet.add(tag));
         }
       });
 
-      if (allTags.size === 0) {
-        filterContainer.classList.add('hidden');
-        return;
-      }
+      let html = '<option value="">All Tags</option>';
+      tagsSet.forEach(tag => {
+        html += `<option value="${tag}" ${currentVal === tag ? 'selected' : ''}>#${tag}</option>`;
+      });
+      select.innerHTML = html;
+    }
 
-      filterContainer.classList.remove('hidden');
+    function filterTransactions() {
+      const query = document.getElementById('tx-search').value.toLowerCase();
+      const selectedTag = document.getElementById('tx-filter-tag').value;
+      const selectedStatus = document.getElementById('tx-filter-status').value;
 
-      let html = `<button onclick="setTagFilter(null)" class="px-2 py-0.5 text-xs font-medium rounded-full ${selectedTagFilter === null ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-        }">All</button>`;
+      const filtered = transactions.filter(t => {
+        const payeeMatch = (t.payee || '').toLowerCase().includes(query);
+        const descMatch = (t.description || '').toLowerCase().includes(query);
+        const tagMatchQuery = Array.isArray(t.tags) && t.tags.some(tag => tag.toLowerCase().includes(query));
+        const matchesSearch = !query || payeeMatch || descMatch || tagMatchQuery;
 
-      allTags.forEach(tag => {
-        const isSelected = selectedTagFilter === tag;
-        html += `<button onclick="setTagFilter('${tag}')" class="px-2 py-0.5 text-xs font-medium rounded-full ${isSelected ? 'bg-blue-600 text-white' : 'bg-blue-50 text-blue-700 hover:bg-blue-100'
-          }">#${tag}</button>`;
+        const matchesTag = !selectedTag || (Array.isArray(t.tags) && t.tags.includes(selectedTag));
+        const matchesStatus = !selectedStatus || t.status === selectedStatus;
+
+        return matchesSearch && matchesTag && matchesStatus;
       });
 
-      chipsContainer.innerHTML = html;
+      renderTransactions(filtered);
     }
 
-    function setTagFilter(tag) {
-      selectedTagFilter = tag;
-      renderTagFilters();
-      renderTransactions();
+    // --- Helpers ---
+    function escapeHtml(str) {
+      if (!str) return '';
+      return str.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;').replace('"', '&quot;').replace("'", '&#039;');
     }
 
-    function renderTransactions() {
-      const list = document.getElementById('transactions-list');
-
-      let filteredTx = transactions;
-      if (selectedTagFilter) {
-        filteredTx = transactions.filter(tx => Array.isArray(tx.tags) && tx.tags.includes(selectedTagFilter));
-      }
-
-      if (filteredTx.length === 0) {
-        list.innerHTML = `
-          <div class="bg-white p-6 rounded-xl border border-gray-200 text-center space-y-2">
-            <p class="text-gray-600 font-medium">${selectedTagFilter ? 'No transactions with this tag.' : 'No transactions yet.'}</p>
-            <p class="text-xs text-gray-400">${selectedTagFilter ? 'Try picking a different tag filter above.' : 'Tap "+ Add Tx" above to log a deposit or spending.'}</p>
-          </div>
-        `;
-        return;
-      }
-
-      list.innerHTML = filteredTx.map(tx => {
-        const amt = parseFloat(tx.amount || 0);
-        const isPositive = amt >= 0;
-        const status = tx.status || 'pending';
-        const isPending = status === 'pending';
-        const tags = Array.isArray(tx.tags) ? tx.tags : [];
-
-        const displayTitle = tx.description || tx.payee || 'Transaction';
-        const subTitle = (tx.description && tx.payee) ? tx.payee : '';
-
-        const tagsHtml = tags.length > 0 ? `
-          <div class="flex flex-wrap gap-1 mt-1">
-            ${tags.map(t => `<span class="text-[10px] bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded font-medium">#${t}</span>`).join('')}
-          </div>
-        ` : '';
-
-        const receiptUrls = tx.receipt_url ? tx.receipt_url.split(',').map(u => u.trim()).filter(Boolean) : [];
-        const receiptBtn = receiptUrls.length > 0 ? `
-          <div class="flex gap-1 flex-wrap mt-0.5">
-            ${receiptUrls.map((url, idx) => `
-              <a href="${url}" target="_blank" onclick="event.stopPropagation()" class="text-[11px] bg-gray-100 hover:bg-gray-200 text-gray-600 px-1.5 py-0.5 rounded flex items-center gap-1 font-medium border border-gray-200">
-                📎 Receipt ${receiptUrls.length > 1 ? idx + 1 : ''}
-              </a>
-            `).join('')}
-          </div>
-        ` : '';
-
-        return `
-          <div onclick="openTxModal('${tx.id}')" class="bg-white p-3 rounded-xl shadow-sm border border-gray-100 flex justify-between items-center cursor-pointer hover:border-blue-300 transition-all">
-            <div>
-              <div class="flex items-center gap-2">
-                <p class="font-semibold text-gray-900 text-sm">${displayTitle}</p>
-              </div>
-              ${receiptBtn}
-              ${subTitle ? `<p class="text-xs text-gray-500 font-medium mt-0.5">${subTitle}</p>` : ''}
-              <p class="text-xs text-gray-400 mt-0.5">${tx.date}</p>
-              ${tagsHtml}
-            </div>
-            <div class="flex items-center gap-2">
-              <span class="font-bold text-sm ${isPositive ? 'text-emerald-600' : 'text-gray-900'}">
-                ${isPositive ? '+' : ''}$${amt.toFixed(2)}
-              </span>
-              <button 
-                onclick="event.stopPropagation(); toggleTxStatus('${tx.id}', '${status}')" 
-                title="Status: ${status}. Click to toggle"
-                class="px-2 py-0.5 text-xs font-bold rounded-full transition-colors ${isPending
-            ? 'bg-amber-100 text-amber-700 hover:bg-amber-200'
-            : 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200'
-          }">
-                ${isPending ? 'P' : 'R'}
-              </button>
-              <button onclick="event.stopPropagation(); deleteTx('${tx.id}', '${displayTitle}')" class="text-red-400 hover:text-red-600 text-base font-bold px-1">&times;</button>
-            </div>
-          </div>
-        `;
-      }).join('');
-    }
-
-    async function toggleTxStatus(id, currentStatus) {
-      const newStatus = currentStatus === 'pending' ? 'reconciled' : 'pending';
-      const { error } = await sb.from('transactions').update({ status: newStatus }).eq('id', id);
-      if (error) {
-        alert("Error updating status: " + error.message);
-        return;
-      }
-      fetchTransactions(activeAccountId);
-      fetchAccounts();
+    function populateAccountDropdown(selectedId = null) {
+      const select = document.getElementById('txAccount');
+      if (!select) return;
+      select.innerHTML = accounts.map(acc => `
+        <option value="${acc.id}" ${selectedId === acc.id || (!selectedId && activeAccountId === acc.id) ? 'selected' : ''}>${escapeHtml(acc.name)} (${acc.type})</option>
+      `).join('');
     }
 
     function updatePayeeLabel() {
       const type = document.getElementById('txType').value;
       const label = document.getElementById('txPayeeLabel');
-      if (label) {
-        label.textContent = type === 'income' ? 'Payer' : 'Payee';
+      if (type === 'income') {
+        label.textContent = "Payer / Source";
+        document.getElementById('txPayee').placeholder = "e.g., Employer, Client";
+      } else {
+        label.textContent = "Payee / Merchant";
+        document.getElementById('txPayee').placeholder = "e.g., Amazon, Grocery Store";
       }
     }
 
-    function populateAccountDropdown(selectedId = null) {
-      const select = document.getElementById('txAccount');
-      if (!accounts || accounts.length === 0) {
-        select.innerHTML = `<option value="">No accounts available</option>`;
-        return;
+    // --- Receipt File Handling ---
+    function handleReceiptFileSelect(e) {
+      if (e.target.files && e.target.files.length > 0) {
+        handleFiles(e.target.files);
       }
-
-      select.innerHTML = accounts.map(acc => {
-        const isSelected = (selectedId && acc.id === selectedId) || (!selectedId && activeAccountId && acc.id === activeAccountId);
-        return `<option value="${acc.id}" ${isSelected ? 'selected' : ''}>${acc.name} (${acc.type})</option>`;
-      }).join('');
     }
 
-    // --- Image Cropper Integration Logic ---
-    function handleImageInput(input) {
-      const file = input.files && input.files[0];
-      if (!file) return;
-
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const imageToCrop = document.getElementById('imageToCrop');
-        imageToCrop.src = e.target.result;
-        document.getElementById('cropModal').classList.remove('hidden');
-
-        if (cropper) {
-          cropper.destroy();
+    function handleFiles(files) {
+      for (const file of files) {
+        if (!file.type.startsWith('image/')) {
+          alert('Please upload an image file for the receipt.');
+          continue;
         }
-
-        cropper = new Cropper(imageToCrop, {
-          aspectRatio: NaN,
-          viewMode: 1,
-        });
-      };
-      reader.readAsDataURL(file);
-      input.value = '';
-    }
-
-    function cancelCrop() {
-      document.getElementById('cropModal').classList.add('hidden');
-      if (cropper) {
-        cropper.destroy();
-        cropper = null;
+        activeReceiptFiles.push(file);
       }
-    }
-
-    function confirmCrop() {
-      if (!cropper) return;
-
-      const canvas = cropper.getCroppedCanvas({
-        maxWidth: 1200,
-        maxHeight: 1200,
-        imageSmoothingQuality: 'high',
-      });
-
-      canvas.toBlob((blob) => {
-        const croppedFile = new File([blob], `receipt_${Date.now()}.jpg`, { type: 'image/jpeg' });
-        activeReceiptFiles.push(croppedFile);
-
-        cancelCrop();
-        renderModalReceiptList();
-      }, 'image/jpeg', 0.85);
+      renderModalReceiptList();
     }
 
     function renderModalReceiptList() {
-      const preview = document.getElementById('receiptPreview');
-      const container = document.getElementById('receiptLinksList');
-      const statusText = document.getElementById('fileSelectionStatus');
-
-      const totalCount = activeReceiptUrls.length + activeReceiptFiles.length;
-
-      if (totalCount === 0) {
-        preview.classList.add('hidden');
-        container.innerHTML = '';
-        statusText.classList.add('hidden');
-        return;
-      }
-
-      preview.classList.remove('hidden');
-      statusText.textContent = `✓ ${totalCount} attachment${totalCount > 1 ? 's' : ''} ready`;
-      statusText.classList.remove('hidden');
+      const container = document.getElementById('receipt-preview-container');
+      if (!container) return;
 
       let html = '';
-
-      activeReceiptUrls.forEach((url, idx) => {
+      // Existing uploaded URLs
+      activeReceiptUrls.forEach((url, index) => {
         html += `
-          <div class="flex items-center justify-between bg-gray-50 border border-gray-200 p-2 rounded-lg text-xs">
-            <a href="${url}" target="_blank" class="text-blue-600 font-semibold underline truncate max-w-[200px]">
-              Receipt URL ${activeReceiptUrls.length > 1 ? idx + 1 : ''}
-            </a>
-            <button type="button" onclick="removeExistingReceipt(${idx})" class="bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 text-[11px] font-semibold px-2 py-0.5 rounded transition-colors">
-              Remove
+          <div class="relative group w-16 h-16 rounded-lg border border-stone-200 overflow-hidden bg-stone-100 flex items-center justify-center">
+            <img src="${url}" class="w-full h-full object-cover">
+            <button type="button" onclick="removeExistingReceiptUrl(${index})" class="absolute inset-0 bg-black/40 text-white opacity-0 group-hover:opacity-100 flex items-center justify-center transition">
+              <i class="fa-solid fa-trash text-xs"></i>
             </button>
           </div>
         `;
       });
 
-      activeReceiptFiles.forEach((file, idx) => {
+      // New files selected locally
+      activeReceiptFiles.forEach((file, index) => {
+        const objectUrl = URL.createObjectURL(file);
         html += `
-          <div class="flex items-center justify-between bg-blue-50 border border-blue-200 p-2 rounded-lg text-xs">
-            <span class="text-blue-700 font-semibold truncate max-w-[200px]">
-              📷 Cropped: ${file.name}
-            </span>
-            <button type="button" onclick="removeNewReceipt(${idx})" class="bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 text-[11px] font-semibold px-2 py-0.5 rounded transition-colors">
-              Remove
+          <div class="relative group w-16 h-16 rounded-lg border border-stone-200 overflow-hidden bg-stone-100 flex items-center justify-center">
+            <img src="${objectUrl}" class="w-full h-full object-cover">
+            <button type="button" onclick="removeNewReceiptFile(${index})" class="absolute inset-0 bg-black/40 text-white opacity-0 group-hover:opacity-100 flex items-center justify-center transition">
+              <i class="fa-solid fa-trash text-xs"></i>
             </button>
           </div>
         `;
@@ -702,286 +659,310 @@
       container.innerHTML = html;
     }
 
-    function removeExistingReceipt(index) {
+    function removeExistingReceiptUrl(index) {
       activeReceiptUrls.splice(index, 1);
       renderModalReceiptList();
     }
 
-    function removeNewReceipt(index) {
+    function removeNewReceiptFile(index) {
       activeReceiptFiles.splice(index, 1);
       renderModalReceiptList();
     }
 
-    function openTxModal(txId = null) {
-      if (accounts.length === 0) {
-        alert("Please create an account first before adding transactions.");
-        return;
-      }
+    function openImageModal(url) {
+      document.getElementById('fullscreen-image').src = url;
+      document.getElementById('image-modal').classList.remove('hidden');
+    }
 
+    function closeImageModal() {
+      document.getElementById('image-modal').classList.add('hidden');
+    }
+
+    // --- Transaction Modal Management ---
+    function openTxModal(txId = null) {
       const form = document.getElementById('tx-form');
       form.reset();
-      const deleteBtn = document.getElementById('txDeleteBtn');
-
       activeReceiptFiles = [];
       activeReceiptUrls = [];
+      const deleteBtn = document.getElementById('txDeleteBtn');
 
       if (txId) {
         const tx = transactions.find(t => t.id === txId);
         if (!tx) return;
 
-        const amt = parseFloat(tx.amount || 0);
         document.getElementById('tx-modal-title').textContent = "Edit Transaction";
         document.getElementById('txSubmitBtn').textContent = "Update Transaction";
         document.getElementById('editingTxId').value = tx.id;
+        
         populateAccountDropdown(tx.account_id);
+        const amt = Number(tx.amount);
+        document.getElementById('txType').value = amt >= 0 ? 'income' : 'expense';
+        updatePayeeLabel();
+        document.getElementById('txAmount').value = Math.abs(amt).toFixed(2);
         document.getElementById('txDesc').value = tx.description || '';
         document.getElementById('txPayee').value = tx.payee || '';
-        document.getElementById('txType').value = amt >= 0 ? 'income' : 'expense';
-        document.getElementById('txAmount').value = Math.abs(amt);
         document.getElementById('txPaymentMethod').value = tx.payment_method || 'debit';
         document.getElementById('txDate').value = tx.date || new Date().toISOString().split('T')[0];
         document.getElementById('txStatus').value = tx.status || 'pending';
         document.getElementById('txTags').value = Array.isArray(tx.tags) ? tx.tags.join(', ') : '';
 
-        if (tx.receipt_url) {
-          activeReceiptUrls = tx.receipt_url.split(',').map(u => u.trim()).filter(Boolean);
-        }
+        activeReceiptUrls = tx.receipt_url ? tx.receipt_url.split(',').map(u => u.trim()).filter(Boolean) : [];
+        renderModalReceiptList();
 
         deleteBtn.classList.remove('hidden');
       } else {
         document.getElementById('tx-modal-title').textContent = "Add Transaction";
         document.getElementById('txSubmitBtn').textContent = "Save Transaction";
-        document.getElementById('editingTxId').value = "";
-        populateAccountDropdown(activeAccountId);
-        document.getElementById('txPayee').value = "";
-        document.getElementById('txPaymentMethod').value = "debit";
+        document.getElementById('editingTxId').value = '';
+        populateAccountDropdown();
+        document.getElementById('txType').value = 'expense';
+        updatePayeeLabel();
         document.getElementById('txDate').value = new Date().toISOString().split('T')[0];
         document.getElementById('txStatus').value = 'pending';
-        document.getElementById('txTags').value = '';
+        renderModalReceiptList();
 
         deleteBtn.classList.add('hidden');
       }
 
-      renderModalReceiptList();
-      updatePayeeLabel();
-      toggleTxModal(true);
-    }
-
-    async function handleTxSubmit(e) {
-      e.preventDefault();
-      const submitBtn = document.getElementById('txSubmitBtn');
-      submitBtn.disabled = true;
-      submitBtn.textContent = "Saving...";
-
-      const editId = document.getElementById('editingTxId').value;
-      const targetAccountId = document.getElementById('txAccount').value;
-      const description = document.getElementById('txDesc').value;
-      const payee = document.getElementById('txPayee').value;
-      const payment_method = document.getElementById('txPaymentMethod').value;
-      const txType = document.getElementById('txType').value;
-      let amount = parseFloat(document.getElementById('txAmount').value) || 0;
-      const date = document.getElementById('txDate').value;
-      const status = document.getElementById('txStatus').value;
-
-      if (!targetAccountId) {
-        alert("Please select an account.");
-        submitBtn.disabled = false;
-        submitBtn.textContent = editId ? "Update Transaction" : "Save Transaction";
-        return;
-      }
-
-      const rawTags = document.getElementById('txTags').value;
-      const tags = rawTags
-        .split(',')
-        .map(t => t.trim().toLowerCase())
-        .filter(t => t.length > 0);
-
-      if (txType === 'expense' && amount > 0) {
-        amount = -amount;
-      }
-
-      let finalReceiptUrls = [...activeReceiptUrls];
-
-      if (activeReceiptFiles.length > 0) {
-        for (const file of activeReceiptFiles) {
-          const fileExt = file.name.split('.').pop();
-          const fileName = `${Date.now()}_${Math.random().toString(36).substring(2, 7)}.${fileExt}`;
-
-          const { error: uploadError } = await sb.storage
-            .from('receipts')
-            .upload(fileName, file);
-
-          if (uploadError) {
-            alert(`Error uploading file: ${uploadError.message}`);
-            submitBtn.disabled = false;
-            submitBtn.textContent = editId ? "Update Transaction" : "Save Transaction";
-            return;
-          }
-
-          const { data: publicUrlData } = sb.storage
-            .from('receipts')
-            .getPublicUrl(fileName);
-
-          finalReceiptUrls.push(publicUrlData.publicUrl);
-        }
-      }
-
-      const payload = {
-        account_id: targetAccountId,
-        description: description || payee || 'Transaction',
-        payee,
-        payment_method,
-        amount,
-        date,
-        status,
-        tags,
-        receipt_url: finalReceiptUrls.join(', ')
-      };
-
-      let error;
-      if (editId) {
-        ({ error } = await sb.from('transactions').update(payload).eq('id', editId));
-      } else {
-        ({ error } = await sb.from('transactions').insert([payload]));
-      }
-
-      submitBtn.disabled = false;
-
-      if (error) {
-        alert("Error saving transaction: " + error.message);
-        submitBtn.textContent = editId ? "Update Transaction" : "Save Transaction";
-        return;
-      }
-
-      toggleTxModal(false);
-      if (activeAccountId) {
-        fetchTransactions(activeAccountId);
-      }
-      fetchAccounts();
-    }
-
-    async function handleDeleteTxFromModal() {
-      const id = document.getElementById('editingTxId').value;
-      const desc = document.getElementById('txDesc').value || 'this transaction';
-      if (!id) return;
-
-      if (!confirm(`Are you sure you want to delete transaction "${desc}"?`)) return;
-
-      const { error } = await sb.from('transactions').delete().eq('id', id);
-      if (error) {
-        alert("Error deleting transaction: " + error.message);
-        return;
-      }
-
-      toggleTxModal(false);
-      if (activeAccountId) {
-        fetchTransactions(activeAccountId);
-      }
-      fetchAccounts();
-    }
-
-    async function deleteTx(id, description = 'this transaction') {
-      if (!confirm(`Delete "${description}"?`)) return;
-      const { error } = await sb.from('transactions').delete().eq('id', id);
-      if (error) {
-        alert("Error deleting transaction: " + error.message);
-        return;
-      }
-      if (activeAccountId) {
-        fetchTransactions(activeAccountId);
-      }
-      fetchAccounts();
-    }
-
-    function openAccountModal(accountId = null) {
-      const form = document.getElementById('account-form');
-      form.reset();
-      const deleteBtn = document.getElementById('deleteBtn');
-
-      if (accountId) {
-        const acc = accounts.find(a => a.id === accountId);
-        if (!acc) return;
-        document.getElementById('modal-title').textContent = "Edit Account";
-        document.getElementById('submitBtn').textContent = "Update Account";
-        document.getElementById('editingAccId').value = acc.id;
-        document.getElementById('accName').value = acc.name || '';
-        document.getElementById('accType').value = acc.type || 'checking';
-        document.getElementById('accBalance').value = acc.initial_balance || '0.00';
-        document.getElementById('accInstitution').value = acc.institution || '';
-        document.getElementById('accNumber').value = acc.account_number || '';
-        deleteBtn.classList.remove('hidden');
-      } else {
-        document.getElementById('modal-title').textContent = "Add New Account";
-        document.getElementById('submitBtn').textContent = "Create Account";
-        document.getElementById('editingAccId').value = "";
-        deleteBtn.classList.add('hidden');
-      }
-
-      toggleAccountModal(true);
-    }
-
-    async function handleAccountSubmit(e) {
-      e.preventDefault();
-      const submitBtn = document.getElementById('submitBtn');
-      submitBtn.disabled = true;
-
-      const editId = document.getElementById('editingAccId').value;
-      const payload = {
-        name: document.getElementById('accName').value,
-        type: document.getElementById('accType').value,
-        initial_balance: parseFloat(document.getElementById('accBalance').value) || 0,
-        institution: document.getElementById('accInstitution').value,
-        account_number: document.getElementById('accNumber').value
-      };
-
-      let error;
-      if (editId) {
-        ({ error } = await sb.from('accounts').update(payload).eq('id', editId));
-      } else {
-        ({ error } = await sb.from('accounts').insert([payload]));
-      }
-
-      submitBtn.disabled = false;
-
-      if (error) {
-        alert("Error saving account: " + error.message);
-        return;
-      }
-
-      toggleAccountModal(false);
-      fetchAccounts();
-    }
-
-    async function handleDeleteFromModal() {
-      const id = document.getElementById('editingAccId').value;
-      const name = document.getElementById('accName').value || 'this account';
-      if (!id) return;
-
-      if (!confirm(`Are you sure you want to delete "${name}"? This will also remove associated transactions.`)) return;
-
-      const { error } = await sb.from('accounts').delete().eq('id', id);
-      if (error) {
-        alert("Error deleting account: " + error.message);
-        return;
-      }
-
-      toggleAccountModal(false);
-      fetchAccounts();
-    }
-
-    function toggleAccountModal(show) {
-      const modal = document.getElementById('account-modal');
-      if (show) modal.classList.remove('hidden');
-      else modal.classList.add('hidden');
+      document.getElementById('tx-modal').classList.remove('hidden');
     }
 
     function toggleTxModal(show) {
       const modal = document.getElementById('tx-modal');
-      if (show) modal.classList.remove('hidden');
-      else modal.classList.add('hidden');
+      if (show) {
+        openTxModal();
+      } else {
+        modal.classList.add('hidden');
+      }
     }
 
-    window.onload = init;
+    async function handleTxSubmit(e) {
+      e.preventDefault();
+
+      const editingId = document.getElementById('editingTxId').value;
+      const accountId = document.getElementById('txAccount').value;
+      const description = document.getElementById('txDesc').value.trim();
+      const payee = document.getElementById('txPayee').value.trim();
+      const type = document.getElementById('txType').value;
+      const rawAmount = parseFloat(document.getElementById('txAmount').value || 0);
+      const paymentMethod = document.getElementById('txPaymentMethod').value;
+      const date = document.getElementById('txDate').value;
+      const status = document.getElementById('txStatus').value;
+      const tagsInput = document.getElementById('txTags').value;
+
+      const tags = tagsInput
+        ? tagsInput.split(',').map(t => t.trim().replace(/^#/, '')).filter(Boolean)
+        : [];
+
+      const finalAmount = type === 'expense' ? -Math.abs(rawAmount) : Math.abs(rawAmount);
+
+      const submitBtn = document.getElementById('txSubmitBtn');
+      submitBtn.disabled = true;
+      submitBtn.textContent = "Saving...";
+
+      try {
+        let uploadedUrls = [...activeReceiptUrls];
+
+        for (const file of activeReceiptFiles) {
+          const fileExt = file.name.split('.').pop() || 'jpg';
+          const fileName = `receipt_${Date.now()}_${Math.random().toString(36).substring(2, 7)}.${fileExt}`;
+          const filePath = `${fileName}`;
+
+          const { error: uploadError } = await sb.storage
+            .from('receipts')
+            .upload(filePath, file, { cacheControl: '3600', upsert: false });
+
+          if (uploadError) {
+            console.warn("Storage upload error (bucket 'receipts' may need setup):", uploadError);
+            throw new Error("Failed to upload receipt image: " + uploadError.message);
+          }
+
+          const { data: publicData } = sb.storage
+            .from('receipts')
+            .getPublicUrl(filePath);
+
+          if (publicData && publicData.publicUrl) {
+            uploadedUrls.push(publicData.publicUrl);
+          }
+        }
+
+        const receiptUrlString = uploadedUrls.join(', ');
+
+        const txData = {
+          account_id: accountId,
+          description: description || null,
+          payee: payee || null,
+          amount: finalAmount,
+          payment_method: paymentMethod,
+          date: date,
+          status: status,
+          tags: tags.length > 0 ? tags : null,
+          receipt_url: receiptUrlString || null
+        };
+
+        if (editingId) {
+          const { error } = await sb.from('transactions').update(txData).eq('id', editingId);
+          if (error) throw error;
+        } else {
+          const { error } = await sb.from('transactions').insert([txData]);
+          if (error) throw error;
+        }
+
+        toggleTxModal(false);
+        if (activeAccountId) {
+          await fetchTransactions(activeAccountId);
+        }
+        await fetchAccounts();
+      } catch (err) {
+        console.error("Error saving transaction:", err);
+        alert("Error saving transaction: " + (err.message || 'Unknown error'));
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = editingId ? "Update Transaction" : "Save Transaction";
+      }
+    }
+
+    async function deleteTx(id, title) {
+      if (!confirm(`Are you sure you want to delete "${title}"?`)) return;
+
+      try {
+        const { error } = await sb.from('transactions').delete().eq('id', id);
+        if (error) throw error;
+
+        if (activeAccountId) {
+          await fetchTransactions(activeAccountId);
+        }
+        await fetchAccounts();
+      } catch (err) {
+        console.error("Error deleting transaction:", err);
+        alert("Error deleting transaction: " + err.message);
+      }
+    }
+
+    async function handleDeleteTxFromModal() {
+      const editingId = document.getElementById('editingTxId').value;
+      if (!editingId) return;
+      const tx = transactions.find(t => t.id === editingId);
+      const title = tx ? (tx.description || tx.payee || 'Transaction') : 'Transaction';
+      
+      toggleTxModal(false);
+      await deleteTx(editingId, title);
+    }
+
+    // --- Account Modal Management ---
+    function openAccountModal(accId = null) {
+      const form = document.getElementById('account-form');
+      form.reset();
+      const deleteBtn = document.getElementById('deleteBtn');
+      const title = document.getElementById('modal-title');
+      const submitBtn = document.getElementById('submitBtn');
+
+      if (accId) {
+        const acc = accounts.find(a => a.id === accId);
+        if (!acc) return;
+
+        title.textContent = "Edit Account";
+        submitBtn.textContent = "Update Account";
+        document.getElementById('editingAccId').value = acc.id;
+        document.getElementById('accName').value = acc.name || '';
+        document.getElementById('accType').value = acc.type || 'checking';
+        document.getElementById('accBalance').value = acc.initial_balance !== undefined ? acc.initial_balance : '0.00';
+        document.getElementById('accInstitution').value = acc.institution || '';
+        document.getElementById('accNumber').value = acc.account_number || '';
+
+        deleteBtn.classList.remove('hidden');
+      } else {
+        title.textContent = "Add New Account";
+        submitBtn.textContent = "Create Account";
+        document.getElementById('editingAccId').value = '';
+        document.getElementById('accBalance').value = '0.00';
+
+        deleteBtn.classList.add('hidden');
+      }
+
+      document.getElementById('account-modal').classList.remove('hidden');
+    }
+
+    function toggleAccountModal(show) {
+      const modal = document.getElementById('account-modal');
+      if (show) {
+        openAccountModal();
+      } else {
+        modal.classList.add('hidden');
+      }
+    }
+
+    async function handleAccountSubmit(e) {
+      e.preventDefault();
+
+      const editingId = document.getElementById('editingAccId').value;
+      const name = document.getElementById('accName').value.trim();
+      const type = document.getElementById('accType').value;
+      const initialBalance = parseFloat(document.getElementById('accBalance').value || 0);
+      const institution = document.getElementById('accInstitution').value.trim();
+      const accountNumber = document.getElementById('accNumber').value.trim();
+
+      const submitBtn = document.getElementById('submitBtn');
+      submitBtn.disabled = true;
+      submitBtn.textContent = "Saving...";
+
+      try {
+        const accData = {
+          name,
+          type,
+          initial_balance: initialBalance,
+          institution: institution || null,
+          account_number: accountNumber || null
+        };
+
+        if (editingId) {
+          const { error } = await sb.from('accounts').update(accData).eq('id', editingId);
+          if (error) throw error;
+        } else {
+          const { error } = await sb.from('accounts').insert([accData]);
+          if (error) throw error;
+        }
+
+        toggleAccountModal(false);
+        await fetchAccounts();
+        if (activeAccountId) {
+          await fetchTransactions(activeAccountId);
+        }
+      } catch (err) {
+        console.error("Error saving account:", err);
+        alert("Error saving account: " + (err.message || 'Unknown error'));
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = editingId ? "Update Account" : "Create Account";
+      }
+    }
+
+    async function handleDeleteFromModal() {
+      const editingId = document.getElementById('editingAccId').value;
+      if (!editingId) return;
+
+      const acc = accounts.find(a => a.id === editingId);
+      const name = acc ? acc.name : 'Account';
+
+      if (!confirm(`Are you sure you want to delete "${name}"? This will also delete all associated transactions!`)) return;
+
+      try {
+        const { error: txErr } = await sb.from('transactions').delete().eq('account_id', editingId);
+        if (txErr) throw txErr;
+
+        const { error: accErr } = await sb.from('accounts').delete().eq('id', editingId);
+        if (accErr) throw accErr;
+
+        toggleAccountModal(false);
+        showAccountsView();
+        await fetchAccounts();
+      } catch (err) {
+        console.error("Error deleting account:", err);
+        alert("Error deleting account: " + err.message);
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', init);
   </script>
 </body>
 
