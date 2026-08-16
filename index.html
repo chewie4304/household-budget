@@ -528,58 +528,59 @@
         return;
       }
 
-      list.innerHTML = filteredTx.map(t => {
-        const isIncome = Number(t.amount) >= 0;
-        const amtFormatted = `${isIncome ? '+' : ''}$${Number(t.amount).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
-        const hasReceipt = t.receipt_url && t.receipt_url.trim() !== '';
-        const receiptUrls = hasReceipt ? t.receipt_url.split(',').map(u => u.trim()).filter(Boolean) : [];
+      list.innerHTML = filteredTx.map(tx => {
+        const amt = parseFloat(tx.amount || 0);
+        const isPositive = amt >= 0;
+        const status = tx.status || 'pending';
+        const isPending = status === 'pending';
+        const tags = Array.isArray(tx.tags) ? tx.tags : [];
 
-        // Top Line: Always shows Payee/Payer (defaults to 'Uncategorized' if left empty)
-        const payeeText = t.payee ? t.payee.trim() : 'Uncategorized';
+        // SWAPPED: Payee is top title, Description is subtitle below
+        const displayTitle = tx.payee || 'Transaction';
+        const subTitle = tx.description || '';
 
-        // Second Line: Shows Description ONLY if filled out
-        const descText = t.description ? t.description.trim() : '';
+        const tagsHtml = tags.length > 0 ? `
+          <div class="flex flex-wrap gap-1 mt-1">
+            ${tags.map(t => `<span class="text-[10px] bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded font-medium">#${t}</span>`).join('')}
+          </div>
+        ` : '';
+
+        const receiptUrls = tx.receipt_url ? tx.receipt_url.split(',').map(u => u.trim()).filter(Boolean) : [];
+        const receiptBtn = receiptUrls.length > 0 ? `
+          <div class="flex gap-1 flex-wrap mt-0.5">
+            ${receiptUrls.map((url, idx) => `
+              <a href="${url}" target="_blank" onclick="event.stopPropagation()" class="text-[11px] bg-gray-100 hover:bg-gray-200 text-gray-600 px-1.5 py-0.5 rounded flex items-center gap-1 font-medium border border-gray-200">
+                📎 Receipt ${receiptUrls.length > 1 ? idx + 1 : ''}
+              </a>
+            `).join('')}
+          </div>
+        ` : '';
 
         return `
-          <div class="bg-white rounded-2xl p-4 sm:p-5 shadow-sm border border-stone-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 hover:border-stone-300 transition">
-            <div class="flex items-start gap-4">
-              <div class="w-10 h-10 rounded-xl ${isIncome ? 'bg-emerald-50 text-emerald-600' : 'bg-stone-100 text-stone-600'} flex items-center justify-center font-bold flex-shrink-0 mt-0.5">
-                ${isIncome ? '<i class="fa-solid fa-arrow-down"></i>' : '<i class="fa-solid fa-arrow-up"></i>'}
+          <div onclick="openTxModal('${tx.id}')" class="bg-white p-3 rounded-xl shadow-sm border border-gray-100 flex justify-between items-center cursor-pointer hover:border-blue-300 transition-all">
+            <div>
+              <div class="flex items-center gap-2">
+                <p class="font-semibold text-gray-900 text-sm">${displayTitle}</p>
               </div>
-              <div>
-                <!-- Top Line: Payee / Merchant -->
-                <h4 class="text-base font-bold text-stone-900">${escapeHtml(payeeText)}</h4>
-                
-                <!-- Second Line: Description (Only renders if descText has content) -->
-                ${descText ? `<p class="text-xs text-stone-500 mt-0.5">${escapeHtml(descText)}</p>` : ''}
-                
-                <div class="flex flex-wrap items-center gap-2 mt-2">
-                  ${hasReceipt ? `
-                    <div class="flex items-center gap-1 bg-stone-100 text-stone-700 px-2.5 py-1 rounded-lg text-xs font-medium">
-                      <i class="fa-solid fa-receipt text-brand-700"></i>
-                      <span>Receipt</span>
-                      <div class="flex gap-1 ml-1.5">
-                        ${receiptUrls.map((url, idx) => `<button onclick="openImageModal('${url}')" class="underline hover:text-brand-700">#${idx + 1}</button>`).join('')}
-                      </div>
-                    </div>
-                  ` : ''}
-                  <span class="text-xs text-stone-400">${t.date}</span>
-                  ${t.status === 'pending' ? '<span class="px-2 py-0.5 bg-amber-50 text-amber-700 rounded text-[10px] font-semibold uppercase">Pending</span>' : ''}
-                  ${Array.isArray(t.tags) ? t.tags.map(tag => `<span class="px-2 py-0.5 bg-brand-50 text-brand-700 rounded text-[10px] font-semibold">#${escapeHtml(tag)}</span>`).join('') : ''}
-                </div>
-              </div>
+              ${receiptBtn}
+              ${subTitle ? `<p class="text-xs text-gray-500 font-medium mt-0.5">${subTitle}</p>` : ''}
+              <p class="text-xs text-gray-400 mt-0.5">${tx.date}</p>
+              ${tagsHtml}
             </div>
-
-            <div class="flex items-center gap-4 w-full sm:w-auto justify-between sm:justify-end pt-3 sm:pt-0 border-t sm:border-t-0 border-stone-100">
-              <span class="text-lg font-extrabold ${isIncome ? 'text-emerald-600' : 'text-stone-900'}">${amtFormatted}</span>
-              <div class="flex items-center gap-1">
-                <button onclick="openTxModal('${t.id}')" class="p-2 text-stone-400 hover:text-stone-700 rounded-lg transition" title="Edit">
-                  <i class="fa-solid fa-pen text-xs"></i>
-                </button>
-                <button onclick="deleteTx('${t.id}', '${escapeHtml(payeeText)}')" class="p-2 text-stone-400 hover:text-red-600 rounded-lg transition" title="Delete">
-                  <i class="fa-solid fa-trash text-xs"></i>
-                </button>
-              </div>
+            <div class="flex items-center gap-2">
+              <span class="font-bold text-sm ${isPositive ? 'text-emerald-600' : 'text-gray-900'}">
+                ${isPositive ? '+' : ''}$${amt.toFixed(2)}
+              </span>
+              <button 
+                onclick="event.stopPropagation(); toggleTxStatus('${tx.id}', '${status}')" 
+                title="Status: ${status}. Click to toggle"
+                class="px-2 py-0.5 text-xs font-bold rounded-full transition-colors ${isPending
+                  ? 'bg-amber-100 text-amber-700 hover:bg-amber-200'
+                  : 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200'
+                }">
+                ${isPending ? 'P' : 'R'}
+              </button>
+              <button onclick="event.stopPropagation(); deleteTx('${tx.id}', '${displayTitle}')" class="text-red-400 hover:text-red-600 text-base font-bold px-1">&times;</button>
             </div>
           </div>
         `;
