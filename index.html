@@ -131,7 +131,7 @@
 
   <!-- Add/Edit Transaction Modal -->
   <div id="tx-modal" class="fixed inset-0 bg-black/50 hidden flex items-end sm:items-center justify-center p-0 sm:p-4 z-50">
-    <div class="bg-white w-full max-w-md rounded-t-2xl sm:rounded-2xl p-6 space-y-4">
+    <div class="bg-white w-full max-w-md rounded-t-2xl sm:rounded-2xl p-6 space-y-4 max-h-[90vh] overflow-y-auto">
       <div class="flex justify-between items-center">
         <h3 id="tx-modal-title" class="font-bold text-lg">Add Transaction</h3>
         <button onclick="toggleTxModal(false)" class="text-gray-400 text-2xl">&times;</button>
@@ -172,6 +172,13 @@
           <label class="text-xs font-semibold text-gray-600">Tags (comma-separated)</label>
           <input type="text" id="txTags" placeholder="e.g., groceries, vacation, tax" class="w-full border p-2 rounded-lg mt-1" />
         </div>
+        <div>
+          <label class="text-xs font-semibold text-gray-600">Receipt Image / Screenshot</label>
+          <input type="file" id="txReceiptFile" accept="image/*" class="w-full border p-2 rounded-lg mt-1 text-xs text-gray-600" />
+          <div id="receiptPreview" class="mt-2 hidden">
+            <a id="receiptLink" href="#" target="_blank" class="text-xs text-blue-600 font-semibold underline block">View Current Receipt</a>
+          </div>
+        </div>
         <div class="pt-2 space-y-2">
           <button type="submit" id="txSubmitBtn" class="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold shadow">
             Save Transaction
@@ -193,6 +200,7 @@
     let transactions = [];
     let activeAccountId = null;
     let selectedTagFilter = null;
+    let currentReceiptUrl = null;
 
     async function init() {
       await fetchAccounts();
@@ -410,10 +418,19 @@
           </div>
         ` : '';
 
+        const receiptBtn = tx.receipt_url ? `
+          <a href="${tx.receipt_url}" target="_blank" onclick="event.stopPropagation()" class="text-xs bg-gray-100 hover:bg-gray-200 text-gray-600 px-1.5 py-0.5 rounded flex items-center gap-1 font-medium">
+            📎 Receipt
+          </a>
+        ` : '';
+
         return `
           <div onclick="openTxModal('${tx.id}')" class="bg-white p-3 rounded-xl shadow-sm border border-gray-100 flex justify-between items-center cursor-pointer hover:border-blue-300 transition-all">
             <div>
-              <p class="font-semibold text-gray-900 text-sm">${tx.description}</p>
+              <div class="flex items-center gap-2">
+                <p class="font-semibold text-gray-900 text-sm">${tx.description}</p>
+                ${receiptBtn}
+              </div>
               <p class="text-xs text-gray-400">${tx.date}</p>
               ${tagsHtml}
             </div>
@@ -453,6 +470,10 @@
       const form = document.getElementById('tx-form');
       form.reset();
       const deleteBtn = document.getElementById('txDeleteBtn');
+      const preview = document.getElementById('receiptPreview');
+      const link = document.getElementById('receiptLink');
+      
+      currentReceiptUrl = null;
 
       if (txId) {
         const tx = transactions.find(t => t.id === txId);
@@ -469,6 +490,14 @@
         document.getElementById('txStatus').value = tx.status || 'pending';
         document.getElementById('txTags').value = Array.isArray(tx.tags) ? tx.tags.join(', ') : '';
 
+        if (tx.receipt_url) {
+          currentReceiptUrl = tx.receipt_url;
+          link.href = tx.receipt_url;
+          preview.classList.remove('hidden');
+        } else {
+          preview.classList.add('hidden');
+        }
+
         deleteBtn.classList.remove('hidden');
       } else {
         document.getElementById('tx-modal-title').textContent = "Add Transaction";
@@ -477,6 +506,7 @@
         document.getElementById('txDate').value = new Date().toISOString().split('T')[0];
         document.getElementById('txStatus').value = 'pending';
         document.getElementById('txTags').value = '';
+        preview.classList.add('hidden');
 
         deleteBtn.classList.add('hidden');
       }
@@ -486,6 +516,10 @@
 
     async function handleTxSubmit(e) {
       e.preventDefault();
+      const submitBtn = document.getElementById('txSubmitBtn');
+      submitBtn.disabled = true;
+      submitBtn.textContent = "Saving...";
+
       const editId = document.getElementById('editingTxId').value;
       const description = document.getElementById('txDesc').value;
       const txType = document.getElementById('txType').value;
@@ -503,13 +537,39 @@
         amount = -amount;
       }
 
+      let receipt_url = currentReceiptUrl;
+      const fileInput = document.getElementById('txReceiptFile');
+      if (fileInput.files && fileInput.files[0]) {
+        const file = fileInput.files[0];
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${Date.now()}_${Math.random().toString(36).substring(2, 7)}.${fileExt}`;
+
+        const { data: uploadData, error: uploadError } = await sb.storage
+          .from('receipts')
+          .upload(fileName, file);
+
+        if (uploadError) {
+          alert(`Error uploading file "${file.name}": ${uploadError.message}`);
+          submitBtn.disabled = false;
+          submitBtn.textContent = editId ? "Update Transaction" : "Save Transaction";
+          return;
+        }
+
+        const { data: publicUrlData } = sb.storage
+          .from('receipts')
+          .getPublicUrl(fileName);
+
+        receipt_url = publicUrlData.publicUrl;
+      }
+
       const payload = {
         account_id: activeAccountId,
         description,
         amount,
         date,
         status,
-        tags
+        tags,
+        receipt_url
       };
 
       let error;
@@ -519,8 +579,11 @@
         ({ error } = await sb.from('transactions').insert([payload]));
       }
 
+      submitBtn.disabled = false;
+
       if (error) {
         alert("Error saving transaction: " + error.message);
+        submitBtn.textContent = editId ? "Update Transaction" : "Save Transaction";
         return;
       }
 
@@ -598,7 +661,7 @@
 
       let error;
       if (editId) {
-        ({ error } = await sb.from('transactions').update(payload).eq('id', editId));
+        ({ error } = await sb.from('accounts').update(payload).eq('id', editId));
       } else {
         ({ error } = await sb.from('accounts').insert([payload]));
       }
@@ -637,7 +700,6 @@
       document.getElementById('tx-modal').classList.toggle('hidden', !show);
     }
 
-    // Safely trigger initialization after the page elements are loaded
     document.addEventListener('DOMContentLoaded', () => {
       init();
     });
