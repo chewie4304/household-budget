@@ -535,8 +535,10 @@
         const isPending = status === 'pending';
         const tags = Array.isArray(tx.tags) ? tx.tags : [];
 
-        // SWAPPED: Payee is top title, Description is subtitle below
+        // Main Title: Payer/Payee
         const displayTitle = tx.payee || 'Transaction';
+        
+        // Subtitle: ONLY rendered if Description was explicitly entered
         const subTitle = (tx.description && tx.description.trim() !== '') ? tx.description.trim() : '';
 
         const tagsHtml = tags.length > 0 ? `
