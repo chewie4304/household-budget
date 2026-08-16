@@ -138,22 +138,24 @@
       </div>
       <form id="tx-form" onsubmit="handleTxSubmit(event)" class="space-y-3">
         <input type="hidden" id="editingTxId" value="" />
-        
-        <div class="grid grid-cols-2 gap-2">
-          <div>
-            <label class="text-xs font-semibold text-gray-600">Description (Optional)</label>
-            <input type="text" id="txDesc" placeholder="e.g., Weekly groceries" class="w-full border p-2 rounded-lg mt-1" />
-          </div>
-          <div>
-            <label class="text-xs font-semibold text-gray-600">Payee / Payer (Optional)</label>
-            <input type="text" id="txPayee" placeholder="e.g., Walmart, Employer" class="w-full border p-2 rounded-lg mt-1" />
-          </div>
+
+        <!-- Description (Optional) -->
+        <div>
+          <label class="text-xs font-semibold text-gray-600">Description</label>
+          <input type="text" id="txDesc" placeholder="e.g., Grocery Store, Paycheck" class="w-full border p-2 rounded-lg mt-1" />
         </div>
 
+        <!-- Dynamic Payer / Payee Field (Optional) -->
+        <div>
+          <label id="txPayeeLabel" class="text-xs font-semibold text-gray-600">Payee</label>
+          <input type="text" id="txPayee" placeholder="e.g., Walmart, Employer" class="w-full border p-2 rounded-lg mt-1" />
+        </div>
+
+        <!-- Type & Amount -->
         <div class="grid grid-cols-2 gap-2">
           <div>
             <label class="text-xs font-semibold text-gray-600">Type</label>
-            <select id="txType" class="w-full border p-2 rounded-lg mt-1 bg-white">
+            <select id="txType" onchange="updatePayeeLabel()" class="w-full border p-2 rounded-lg mt-1 bg-white">
               <option value="expense">Expense (-)</option>
               <option value="income">Income (+)</option>
             </select>
@@ -164,16 +166,23 @@
           </div>
         </div>
 
+        <!-- Payment Type Dropdown -->
+        <div>
+          <label class="text-xs font-semibold text-gray-600">Payment Type</label>
+          <select id="txPaymentMethod" class="w-full border p-2 rounded-lg mt-1 bg-white">
+            <option value="debit">Debit Card</option>
+            <option value="credit">Credit Card</option>
+            <option value="cash">Cash</option>
+            <option value="check">Check</option>
+            <option value="bank_transfer">Bank Transfer</option>
+          </select>
+        </div>
+
+        <!-- Date & Status -->
         <div class="grid grid-cols-2 gap-2">
           <div>
-            <label class="text-xs font-semibold text-gray-600">Payment Method</label>
-            <select id="txPaymentMethod" class="w-full border p-2 rounded-lg mt-1 bg-white">
-              <option value="debit">Debit Card</option>
-              <option value="credit">Credit Card</option>
-              <option value="cash">Cash</option>
-              <option value="check">Check</option>
-              <option value="bank_transfer">Bank Transfer</option>
-            </select>
+            <label class="text-xs font-semibold text-gray-600">Date</label>
+            <input type="date" id="txDate" required class="w-full border p-2 rounded-lg mt-1" />
           </div>
           <div>
             <label class="text-xs font-semibold text-gray-600">Status</label>
@@ -184,16 +193,13 @@
           </div>
         </div>
 
-        <div>
-          <label class="text-xs font-semibold text-gray-600">Date</label>
-          <input type="date" id="txDate" required class="w-full border p-2 rounded-lg mt-1" />
-        </div>
-
+        <!-- Tags -->
         <div>
           <label class="text-xs font-semibold text-gray-600">Tags (comma-separated)</label>
           <input type="text" id="txTags" placeholder="e.g., groceries, vacation, tax" class="w-full border p-2 rounded-lg mt-1" />
         </div>
 
+        <!-- Receipt Upload -->
         <div>
           <label class="text-xs font-semibold text-gray-600">Receipt Image / Screenshot</label>
           <input type="file" id="txReceiptFile" accept="image/*" class="w-full border p-2 rounded-lg mt-1 text-xs text-gray-600" />
@@ -202,6 +208,7 @@
           </div>
         </div>
 
+        <!-- Submit Buttons -->
         <div class="pt-2 space-y-2">
           <button type="submit" id="txSubmitBtn" class="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold shadow">
             Save Transaction
@@ -216,7 +223,7 @@
 
   <script>
     const SUPABASE_URL = "https://raujjskhrprnyigfmkwq.supabase.co";
-    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJhdWpqc2tocnBybnlpZ2Zta3dxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY3Njk0NzEsImV4cCI6MjEwMjM0NTQ3MX0.jEjU9BOmzpQpm-A4UlD8xrP2dpeQSiIEjj7-IuMbiVE";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJhdWpqc2tocnBybnlpZ2Zta3dxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY3Njk0NzEsImV4cCI6210MjM0NTQ3MX0.jEjU9BOmzpQpm-A4UlD8xrP2dpeQSiIEjj7-IuMbiVE";
     const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     let accounts = [];
@@ -493,6 +500,14 @@
       fetchAccounts();
     }
 
+    function updatePayeeLabel() {
+      const type = document.getElementById('txType').value;
+      const label = document.getElementById('txPayeeLabel');
+      if (label) {
+        label.textContent = type === 'income' ? 'Payer' : 'Payee';
+      }
+    }
+
     function openTxModal(txId = null) {
       const form = document.getElementById('tx-form');
       form.reset();
@@ -542,6 +557,7 @@
         deleteBtn.classList.add('hidden');
       }
 
+      updatePayeeLabel();
       toggleTxModal(true);
     }
 
