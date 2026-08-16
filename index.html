@@ -199,17 +199,19 @@
           <input type="text" id="txTags" placeholder="e.g., groceries, vacation, tax" class="w-full border p-2 rounded-lg mt-1" />
         </div>
 
-        <!-- Receipt Upload -->
-        <div class="form-group">
-          <label for="tx-receipt">Receipt Image / Screenshot</label>
-          <div style="display: flex; gap: 8px; align-items: center;">
-          <input type="file" id="tx-receipt" accept="image/*" style="flex: 1;" />
-          <button type="button" id="btn-remove-receipt" style="display: none; padding: 6px 12px; background: #dc2626; color: white; border: none; border-radius: 4px; cursor: pointer;">
-            Remove
-          </button>
+        <!-- Receipt Upload with Remove Attachment Button -->
+        <div>
+          <label class="text-xs font-semibold text-gray-600">Receipt Image / Screenshot</label>
+          <div class="flex items-center gap-2 mt-1">
+            <input type="file" id="txReceiptFile" accept="image/*" onchange="handleReceiptSelectionChange()" class="w-full border p-2 rounded-lg text-xs text-gray-600" />
+            <button type="button" id="btnRemoveReceipt" onclick="removeReceiptAttachment()" class="hidden bg-red-100 hover:bg-red-200 text-red-700 text-xs font-semibold px-3 py-2 rounded-lg transition-colors border border-red-200 whitespace-nowrap">
+              Remove
+            </button>
+          </div>
+          <div id="receiptPreview" class="mt-2 hidden">
+            <a id="receiptLink" href="#" target="_blank" class="text-xs text-blue-600 font-semibold underline block">View Current Receipt</a>
+          </div>
         </div>
-        <small id="receipt-current-file" style="display: block; margin-top: 4px; color: #6b7280;"></small>
-      </div>
 
         <!-- Submit Buttons -->
         <div class="pt-2 space-y-2">
@@ -226,7 +228,7 @@
 
   <script>
     const SUPABASE_URL = "https://raujjskhrprnyigfmkwq.supabase.co";
-    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJhdWpqc2tocnBybnlpZ2Zta3dxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY3Njk0NzEsImV4cCI6MjEwMjM0NTQ3MX0.jEjU9BOmzpQpm-A4UlD8xrP2dpeQSiIEjj7-IuMbiVE";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJhdWpqc2tocnBybnlpZ2Zta3dxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY3Njk0NzEsImV4cCI6210MjM0NTQ3MX0.jEjU9BOmzpQpm-A4UlD8xrP2dpeQSiIEjj7-IuMbiVEe";
     const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     let accounts = [];
@@ -234,6 +236,7 @@
     let activeAccountId = null;
     let selectedTagFilter = null;
     let currentReceiptUrl = null;
+    let removeReceiptFlag = false;
 
     async function init() {
       await fetchAccounts();
@@ -511,14 +514,38 @@
       }
     }
 
+    function handleReceiptSelectionChange() {
+      const fileInput = document.getElementById('txReceiptFile');
+      const removeBtn = document.getElementById('btnRemoveReceipt');
+      if (fileInput.files && fileInput.files.length > 0) {
+        removeBtn.classList.remove('hidden');
+        removeReceiptFlag = false;
+      }
+    }
+
+    function removeReceiptAttachment() {
+      const fileInput = document.getElementById('txReceiptFile');
+      const preview = document.getElementById('receiptPreview');
+      const removeBtn = document.getElementById('btnRemoveReceipt');
+
+      fileInput.value = '';
+      currentReceiptUrl = null;
+      removeReceiptFlag = true;
+
+      preview.classList.add('hidden');
+      removeBtn.classList.add('hidden');
+    }
+
     function openTxModal(txId = null) {
       const form = document.getElementById('tx-form');
       form.reset();
       const deleteBtn = document.getElementById('txDeleteBtn');
       const preview = document.getElementById('receiptPreview');
       const link = document.getElementById('receiptLink');
+      const removeBtn = document.getElementById('btnRemoveReceipt');
       
       currentReceiptUrl = null;
+      removeReceiptFlag = false;
 
       if (txId) {
         const tx = transactions.find(t => t.id === txId);
@@ -541,8 +568,10 @@
           currentReceiptUrl = tx.receipt_url;
           link.href = tx.receipt_url;
           preview.classList.remove('hidden');
+          removeBtn.classList.remove('hidden');
         } else {
           preview.classList.add('hidden');
+          removeBtn.classList.add('hidden');
         }
 
         deleteBtn.classList.remove('hidden');
@@ -556,6 +585,7 @@
         document.getElementById('txStatus').value = 'pending';
         document.getElementById('txTags').value = '';
         preview.classList.add('hidden');
+        removeBtn.classList.add('hidden');
 
         deleteBtn.classList.add('hidden');
       }
@@ -590,6 +620,11 @@
       }
 
       let receipt_url = currentReceiptUrl;
+
+      if (removeReceiptFlag) {
+        receipt_url = null;
+      }
+
       const fileInput = document.getElementById('txReceiptFile');
       if (fileInput.files && fileInput.files[0]) {
         const file = fileInput.files[0];
