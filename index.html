@@ -495,23 +495,81 @@
       renderTransactions();
     }
 
-    function renderTransactions() {
-      const list = document.getElementById('transactions-list');
+function renderTransactions() {
+  const list = document.getElementById('transactions-list');
 
-      let filteredTx = transactions;
-      if (selectedTagFilter) {
-        filteredTx = transactions.filter(tx => Array.isArray(tx.tags) && tx.tags.includes(selectedTagFilter));
-      }
+  let filteredTx = transactions;
+  if (selectedTagFilter) {
+    filteredTx = transactions.filter(tx => Array.isArray(tx.tags) && tx.tags.includes(selectedTagFilter));
+  }
 
-      if (filteredTx.length === 0) {
-        list.innerHTML = `
-          <div class="bg-white p-6 rounded-xl border border-gray-200 text-center space-y-2">
-            <p class="text-gray-600 font-medium">${selectedTagFilter ? 'No transactions with this tag.' : 'No transactions yet.'}</p>
-            <p class="text-xs text-gray-400">${selectedTagFilter ? 'Try picking a different tag filter above.' : 'Tap "+ Add Tx" above to log a deposit or spending.'}</p>
+  if (filteredTx.length === 0) {
+    list.innerHTML = `
+      <div class="bg-white p-6 rounded-xl border border-gray-200 text-center space-y-2">
+        <p class="text-gray-600 font-medium">${selectedTagFilter ? 'No transactions with this tag.' : 'No transactions yet.'}</p>
+        <p class="text-xs text-gray-400">${selectedTagFilter ? 'Try picking a different tag filter above.' : 'Tap "+ Add Tx" above to log a deposit or spending.'}</p>
+      </div>
+    `;
+    return;
+  }
+
+  list.innerHTML = filteredTx.map(t => {
+    const isIncome = Number(t.amount) >= 0;
+    const amtFormatted = `${isIncome ? '+' : ''}$${Number(t.amount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    const hasReceipt = t.receipt_url && t.receipt_url.trim() !== '';
+    const receiptUrls = hasReceipt ? t.receipt_url.split(',').map(u => u.trim()).filter(Boolean) : [];
+
+    // Top Line: Always shows Payee/Payer (defaults to 'Uncategorized' if left empty)
+    const payeeText = t.payee ? t.payee.trim() : 'Uncategorized';
+    
+    // Second Line: Shows Description ONLY if filled out
+    const descText = t.description ? t.description.trim() : '';
+
+    return `
+      <div class="bg-white rounded-2xl p-4 sm:p-5 shadow-sm border border-stone-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 hover:border-stone-300 transition">
+        <div class="flex items-start gap-4">
+          <div class="w-10 h-10 rounded-xl ${isIncome ? 'bg-emerald-50 text-emerald-600' : 'bg-stone-100 text-stone-600'} flex items-center justify-center font-bold flex-shrink-0 mt-0.5">
+            ${isIncome ? '<i class="fa-solid fa-arrow-down"></i>' : '<i class="fa-solid fa-arrow-up"></i>'}
           </div>
-        `;
-        return;
-      }
+          <div>
+            <!-- Top Line: Payee / Merchant -->
+            <h4 class="text-base font-bold text-stone-900">${escapeHtml(payeeText)}</h4>
+            
+            <!-- Second Line: Description (Only renders if descText has content) -->
+            ${descText ? `<p class="text-xs text-stone-500 mt-0.5">${escapeHtml(descText)}</p>` : ''}
+            
+            <div class="flex flex-wrap items-center gap-2 mt-2">
+              ${hasReceipt ? `
+                <div class="flex items-center gap-1 bg-stone-100 text-stone-700 px-2.5 py-1 rounded-lg text-xs font-medium">
+                  <i class="fa-solid fa-receipt text-brand-700"></i>
+                  <span>Receipt</span>
+                  <div class="flex gap-1 ml-1.5">
+                    ${receiptUrls.map((url, idx) => `<button onclick="openImageModal('${url}')" class="underline hover:text-brand-700">#${idx+1}</button>`).join('')}
+                  </div>
+                </div>
+              ` : ''}
+              <span class="text-xs text-stone-400">${t.date}</span>
+              ${t.status === 'pending' ? '<span class="px-2 py-0.5 bg-amber-50 text-amber-700 rounded text-[10px] font-semibold uppercase">Pending</span>' : ''}
+              ${Array.isArray(t.tags) ? t.tags.map(tag => `<span class="px-2 py-0.5 bg-brand-50 text-brand-700 rounded text-[10px] font-semibold">#${escapeHtml(tag)}</span>`).join('') : ''}
+            </div>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-4 w-full sm:w-auto justify-between sm:justify-end pt-3 sm:pt-0 border-t sm:border-t-0 border-stone-100">
+          <span class="text-lg font-extrabold ${isIncome ? 'text-emerald-600' : 'text-stone-900'}">${amtFormatted}</span>
+          <div class="flex items-center gap-1">
+            <button onclick="openTxModal('${t.id}')" class="p-2 text-stone-400 hover:text-stone-700 rounded-lg transition" title="Edit">
+              <i class="fa-solid fa-pen text-xs"></i>
+            </button>
+            <button onclick="deleteTx('${t.id}', '${escapeHtml(payeeText)}')" class="p-2 text-stone-400 hover:text-red-600 rounded-lg transition" title="Delete">
+              <i class="fa-solid fa-trash text-xs"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
 
       list.innerHTML = filteredTx.map(tx => {
         const amt = parseFloat(tx.amount || 0);
