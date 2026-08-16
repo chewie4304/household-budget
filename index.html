@@ -163,7 +163,7 @@
         <!-- Account Selection (Required) -->
         <div>
           <label class="text-xs font-semibold text-gray-600">Account</label>
-          <select id="txAccount" required class="w-full border p-2 rounded-lg mt-1 bg-white font-medium text-gray-800">
+          <select id="txAccount" required onchange="autoSelectPaymentMethod()" class="w-full border p-2 rounded-lg mt-1 bg-white font-medium text-gray-800">
             <!-- Dynamically populated -->
           </select>
         </div>
@@ -732,61 +732,86 @@
       renderModalReceiptList();
     }
 
-    function openTxModal(txId = null) {
-      if (accounts.length === 0) {
-        alert("Please create an account first before adding transactions.");
-        return;
-      }
+    function autoSelectPaymentMethod() {
+  const accountSelect = document.getElementById('txAccount');
+  const paymentSelect = document.getElementById('txPaymentMethod');
+  if (!accountSelect || !paymentSelect) return;
 
-      const form = document.getElementById('tx-form');
-      form.reset();
-      const deleteBtn = document.getElementById('txDeleteBtn');
+  const selectedAccountId = accountSelect.value;
+  const selectedAccount = accounts.find(a => String(a.id) === String(selectedAccountId));
+  if (!selectedAccount) return;
 
-      activeReceiptFiles = [];
-      activeReceiptUrls = [];
+  const nameAndType = `${selectedAccount.name || ''} ${selectedAccount.type || ''}`.toLowerCase();
 
-      if (txId) {
-        const tx = transactions.find(t => t.id === txId);
-        if (!tx) return;
+  if (nameAndType.includes('credit') || nameAndType.includes('visa') || nameAndType.includes('mastercard') || nameAndType.includes('card')) {
+    paymentSelect.value = 'credit';
+  } else if (nameAndType.includes('checking') || nameAndType.includes('debit')) {
+    paymentSelect.value = 'debit';
+  } else if (nameAndType.includes('cash')) {
+    paymentSelect.value = 'cash';
+  } else if (nameAndType.includes('savings')) {
+    paymentSelect.value = 'transfer';
+  }
+}
 
-        const amt = parseFloat(tx.amount || 0);
-        document.getElementById('tx-modal-title').textContent = "Edit Transaction";
-        document.getElementById('txSubmitBtn').textContent = "Update Transaction";
-        document.getElementById('editingTxId').value = tx.id;
-        populateAccountDropdown(tx.account_id);
-        document.getElementById('txDesc').value = tx.description || '';
-        document.getElementById('txPayee').value = tx.payee || '';
-        document.getElementById('txType').value = amt >= 0 ? 'income' : 'expense';
-        document.getElementById('txAmount').value = Math.abs(amt);
-        document.getElementById('txPaymentMethod').value = tx.payment_method || 'debit';
-        document.getElementById('txDate').value = tx.date || new Date().toISOString().split('T')[0];
-        document.getElementById('txStatus').value = tx.status || 'pending';
-        document.getElementById('txTags').value = Array.isArray(tx.tags) ? tx.tags.join(', ') : '';
+function openTxModal(txId = null) {
+  if (accounts.length === 0) {
+    alert("Please create an account first before adding transactions.");
+    return;
+  }
 
-        if (tx.receipt_url) {
-          activeReceiptUrls = tx.receipt_url.split(',').map(u => u.trim()).filter(Boolean);
-        }
+  const form = document.getElementById('tx-form');
+  form.reset();
+  const deleteBtn = document.getElementById('txDeleteBtn');
 
-        deleteBtn.classList.remove('hidden');
-      } else {
-        document.getElementById('tx-modal-title').textContent = "Add Transaction";
-        document.getElementById('txSubmitBtn').textContent = "Save Transaction";
-        document.getElementById('editingTxId').value = "";
-        populateAccountDropdown(activeAccountId);
-        document.getElementById('txPayee').value = "";
-        document.getElementById('txPaymentMethod').value = "debit";
-        document.getElementById('txDate').value = new Date().toISOString().split('T')[0];
-        document.getElementById('txStatus').value = 'pending';
-        document.getElementById('txTags').value = '';
+  activeReceiptFiles = [];
+  activeReceiptUrls = [];
 
-        deleteBtn.classList.add('hidden');
-      }
+  if (txId) {
+    const tx = transactions.find(t => t.id === txId);
+    if (!tx) return;
 
-      renderModalReceiptList();
-      updatePayeeLabel();
-      toggleTxModal(true);
+    const amt = parseFloat(tx.amount || 0);
+    document.getElementById('tx-modal-title').textContent = "Edit Transaction";
+    document.getElementById('txSubmitBtn').textContent = "Update Transaction";
+    document.getElementById('editingTxId').value = tx.id;
+    populateAccountDropdown(tx.account_id);
+    document.getElementById('txDesc').value = tx.description || '';
+    document.getElementById('txPayee').value = tx.payee || '';
+    document.getElementById('txType').value = amt >= 0 ? 'income' : 'expense';
+    document.getElementById('txAmount').value = Math.abs(amt);
+    document.getElementById('txPaymentMethod').value = tx.payment_method || 'debit';
+    document.getElementById('txDate').value = tx.date || new Date().toISOString().split('T')[0];
+    document.getElementById('txStatus').value = tx.status || 'pending';
+    document.getElementById('txTags').value = Array.isArray(tx.tags) ? tx.tags.join(', ') : '';
+
+    if (tx.receipt_url) {
+      activeReceiptUrls = tx.receipt_url.split(',').map(u => u.trim()).filter(Boolean);
     }
 
+    deleteBtn.classList.remove('hidden');
+  } else {
+    document.getElementById('tx-modal-title').textContent = "Add Transaction";
+    document.getElementById('txSubmitBtn').textContent = "Save Transaction";
+    document.getElementById('editingTxId').value = "";
+    populateAccountDropdown(activeAccountId);
+    
+    // Automatically match payment method to the default/active account
+    autoSelectPaymentMethod();
+
+    document.getElementById('txPayee').value = "";
+    document.getElementById('txDate').value = new Date().toISOString().split('T')[0];
+    document.getElementById('txStatus').value = 'pending';
+    document.getElementById('txTags').value = '';
+
+    deleteBtn.classList.add('hidden');
+  }
+
+  renderModalReceiptList();
+  updatePayeeLabel();
+  toggleTxModal(true);
+}
+    
     async function handleTxSubmit(e) {
       e.preventDefault();
       const submitBtn = document.getElementById('txSubmitBtn');
