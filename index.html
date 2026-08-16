@@ -495,12 +495,11 @@
         const hasReceipt = t.receipt_url && t.receipt_url.trim() !== '';
         const receiptUrls = hasReceipt ? t.receipt_url.split(',').map(u => u.trim()).filter(Boolean) : [];
 
-        // Formatting per user request:
-        // Payee/Payer is large text on top (if description exists). 
-        // If description exists, description is smaller on the second line.
-        // If NO description, leave the second line blank rather than repeating the Payee.
-        const payeeText = t.payee || t.description || 'Transaction';
-        const descText = t.description && t.payee ? t.description : '';
+        // Corrected layout: 
+        // 1. Payee / Merchant is always the large top text.
+        // 2. Description is on the second line ONLY if it exists and is different from Payee. If no description, second line is left blank.
+        const topText = t.payee || t.description || 'Transaction';
+        const secondLineText = (t.description && t.description !== t.payee) ? t.description : '';
 
         return `
           <div class="bg-white rounded-2xl p-4 sm:p-5 shadow-sm border border-stone-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 hover:border-stone-300 transition">
@@ -509,8 +508,8 @@
                 ${isIncome ? '<i class="fa-solid fa-arrow-down"></i>' : '<i class="fa-solid fa-arrow-up"></i>'}
               </div>
               <div>
-                <h4 class="text-base font-bold text-stone-900">${escapeHtml(payeeText)}</h4>
-                ${descText ? `<p class="text-xs text-stone-500 mt-0.5">${escapeHtml(descText)}</p>` : ''}
+                <h4 class="text-base font-bold text-stone-900">${escapeHtml(topText)}</h4>
+                ${secondLineText ? `<p class="text-xs text-stone-500 mt-0.5">${escapeHtml(secondLineText)}</p>` : ''}
                 
                 <div class="flex flex-wrap items-center gap-2 mt-2">
                   ${hasReceipt ? `
@@ -535,7 +534,7 @@
                 <button onclick="openTxModal('${t.id}')" class="p-2 text-stone-400 hover:text-stone-700 rounded-lg transition" title="Edit">
                   <i class="fa-solid fa-pen text-xs"></i>
                 </button>
-                <button onclick="deleteTx('${t.id}', '${escapeHtml(payeeText)}')" class="p-2 text-stone-400 hover:text-red-600 rounded-lg transition" title="Delete">
+                <button onclick="deleteTx('${t.id}', '${escapeHtml(topText)}')" class="p-2 text-stone-400 hover:text-red-600 rounded-lg transition" title="Delete">
                   <i class="fa-solid fa-trash text-xs"></i>
                 </button>
               </div>
@@ -631,7 +630,6 @@
       if (!container) return;
 
       let html = '';
-      // Existing uploaded URLs
       activeReceiptUrls.forEach((url, index) => {
         html += `
           <div class="relative group w-16 h-16 rounded-lg border border-stone-200 overflow-hidden bg-stone-100 flex items-center justify-center">
@@ -643,7 +641,6 @@
         `;
       });
 
-      // New files selected locally
       activeReceiptFiles.forEach((file, index) => {
         const objectUrl = URL.createObjectURL(file);
         html += `
@@ -843,7 +840,7 @@
       const editingId = document.getElementById('editingTxId').value;
       if (!editingId) return;
       const tx = transactions.find(t => t.id === editingId);
-      const title = tx ? (tx.description || tx.payee || 'Transaction') : 'Transaction';
+      const title = tx ? (tx.payee || tx.description || 'Transaction') : 'Transaction';
       
       toggleTxModal(false);
       await deleteTx(editingId, title);
