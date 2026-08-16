@@ -537,7 +537,7 @@
 
         // SWAPPED: Payee is top title, Description is subtitle below
         const displayTitle = tx.payee || 'Transaction';
-        const subTitle = tx.description || '';
+        const subTitle = (tx.description && tx.description.trim() !== '') ? tx.description.trim() : '';
 
         const tagsHtml = tags.length > 0 ? `
           <div class="flex flex-wrap gap-1 mt-1">
