@@ -171,15 +171,15 @@
         <!-- Description (Optional) -->
         <div>
           <label class="text-xs font-semibold text-gray-600">Description</label>
-          <input type="text" id="txDesc" placeholder="e.g., Grocery Store, Paycheck"
-            class="w-full border p-2 rounded-lg mt-1" />
+          <input type="text" id="txDesc" list="desc-suggestions" class="w-full border p-2 rounded-lg mt-1 font-medium text-gray-800" placeholder="e.g., Groceries or reimbursement" />
+          <datalist id="desc-suggestions"></datalist>
         </div>
 
         <!-- Dynamic Payer / Payee Field (Optional) -->
         <div>
-          <label id="txPayeeLabel" class="text-xs font-semibold text-gray-600">Payee</label>
-          <input type="text" id="txPayee" placeholder="e.g., Walmart, Employer"
-            class="w-full border p-2 rounded-lg mt-1" />
+          <label class="text-xs font-semibold text-gray-600">Payer / Payee</label>
+          <input type="text" id="txPayee" list="payee-suggestions" class="w-full border p-2 rounded-lg mt-1 font-medium text-gray-800" placeholder="e.g., Walmart" />
+          <datalist id="payee-suggestions"></datalist>
         </div>
 
         <!-- Type & Amount -->
@@ -745,6 +745,31 @@
   }
 }
 
+    function updateAutocompleteSuggestions() {
+  const payeeList = document.getElementById('payee-suggestions');
+  const descList = document.getElementById('desc-suggestions');
+
+  if (!payeeList || !descList || !Array.isArray(transactions)) return;
+
+  // Extract unique payees (ignoring empty ones)
+  const uniquePayees = [...new Set(
+    transactions
+      .map(tx => (tx.payee || '').trim())
+      .filter(p => p.length > 0)
+  )].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
+
+  // Extract unique descriptions (ignoring empty ones)
+  const uniqueDescs = [...new Set(
+    transactions
+      .map(tx => (tx.description || '').trim())
+      .filter(d => d.length > 0)
+  )].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
+
+  // Build options HTML
+  payeeList.innerHTML = uniquePayees.map(p => `<option value="${p}">`).join('');
+  descList.innerHTML = uniqueDescs.map(d => `<option value="${d}">`).join('');
+}
+    
 function openTxModal(txId = null) {
   if (accounts.length === 0) {
     alert("Please create an account first before adding transactions.");
@@ -800,6 +825,7 @@ function openTxModal(txId = null) {
 
   renderModalReceiptList();
   updatePayeeLabel();
+  updateAutocompleteSuggestions();
   toggleTxModal(true);
 }
     
