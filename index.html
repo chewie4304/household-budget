@@ -203,7 +203,7 @@
         <div>
           <label class="text-xs font-semibold text-gray-600">Receipt Image / Screenshot</label>
           <div class="flex items-center gap-2 mt-1">
-            <input type="file" id="txReceiptFile" accept="image/*" onchange="handleReceiptSelectionChange()" class="w-full border p-2 rounded-lg text-xs text-gray-600" />
+            <input type="file" id="txReceiptFile" accept="image/*" multiple onchange="handleReceiptSelectionChange()" class="w-full border p-2 rounded-lg text-xs text-gray-600" />
             <button type="button" id="btnRemoveReceipt" onclick="removeReceiptAttachment()" class="hidden bg-red-100 hover:bg-red-200 text-red-700 text-xs font-semibold px-3 py-2 rounded-lg transition-colors border border-red-200 whitespace-nowrap">
               Remove
             </button>
@@ -595,7 +595,7 @@
       toggleTxModal(true);
     }
 
-    async function handleTxSubmit(e) {
+async function handleTxSubmit(e) {
       e.preventDefault();
       const submitBtn = document.getElementById('txSubmitBtn');
       submitBtn.disabled = true;
@@ -620,34 +620,42 @@
         amount = -amount;
       }
 
-      let receipt_url = currentReceiptUrl;
+      // Handle multiple receipt attachment URLs
+      let receipt_urls = currentReceiptUrl ? currentReceiptUrl.split(', ') : [];
 
       if (removeReceiptFlag) {
-        receipt_url = null;
+        receipt_urls = [];
       }
 
       const fileInput = document.getElementById('txReceiptFile');
-      if (fileInput.files && fileInput.files[0]) {
-        const file = fileInput.files[0];
-        const fileExt = file.name.split('.').pop();
-        const fileName = `${Date.now()}_${Math.random().toString(36).substring(2, 7)}.${fileExt}`;
+      if (fileInput.files && fileInput.files.length > 0) {
+        const uploadedUrls = [];
 
-        const { data: uploadData, error: uploadError } = await sb.storage
-          .from('receipts')
-          .upload(fileName, file);
+        for (let i = 0; i < fileInput.files.length; i++) {
+          const file = fileInput.files[i];
+          const fileExt = file.name.split('.').pop();
+          const fileName = `${Date.now()}_${Math.random().toString(36).substring(2, 7)}.${fileExt}`;
 
-        if (uploadError) {
-          alert(`Error uploading file "${file.name}": ${uploadError.message}`);
-          submitBtn.disabled = false;
-          submitBtn.textContent = editId ? "Update Transaction" : "Save Transaction";
-          return;
+          const { data: uploadData, error: uploadError } = await sb.storage
+            .from('receipts')
+            .upload(fileName, file);
+
+          if (uploadError) {
+            alert(`Error uploading file "${file.name}": ${uploadError.message}`);
+            submitBtn.disabled = false;
+            submitBtn.textContent = editId ? "Update Transaction" : "Save Transaction";
+            return;
+          }
+
+          const { data: publicUrlData } = sb.storage
+            .from('receipts')
+            .getPublicUrl(fileName);
+
+          uploadedUrls.push(publicUrlData.publicUrl);
         }
 
-        const { data: publicUrlData } = sb.storage
-          .from('receipts')
-          .getPublicUrl(fileName);
-
-        receipt_url = publicUrlData.publicUrl;
+        // Combine existing and newly uploaded receipt URLs
+        receipt_urls = [...receipt_urls, ...uploadedUrls];
       }
 
       const payload = {
@@ -659,7 +667,7 @@
         date,
         status,
         tags,
-        receipt_url
+        receipt_url: receipt_urls.join(', ') // Stores multiple URLs separated by commas
       };
 
       let error;
@@ -681,7 +689,7 @@
       fetchTransactions(activeAccountId);
       fetchAccounts();
     }
-
+    
     async function handleDeleteTxFromModal() {
       const id = document.getElementById('editingTxId').value;
       const desc = document.getElementById('txDesc').value || 'this transaction';
