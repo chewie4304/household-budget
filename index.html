@@ -354,6 +354,7 @@
     }
 
     async function fetchTransactions(accId) {
+      if (!accId) return;
       const list = document.getElementById('transactions-list');
       try {
         const { data, error } = await sb.from('transactions').select('*').eq('account_id', accId).order('date', { ascending: false });
