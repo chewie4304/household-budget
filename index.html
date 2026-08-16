@@ -312,8 +312,8 @@
     let transactions = [];
     let activeAccountId = null;
     let selectedTagFilter = null;
-    let activeReceiptFiles = []; // Holds cropped File objects ready for upload
-    let activeReceiptUrls = [];  // Holds already uploaded URLs (when editing)
+    let activeReceiptFiles = [];
+    let activeReceiptUrls = [];
 
     let cropper = null;
 
@@ -625,12 +625,12 @@
         }
 
         cropper = new Cropper(imageToCrop, {
-          aspectRatio: NaN, // Free aspect ratio
+          aspectRatio: NaN,
           viewMode: 1,
         });
       };
       reader.readAsDataURL(file);
-      input.value = ''; // Reset file input so same file can be chosen again if needed
+      input.value = '';
     }
 
     function cancelCrop() {
@@ -679,7 +679,6 @@
 
       let html = '';
 
-      // Render already saved/uploaded URLs (if editing)
       activeReceiptUrls.forEach((url, idx) => {
         html += `
           <div class="flex items-center justify-between bg-gray-50 border border-gray-200 p-2 rounded-lg text-xs">
@@ -693,7 +692,6 @@
         `;
       });
 
-      // Render newly cropped local files waiting to be uploaded
       activeReceiptFiles.forEach((file, idx) => {
         html += `
           <div class="flex items-center justify-between bg-blue-50 border border-blue-200 p-2 rounded-lg text-xs">
@@ -810,7 +808,6 @@
 
       let finalReceiptUrls = [...activeReceiptUrls];
 
-      // Upload any newly cropped pending image files to Supabase Storage
       if (activeReceiptFiles.length > 0) {
         for (const file of activeReceiptFiles) {
           const fileExt = file.name.split('.').pop();
