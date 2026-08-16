@@ -129,7 +129,7 @@
     </div>
   </div>
 
-<!-- Add/Edit Transaction Modal -->
+  <!-- Add/Edit Transaction Modal -->
   <div id="tx-modal" class="fixed inset-0 bg-black/50 hidden flex items-end sm:items-center justify-center p-0 sm:p-4 z-50">
     <div class="bg-white w-full max-w-md rounded-t-2xl sm:rounded-2xl p-6 space-y-4 max-h-[90vh] overflow-y-auto">
       <div class="flex justify-between items-center">
@@ -138,10 +138,18 @@
       </div>
       <form id="tx-form" onsubmit="handleTxSubmit(event)" class="space-y-3">
         <input type="hidden" id="editingTxId" value="" />
-        <div>
-          <label class="text-xs font-semibold text-gray-600">Description</label>
-          <input type="text" id="txDesc" placeholder="e.g., Grocery Store, Paycheck" required class="w-full border p-2 rounded-lg mt-1" />
+        
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="text-xs font-semibold text-gray-600">Description (Optional)</label>
+            <input type="text" id="txDesc" placeholder="e.g., Weekly groceries" class="w-full border p-2 rounded-lg mt-1" />
+          </div>
+          <div>
+            <label class="text-xs font-semibold text-gray-600">Payee / Payer (Optional)</label>
+            <input type="text" id="txPayee" placeholder="e.g., Walmart, Employer" class="w-full border p-2 rounded-lg mt-1" />
+          </div>
         </div>
+
         <div class="grid grid-cols-2 gap-2">
           <div>
             <label class="text-xs font-semibold text-gray-600">Type</label>
@@ -155,10 +163,17 @@
             <input type="number" step="0.01" id="txAmount" placeholder="0.00" required class="w-full border p-2 rounded-lg mt-1" />
           </div>
         </div>
+
         <div class="grid grid-cols-2 gap-2">
           <div>
-            <label class="text-xs font-semibold text-gray-600">Date</label>
-            <input type="date" id="txDate" required class="w-full border p-2 rounded-lg mt-1" />
+            <label class="text-xs font-semibold text-gray-600">Payment Method</label>
+            <select id="txPaymentMethod" class="w-full border p-2 rounded-lg mt-1 bg-white">
+              <option value="debit">Debit Card</option>
+              <option value="credit">Credit Card</option>
+              <option value="cash">Cash</option>
+              <option value="check">Check</option>
+              <option value="bank_transfer">Bank Transfer</option>
+            </select>
           </div>
           <div>
             <label class="text-xs font-semibold text-gray-600">Status</label>
@@ -168,10 +183,17 @@
             </select>
           </div>
         </div>
+
+        <div>
+          <label class="text-xs font-semibold text-gray-600">Date</label>
+          <input type="date" id="txDate" required class="w-full border p-2 rounded-lg mt-1" />
+        </div>
+
         <div>
           <label class="text-xs font-semibold text-gray-600">Tags (comma-separated)</label>
           <input type="text" id="txTags" placeholder="e.g., groceries, vacation, tax" class="w-full border p-2 rounded-lg mt-1" />
         </div>
+
         <div>
           <label class="text-xs font-semibold text-gray-600">Receipt Image / Screenshot</label>
           <input type="file" id="txReceiptFile" accept="image/*" class="w-full border p-2 rounded-lg mt-1 text-xs text-gray-600" />
@@ -179,6 +201,7 @@
             <a id="receiptLink" href="#" target="_blank" class="text-xs text-blue-600 font-semibold underline block">View Current Receipt</a>
           </div>
         </div>
+
         <div class="pt-2 space-y-2">
           <button type="submit" id="txSubmitBtn" class="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold shadow">
             Save Transaction
@@ -412,6 +435,9 @@
         const isPending = status === 'pending';
         const tags = Array.isArray(tx.tags) ? tx.tags : [];
 
+        const displayTitle = tx.description || tx.payee || 'Transaction';
+        const subTitle = (tx.description && tx.payee) ? tx.payee : '';
+
         const tagsHtml = tags.length > 0 ? `
           <div class="flex flex-wrap gap-1 mt-1">
             ${tags.map(t => `<span class="text-[10px] bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded font-medium">#${t}</span>`).join('')}
@@ -428,9 +454,10 @@
           <div onclick="openTxModal('${tx.id}')" class="bg-white p-3 rounded-xl shadow-sm border border-gray-100 flex justify-between items-center cursor-pointer hover:border-blue-300 transition-all">
             <div>
               <div class="flex items-center gap-2">
-                <p class="font-semibold text-gray-900 text-sm">${tx.description}</p>
+                <p class="font-semibold text-gray-900 text-sm">${displayTitle}</p>
                 ${receiptBtn}
               </div>
+              ${subTitle ? `<p class="text-xs text-gray-500 font-medium">${subTitle}</p>` : ''}
               <p class="text-xs text-gray-400">${tx.date}</p>
               ${tagsHtml}
             </div>
@@ -448,7 +475,7 @@
                 }">
                 ${isPending ? 'P' : 'R'}
               </button>
-              <button onclick="event.stopPropagation(); deleteTx('${tx.id}', '${tx.description}')" class="text-red-400 hover:text-red-600 text-base font-bold px-1">&times;</button>
+              <button onclick="event.stopPropagation(); deleteTx('${tx.id}', '${displayTitle}')" class="text-red-400 hover:text-red-600 text-base font-bold px-1">&times;</button>
             </div>
           </div>
         `;
@@ -484,8 +511,10 @@
         document.getElementById('txSubmitBtn').textContent = "Update Transaction";
         document.getElementById('editingTxId').value = tx.id;
         document.getElementById('txDesc').value = tx.description || '';
+        document.getElementById('txPayee').value = tx.payee || '';
         document.getElementById('txType').value = amt >= 0 ? 'income' : 'expense';
         document.getElementById('txAmount').value = Math.abs(amt);
+        document.getElementById('txPaymentMethod').value = tx.payment_method || 'debit';
         document.getElementById('txDate').value = tx.date || new Date().toISOString().split('T')[0];
         document.getElementById('txStatus').value = tx.status || 'pending';
         document.getElementById('txTags').value = Array.isArray(tx.tags) ? tx.tags.join(', ') : '';
@@ -503,6 +532,8 @@
         document.getElementById('tx-modal-title').textContent = "Add Transaction";
         document.getElementById('txSubmitBtn').textContent = "Save Transaction";
         document.getElementById('editingTxId').value = "";
+        document.getElementById('txPayee').value = "";
+        document.getElementById('txPaymentMethod').value = "debit";
         document.getElementById('txDate').value = new Date().toISOString().split('T')[0];
         document.getElementById('txStatus').value = 'pending';
         document.getElementById('txTags').value = '';
@@ -522,6 +553,8 @@
 
       const editId = document.getElementById('editingTxId').value;
       const description = document.getElementById('txDesc').value;
+      const payee = document.getElementById('txPayee').value;
+      const payment_method = document.getElementById('txPaymentMethod').value;
       const txType = document.getElementById('txType').value;
       let amount = parseFloat(document.getElementById('txAmount').value) || 0;
       const date = document.getElementById('txDate').value;
@@ -564,7 +597,9 @@
 
       const payload = {
         account_id: activeAccountId,
-        description,
+        description: description || payee || 'Transaction',
+        payee,
+        payment_method,
         amount,
         date,
         status,
@@ -594,7 +629,7 @@
 
     async function handleDeleteTxFromModal() {
       const id = document.getElementById('editingTxId').value;
-      const desc = document.getElementById('txDesc').value;
+      const desc = document.getElementById('txDesc').value || 'this transaction';
       if (!id) return;
 
       if (!confirm(`Are you sure you want to delete transaction "${desc}"?`)) return;
@@ -682,7 +717,7 @@
 
       if (!confirm(`Are you sure you want to delete "${name}"?`)) return;
 
-      const { error } = await sb.from('accounts').delete().eq('id', id);
+      const { error } = await sb.from('transactions').delete().eq('id', id);
       if (error) {
         alert("Error deleting account: " + error.message);
         return;
