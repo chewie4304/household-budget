@@ -7,6 +7,8 @@
   <title>Household Budget</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- Cropper.js CSS -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
@@ -238,13 +240,13 @@
             <!-- Option A: Choose Existing Files -->
             <label class="flex items-center justify-center gap-1.5 bg-gray-100 hover:bg-gray-200 border border-gray-300 text-gray-700 text-xs font-semibold py-2 px-3 rounded-lg cursor-pointer text-center">
               <span>📁 Upload File</span>
-              <input type="file" id="txReceiptFile" accept="image/*" multiple class="hidden" onchange="updateFileSelectionLabel()" />
+              <input type="file" id="txReceiptFile" accept="image/*" class="hidden" onchange="handleImageInput(this)" />
             </label>
 
             <!-- Option B: Direct Camera Capture -->
             <label class="flex items-center justify-center gap-1.5 bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-700 text-xs font-semibold py-2 px-3 rounded-lg cursor-pointer text-center">
               <span>📷 Take Photo</span>
-              <input type="file" id="txCameraFile" accept="image/*" capture="environment" class="hidden" onchange="updateFileSelectionLabel()" />
+              <input type="file" id="txCameraFile" accept="image/*" capture="environment" class="hidden" onchange="handleImageInput(this)" />
             </label>
           </div>
 
@@ -273,9 +275,29 @@
     </div>
   </div>
 
+  <!-- Image Cropper Modal -->
+  <div id="cropModal" class="fixed inset-0 bg-black/75 hidden flex items-center justify-center p-4 z-50">
+    <div class="bg-white w-full max-w-lg rounded-2xl p-4 space-y-3 flex flex-col">
+      <div class="flex justify-between items-center">
+        <h3 class="font-bold text-lg text-gray-800">Crop Image / Receipt</h3>
+        <button type="button" onclick="cancelCrop()" class="text-gray-400 text-2xl">&times;</button>
+      </div>
+      <div class="max-h-[60vh] overflow-hidden flex justify-center bg-gray-100 rounded-lg">
+        <img id="imageToCrop" src="" alt="Source" class="max-w-full block">
+      </div>
+      <div class="flex justify-end gap-2 pt-2">
+        <button type="button" onclick="cancelCrop()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-semibold text-sm">Cancel</button>
+        <button type="button" onclick="confirmCrop()" class="px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold text-sm shadow">Crop & Add</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Cropper.js Script -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+
   <script>
     const SUPABASE_URL = "https://raujjskhrprnyigfmkwq.supabase.co";
-    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJhdWpqc2tocnBybnlpZ2Zta3dxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY3Njk0NzEsImV4cCI6MjEwMjM0NTQ3MX0.jEjU9BOmzpQpm-A4UlD8xrP2dpeQSiIEjj7-IuMbiVE";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJhdWpqc2tocnBybnlpZ2Zta3dxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY3Njk0NzEsImV4cCI6MjEwMjM0NTQ3MX0.jEjU9BOmzpQpm-A4UlD8xrP2dpeQSiIEjj7-IuMbiVEe";
     
     const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
       global: {
@@ -290,7 +312,10 @@
     let transactions = [];
     let activeAccountId = null;
     let selectedTagFilter = null;
-    let activeReceiptUrls = [];
+    let activeReceiptFiles = []; // Holds cropped File objects ready for upload
+    let activeReceiptUrls = [];  // Holds already uploaded URLs (when editing)
+
+    let cropper = null;
 
     async function init() {
       await fetchAccounts();
@@ -584,46 +609,114 @@
       }).join('');
     }
 
-    function updateFileSelectionLabel() {
-      const fileInput = document.getElementById('txReceiptFile');
-      const cameraInput = document.getElementById('txCameraFile');
-      const statusText = document.getElementById('fileSelectionStatus');
+    // --- Image Cropper Integration Logic ---
+    function handleImageInput(input) {
+      const file = input.files && input.files[0];
+      if (!file) return;
 
-      const fileCount = (fileInput.files ? fileInput.files.length : 0) + (cameraInput.files ? cameraInput.files.length : 0);
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const imageToCrop = document.getElementById('imageToCrop');
+        imageToCrop.src = e.target.result;
+        document.getElementById('cropModal').classList.remove('hidden');
 
-      if (fileCount > 0) {
-        statusText.textContent = `✓ ${fileCount} new image${fileCount > 1 ? 's' : ''} ready to upload`;
-        statusText.classList.remove('hidden');
-      } else {
-        statusText.classList.add('hidden');
+        if (cropper) {
+          cropper.destroy();
+        }
+
+        cropper = new Cropper(imageToCrop, {
+          aspectRatio: NaN, // Free aspect ratio
+          viewMode: 1,
+        });
+      };
+      reader.readAsDataURL(file);
+      input.value = ''; // Reset file input so same file can be chosen again if needed
+    }
+
+    function cancelCrop() {
+      document.getElementById('cropModal').classList.add('hidden');
+      if (cropper) {
+        cropper.destroy();
+        cropper = null;
       }
+    }
+
+    function confirmCrop() {
+      if (!cropper) return;
+
+      const canvas = cropper.getCroppedCanvas({
+        maxWidth: 1200,
+        maxHeight: 1200,
+        imageSmoothingQuality: 'high',
+      });
+
+      canvas.toBlob((blob) => {
+        const croppedFile = new File([blob], `receipt_${Date.now()}.jpg`, { type: 'image/jpeg' });
+        activeReceiptFiles.push(croppedFile);
+
+        cancelCrop();
+        renderModalReceiptList();
+      }, 'image/jpeg', 0.85);
     }
 
     function renderModalReceiptList() {
       const preview = document.getElementById('receiptPreview');
       const container = document.getElementById('receiptLinksList');
+      const statusText = document.getElementById('fileSelectionStatus');
 
-      if (!activeReceiptUrls || activeReceiptUrls.length === 0) {
+      const totalCount = activeReceiptUrls.length + activeReceiptFiles.length;
+
+      if (totalCount === 0) {
         preview.classList.add('hidden');
         container.innerHTML = '';
+        statusText.classList.add('hidden');
         return;
       }
 
       preview.classList.remove('hidden');
-      container.innerHTML = activeReceiptUrls.map((url, idx) => `
-        <div class="flex items-center justify-between bg-gray-50 border border-gray-200 p-2 rounded-lg text-xs">
-          <a href="${url}" target="_blank" class="text-blue-600 font-semibold underline truncate max-w-[200px]">
-            View Receipt ${activeReceiptUrls.length > 1 ? idx + 1 : ''}
-          </a>
-          <button type="button" onclick="removeSingleReceipt(${idx})" class="bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 text-[11px] font-semibold px-2 py-0.5 rounded transition-colors">
-            Remove
-          </button>
-        </div>
-      `).join('');
+      statusText.textContent = `✓ ${totalCount} attachment${totalCount > 1 ? 's' : ''} ready`;
+      statusText.classList.remove('hidden');
+
+      let html = '';
+
+      // Render already saved/uploaded URLs (if editing)
+      activeReceiptUrls.forEach((url, idx) => {
+        html += `
+          <div class="flex items-center justify-between bg-gray-50 border border-gray-200 p-2 rounded-lg text-xs">
+            <a href="${url}" target="_blank" class="text-blue-600 font-semibold underline truncate max-w-[200px]">
+              Receipt URL ${activeReceiptUrls.length > 1 ? idx + 1 : ''}
+            </a>
+            <button type="button" onclick="removeExistingReceipt(${idx})" class="bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 text-[11px] font-semibold px-2 py-0.5 rounded transition-colors">
+              Remove
+            </button>
+          </div>
+        `;
+      });
+
+      // Render newly cropped local files waiting to be uploaded
+      activeReceiptFiles.forEach((file, idx) => {
+        html += `
+          <div class="flex items-center justify-between bg-blue-50 border border-blue-200 p-2 rounded-lg text-xs">
+            <span class="text-blue-700 font-semibold truncate max-w-[200px]">
+              📷 Cropped: ${file.name}
+            </span>
+            <button type="button" onclick="removeNewReceipt(${idx})" class="bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 text-[11px] font-semibold px-2 py-0.5 rounded transition-colors">
+              Remove
+            </button>
+          </div>
+        `;
+      });
+
+      container.innerHTML = html;
     }
 
-    function removeSingleReceipt(indexToRemove) {
-      activeReceiptUrls.splice(indexToRemove, 1);
+    function removeExistingReceipt(index) {
+      activeReceiptUrls.splice(index, 1);
+      renderModalReceiptList();
+    }
+
+    function removeNewReceipt(index) {
+      activeReceiptFiles.splice(index, 1);
       renderModalReceiptList();
     }
 
@@ -636,9 +729,8 @@
       const form = document.getElementById('tx-form');
       form.reset();
       const deleteBtn = document.getElementById('txDeleteBtn');
-      const statusText = document.getElementById('fileSelectionStatus');
-      if (statusText) statusText.classList.add('hidden');
 
+      activeReceiptFiles = [];
       activeReceiptUrls = [];
 
       if (txId) {
@@ -716,29 +808,20 @@
         amount = -amount;
       }
 
-      let receipt_urls = [...activeReceiptUrls];
+      let finalReceiptUrls = [...activeReceiptUrls];
 
-      const fileInput = document.getElementById('txReceiptFile');
-      const cameraInput = document.getElementById('txCameraFile');
-
-      const pendingFiles = [
-        ...(fileInput.files ? Array.from(fileInput.files) : []),
-        ...(cameraInput.files ? Array.from(cameraInput.files) : [])
-      ];
-
-      if (pendingFiles.length > 0) {
-        const uploadedUrls = [];
-
-        for (const file of pendingFiles) {
+      // Upload any newly cropped pending image files to Supabase Storage
+      if (activeReceiptFiles.length > 0) {
+        for (const file of activeReceiptFiles) {
           const fileExt = file.name.split('.').pop();
           const fileName = `${Date.now()}_${Math.random().toString(36).substring(2, 7)}.${fileExt}`;
 
-          const { data: uploadData, error: uploadError } = await sb.storage
+          const { error: uploadError } = await sb.storage
             .from('receipts')
             .upload(fileName, file);
 
           if (uploadError) {
-            alert(`Error uploading file "${file.name}": ${uploadError.message}`);
+            alert(`Error uploading file: ${uploadError.message}`);
             submitBtn.disabled = false;
             submitBtn.textContent = editId ? "Update Transaction" : "Save Transaction";
             return;
@@ -748,10 +831,8 @@
             .from('receipts')
             .getPublicUrl(fileName);
 
-          uploadedUrls.push(publicUrlData.publicUrl);
+          finalReceiptUrls.push(publicUrlData.publicUrl);
         }
-
-        receipt_urls = [...receipt_urls, ...uploadedUrls];
       }
 
       const payload = {
@@ -763,7 +844,7 @@
         date,
         status,
         tags,
-        receipt_url: receipt_urls.join(', ')
+        receipt_url: finalReceiptUrls.join(', ')
       };
 
       let error;
