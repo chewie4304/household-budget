@@ -1138,6 +1138,12 @@ function openTxModal(txId = null) {
       else modal.classList.add('hidden');
     }
 
+    document.addEventListener('wheel', () => {
+  if (document.activeElement.type === 'number') {
+    document.activeElement.blur();
+  }
+});
+    
     window.onload = init;
   </script>
 </body>
