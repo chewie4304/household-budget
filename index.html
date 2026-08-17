@@ -622,8 +622,6 @@ const txList = globalTxs.length > 0
     function handleTypeChange() {
   const type = document.getElementById('txType').value;
   const wrapper = document.getElementById('transferTargetWrapper');
-  
-  // Find payment type input/select across common ID naming patterns
   const paymentSelect = document.getElementById('txPaymentType') 
                      || document.getElementById('tx-payment-type')
                      || document.getElementById('paymentType');
@@ -633,16 +631,7 @@ const txList = globalTxs.length > 0
     populateTargetAccountDropdown();
 
     if (paymentSelect) {
-      // Find the option whose text or value matches 'bank transfer' (case-insensitive)
-      const options = Array.from(paymentSelect.options || []);
-      const targetOption = options.find(opt => 
-        opt.value.toLowerCase().replace('_', ' ') === 'bank transfer' ||
-        opt.textContent.trim().toLowerCase() === 'bank transfer'
-      );
-
-      if (targetOption) {
-        paymentSelect.value = targetOption.value;
-      }
+      paymentSelect.value = 'bank_transfer';
     }
   } else {
     wrapper.classList.add('hidden');
