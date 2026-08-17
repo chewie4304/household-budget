@@ -15,7 +15,7 @@
   <link rel="icon" href="data:;base64,iVBORw0KGgo=" />
 </head>
 
-<body class="bg-gray-100 text-gray-900 antialiased min-h-screen pb-10" onload="init()">
+<body class="bg-gray-100 text-gray-900 antialiased min-h-screen pb-10">
 
   <!-- Main View -->
   <div id="accounts-view">
@@ -162,28 +162,22 @@
 
         <!-- Account Selection (Required) -->
         <div>
-          <label for="txAccount" class="text-xs font-semibold text-gray-600">Account</label>
-          <select id="txAccount" required onchange="autoSelectPaymentMethod(); populateToAccountDropdown();" class="w-full border p-2 rounded-lg mt-1 bg-white font-medium text-gray-800">
+          <label class="text-xs font-semibold text-gray-600">Account</label>
+          <select id="txAccount" required onchange="autoSelectPaymentMethod()" class="w-full border p-2 rounded-lg mt-1 bg-white font-medium text-gray-800">
             <!-- Dynamically populated -->
           </select>
         </div>
 
-        <!-- To Account Selection (Transfer Only) -->
-        <div id="transferToContainer" class="hidden mt-2">
-          <label for="txToAccount" class="text-xs font-semibold text-gray-600">To Account</label>
-          <select id="txToAccount" class="w-full border p-2 rounded-lg mt-1 bg-white"></select>
-        </div>
-        
         <!-- Description (Optional) -->
         <div>
-          <label for="txDesc" class="text-xs font-semibold text-gray-600">Description</label>
+          <label class="text-xs font-semibold text-gray-600">Description</label>
           <input type="text" id="txDesc" list="desc-suggestions" class="w-full border p-2 rounded-lg mt-1 font-medium text-gray-800" placeholder="e.g., Groceries or reimbursement" />
           <datalist id="desc-suggestions"></datalist>
         </div>
 
         <!-- Dynamic Payer / Payee Field (Optional) -->
         <div>
-          <label for="txPayee" class="text-xs font-semibold text-gray-600">Payer / Payee</label>
+          <label class="text-xs font-semibold text-gray-600">Payer / Payee</label>
           <input type="text" id="txPayee" list="payee-suggestions" class="w-full border p-2 rounded-lg mt-1 font-medium text-gray-800" placeholder="e.g., Walmart" />
           <datalist id="payee-suggestions"></datalist>
         </div>
@@ -191,15 +185,14 @@
         <!-- Type & Amount -->
         <div class="grid grid-cols-2 gap-2">
           <div>
-            <label for="txType" class="text-xs font-semibold text-gray-600">Type</label>
+            <label class="text-xs font-semibold text-gray-600">Type</label>
             <select id="txType" onchange="updatePayeeLabel()" class="w-full border p-2 rounded-lg mt-1 bg-white">
               <option value="expense">Expense (-)</option>
               <option value="income">Income (+)</option>
-              <option value="transfer">Transfer (↔)</option>
             </select>
           </div>
           <div>
-            <label for="txAmount" class="text-xs font-semibold text-gray-600">Amount ($)</label>
+            <label class="text-xs font-semibold text-gray-600">Amount ($)</label>
             <input type="number" step="0.01" id="txAmount" placeholder="0.00" required
               class="w-full border p-2 rounded-lg mt-1" />
           </div>
@@ -207,7 +200,7 @@
 
         <!-- Payment Type Dropdown -->
         <div>
-          <label for="txPaymentMethod" class="text-xs font-semibold text-gray-600">Payment Type</label>
+          <label class="text-xs font-semibold text-gray-600">Payment Type</label>
           <select id="txPaymentMethod" class="w-full border p-2 rounded-lg mt-1 bg-white">
             <option value="debit">Debit Card</option>
             <option value="credit">Credit Card</option>
@@ -220,11 +213,11 @@
         <!-- Date & Status -->
         <div class="grid grid-cols-2 gap-2">
           <div>
-            <label for="txDate" class="text-xs font-semibold text-gray-600">Date</label>
+            <label class="text-xs font-semibold text-gray-600">Date</label>
             <input type="date" id="txDate" required class="w-full border p-2 rounded-lg mt-1" />
           </div>
           <div>
-            <label for="txStatus" class="text-xs font-semibold text-gray-600">Status</label>
+            <label class="text-xs font-semibold text-gray-600">Status</label>
             <select id="txStatus" class="w-full border p-2 rounded-lg mt-1 bg-white">
               <option value="pending">Pending</option>
               <option value="reconciled">Reconciled</option>
@@ -234,7 +227,7 @@
 
         <!-- Tags -->
         <div>
-          <label for="txTags" class="text-xs font-semibold text-gray-600">Tags (comma-separated)</label>
+          <label class="text-xs font-semibold text-gray-600">Tags (comma-separated)</label>
           <input type="text" id="txTags" placeholder="e.g., groceries, vacation, tax"
             class="w-full border p-2 rounded-lg mt-1" />
         </div>
@@ -250,9 +243,8 @@
               <span>📁 Upload File</span>
               <input type="file" id="txReceiptFile" accept="image/*" class="hidden" onchange="handleImageInput(this)" />
             </label>
-          </div>
 
-          <!-- Selection Status Text -->
+        <!-- Selection Status Text -->
           <p id="fileSelectionStatus" class="text-[11px] text-gray-500 mt-1.5 font-medium hidden"></p>
 
           <!-- Container for Existing Individual Receipts -->
@@ -303,6 +295,7 @@
     const SUPABASE_URL = "https://raujjskhrprnyigfmkwq.supabase.co";
     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJhdWpqc2tocnBybnlpZ2Zta3dxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY3Njk0NzEsImV4cCI6MjEwMjM0NTQ3MX0.jEjU9BOmzpQpm-A4UlD8xrP2dpeQSiIEjj7-IuMbiVE";
 
+    // Standard initialization without custom global headers override
     const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     let accounts = [];
@@ -499,7 +492,7 @@
     }
     
     function escapeHtml(str) {
-      if (!str) return '';
+     if (!str) return '';
       return String(str)
         .replace(/&/g, '&amp;')
         .replace(/</g, '&lt;')
@@ -533,8 +526,10 @@
         const isPending = status === 'pending';
         const tags = Array.isArray(tx.tags) ? tx.tags : [];
 
+        // Main Title: Payer/Payee
         const displayTitle = tx.payee || 'Transaction';
         
+        // Subtitle: ONLY render if description exists AND isn't identical to the payee
         const rawDesc = (tx.description || '').trim();
         const rawPayee = (tx.payee || '').trim();
         const subTitle = (rawDesc && rawDesc.toLowerCase() !== rawPayee.toLowerCase()) ? rawDesc : '';
@@ -600,39 +595,12 @@
 
     function updatePayeeLabel() {
       const type = document.getElementById('txType').value;
-      const payeeLabel = document.querySelector('label[for="txPayee"]');
-      const transferContainer = document.getElementById('transferToContainer');
-      const accountLabel = document.querySelector('label[for="txAccount"]');
-    
-      if (type === 'transfer') {
-        if (payeeLabel) payeeLabel.textContent = 'Transfer Details / Payee (Optional)';
-        if (accountLabel) accountLabel.textContent = 'From Account';
-        if (transferContainer) transferContainer.classList.remove('hidden');
-        populateToAccountDropdown();
-      } else {
-        if (payeeLabel) payeeLabel.textContent = type === 'income' ? 'Payer / Source' : 'Payer / Payee';
-        if (accountLabel) accountLabel.textContent = 'Account';
-        if (transferContainer) transferContainer.classList.add('hidden');
+      const label = document.getElementById('txPayeeLabel');
+      if (label) {
+        label.textContent = type === 'income' ? 'Payer' : 'Payee';
       }
     }
 
-    function populateToAccountDropdown() {
-      const fromAccountId = document.getElementById('txAccount').value;
-      const toSelect = document.getElementById('txToAccount');
-      if (!toSelect || !Array.isArray(accounts)) return;
-    
-      const currentToValue = toSelect.value;
-      const availableAccounts = accounts.filter(acc => String(acc.id) !== String(fromAccountId));
-    
-      toSelect.innerHTML = availableAccounts
-        .map(acc => `<option value="${acc.id}">${acc.name}</option>`)
-        .join('');
-    
-      if (availableAccounts.some(acc => String(acc.id) === String(currentToValue))) {
-        toSelect.value = currentToValue;
-      }
-    }
-    
     function populateAccountDropdown(selectedId = null) {
       const select = document.getElementById('txAccount');
       if (!accounts || accounts.length === 0) {
@@ -646,17 +614,7 @@
       }).join('');
     }
 
-    function autoSelectPaymentMethod() {
-      const accId = document.getElementById('txAccount').value;
-      const acc = accounts.find(a => String(a.id) === String(accId));
-      if (!acc) return;
-
-      const pmSelect = document.getElementById('txPaymentMethod');
-      if (acc.type === 'credit') pmSelect.value = 'credit';
-      else if (acc.type === 'cash') pmSelect.value = 'cash';
-      else pmSelect.value = 'debit';
-    }
-
+    // --- Image Cropper Integration Logic ---
     function handleImageInput(input) {
       const file = input.files && input.files[0];
       if (!file) return;
@@ -728,18 +686,26 @@
 
       activeReceiptUrls.forEach((url, idx) => {
         html += `
-          <div class="flex items-center justify-between bg-gray-50 border border-gray-200 p-1.5 rounded text-xs">
-            <a href="${url}" target="_blank" class="text-blue-600 font-medium truncate max-w-[200px]">Existing Receipt ${idx + 1}</a>
-            <button type="button" onclick="removeExistingReceiptUrl(${idx})" class="text-red-500 font-bold px-1">&times;</button>
+          <div class="flex items-center justify-between bg-gray-50 border border-gray-200 p-2 rounded-lg text-xs">
+            <a href="${url}" target="_blank" class="text-blue-600 font-semibold underline truncate max-w-[200px]">
+              Receipt URL ${activeReceiptUrls.length > 1 ? idx + 1 : ''}
+            </a>
+            <button type="button" onclick="removeExistingReceipt(${idx})" class="bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 text-[11px] font-semibold px-2 py-0.5 rounded transition-colors">
+              Remove
+            </button>
           </div>
         `;
       });
 
       activeReceiptFiles.forEach((file, idx) => {
         html += `
-          <div class="flex items-center justify-between bg-blue-50 border border-blue-200 p-1.5 rounded text-xs">
-            <span class="text-blue-800 font-medium truncate max-w-[200px]">${file.name}</span>
-            <button type="button" onclick="removeNewReceiptFile(${idx})" class="text-red-500 font-bold px-1">&times;</button>
+          <div class="flex items-center justify-between bg-blue-50 border border-blue-200 p-2 rounded-lg text-xs">
+            <span class="text-blue-700 font-semibold truncate max-w-[200px]">
+              📷 Cropped: ${file.name}
+            </span>
+            <button type="button" onclick="removeNewReceipt(${idx})" class="bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 text-[11px] font-semibold px-2 py-0.5 rounded transition-colors">
+              Remove
+            </button>
           </div>
         `;
       });
@@ -747,42 +713,269 @@
       container.innerHTML = html;
     }
 
-    function removeExistingReceiptUrl(idx) {
-      activeReceiptUrls.splice(idx, 1);
+    function removeExistingReceipt(index) {
+      activeReceiptUrls.splice(index, 1);
       renderModalReceiptList();
     }
 
-    function removeNewReceiptFile(idx) {
-      activeReceiptFiles.splice(idx, 1);
+    function removeNewReceipt(index) {
+      activeReceiptFiles.splice(index, 1);
       renderModalReceiptList();
     }
 
-    function toggleAccountModal(show) {
-      document.getElementById('account-modal').classList.toggle('hidden', !show);
+    function autoSelectPaymentMethod() {
+  const accountSelect = document.getElementById('txAccount');
+  const paymentSelect = document.getElementById('txPaymentMethod');
+  if (!accountSelect || !paymentSelect) return;
+
+  const selectedAccountId = accountSelect.value;
+  const selectedAccount = accounts.find(a => String(a.id) === String(selectedAccountId));
+  if (!selectedAccount) return;
+
+  const nameAndType = `${selectedAccount.name || ''} ${selectedAccount.type || ''}`.toLowerCase();
+
+  if (nameAndType.includes('credit') || nameAndType.includes('visa') || nameAndType.includes('mastercard') || nameAndType.includes('card')) {
+    paymentSelect.value = 'credit';
+  } else if (nameAndType.includes('checking') || nameAndType.includes('debit')) {
+    paymentSelect.value = 'debit';
+  } else if (nameAndType.includes('cash')) {
+    paymentSelect.value = 'cash';
+  } else if (nameAndType.includes('savings')) {
+    paymentSelect.value = 'transfer';
+  }
+}
+
+    function updateAutocompleteSuggestions() {
+  const payeeList = document.getElementById('payee-suggestions');
+  const descList = document.getElementById('desc-suggestions');
+
+  if (!payeeList || !descList || !Array.isArray(transactions)) return;
+
+  // Extract unique payees (ignoring empty ones)
+  const uniquePayees = [...new Set(
+    transactions
+      .map(tx => (tx.payee || '').trim())
+      .filter(p => p.length > 0)
+  )].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
+
+  // Extract unique descriptions (ignoring empty ones)
+  const uniqueDescs = [...new Set(
+    transactions
+      .map(tx => (tx.description || '').trim())
+      .filter(d => d.length > 0)
+  )].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
+
+  // Build options HTML
+  payeeList.innerHTML = uniquePayees.map(p => `<option value="${p}">`).join('');
+  descList.innerHTML = uniqueDescs.map(d => `<option value="${d}">`).join('');
+}
+    
+function openTxModal(txId = null) {
+  if (accounts.length === 0) {
+    alert("Please create an account first before adding transactions.");
+    return;
+  }
+
+  const form = document.getElementById('tx-form');
+  form.reset();
+  const deleteBtn = document.getElementById('txDeleteBtn');
+
+  activeReceiptFiles = [];
+  activeReceiptUrls = [];
+
+  if (txId) {
+    const tx = transactions.find(t => t.id === txId);
+    if (!tx) return;
+
+    const amt = parseFloat(tx.amount || 0);
+    document.getElementById('tx-modal-title').textContent = "Edit Transaction";
+    document.getElementById('txSubmitBtn').textContent = "Update Transaction";
+    document.getElementById('editingTxId').value = tx.id;
+    populateAccountDropdown(tx.account_id);
+    document.getElementById('txDesc').value = tx.description || '';
+    document.getElementById('txPayee').value = tx.payee || '';
+    document.getElementById('txType').value = amt >= 0 ? 'income' : 'expense';
+    document.getElementById('txAmount').value = Math.abs(amt);
+    document.getElementById('txPaymentMethod').value = tx.payment_method || 'debit';
+    document.getElementById('txDate').value = tx.date || new Date().toISOString().split('T')[0];
+    document.getElementById('txStatus').value = tx.status || 'pending';
+    document.getElementById('txTags').value = Array.isArray(tx.tags) ? tx.tags.join(', ') : '';
+
+    if (tx.receipt_url) {
+      activeReceiptUrls = tx.receipt_url.split(',').map(u => u.trim()).filter(Boolean);
     }
 
-    function openAccountModal(accId = null) {
-      document.getElementById('account-form').reset();
-      document.getElementById('editingAccId').value = accId || '';
-      const title = document.getElementById('modal-title');
-      const submitBtn = document.getElementById('submitBtn');
+    deleteBtn.classList.remove('hidden');
+  } else {
+    document.getElementById('tx-modal-title').textContent = "Add Transaction";
+    document.getElementById('txSubmitBtn').textContent = "Save Transaction";
+    document.getElementById('editingTxId').value = "";
+    populateAccountDropdown(activeAccountId);
+    
+    // Automatically match payment method to the default/active account
+    autoSelectPaymentMethod();
+
+    document.getElementById('txPayee').value = "";
+    document.getElementById('txDate').value = new Date().toISOString().split('T')[0];
+    document.getElementById('txStatus').value = 'pending';
+    document.getElementById('txTags').value = '';
+
+    deleteBtn.classList.add('hidden');
+  }
+
+  renderModalReceiptList();
+  updatePayeeLabel();
+  updateAutocompleteSuggestions();
+  toggleTxModal(true);
+}
+    
+    async function handleTxSubmit(e) {
+      e.preventDefault();
+      const submitBtn = document.getElementById('txSubmitBtn');
+      submitBtn.disabled = true;
+      submitBtn.textContent = "Saving...";
+
+      const editId = document.getElementById('editingTxId').value;
+      const targetAccountId = document.getElementById('txAccount').value;
+      const description = document.getElementById('txDesc').value;
+      const payee = document.getElementById('txPayee').value;
+      const payment_method = document.getElementById('txPaymentMethod').value;
+      const txType = document.getElementById('txType').value;
+      let amount = parseFloat(document.getElementById('txAmount').value) || 0;
+      const date = document.getElementById('txDate').value;
+      const status = document.getElementById('txStatus').value;
+
+      if (!targetAccountId) {
+        alert("Please select an account.");
+        submitBtn.disabled = false;
+        submitBtn.textContent = editId ? "Update Transaction" : "Save Transaction";
+        return;
+      }
+
+      const rawTags = document.getElementById('txTags').value;
+      const tags = rawTags
+        .split(',')
+        .map(t => t.trim().toLowerCase())
+        .filter(t => t.length > 0);
+
+      if (txType === 'expense' && amount > 0) {
+        amount = -amount;
+      }
+
+      let finalReceiptUrls = [...activeReceiptUrls];
+
+      if (activeReceiptFiles.length > 0) {
+        for (const file of activeReceiptFiles) {
+          const fileExt = file.name.split('.').pop();
+          const fileName = `${Date.now()}_${Math.random().toString(36).substring(2, 7)}.${fileExt}`;
+
+          const {error: uploadError} = await sb.storage
+            .from('receipts')
+            .upload(fileName, file);
+
+          if (uploadError) {
+            alert(`Error uploading file: ${uploadError.message}`);
+            submitBtn.disabled = false;
+            submitBtn.textContent = editId ? "Update Transaction" : "Save Transaction";
+            return;
+          }
+
+          const {data: publicUrlData} = sb.storage
+            .from('receipts')
+            .getPublicUrl(fileName);
+
+          finalReceiptUrls.push(publicUrlData.publicUrl);
+        }
+      }
+
+      const payload = {
+        account_id: targetAccountId,
+        description: description || payee || 'Transaction',
+        payee,
+        payment_method,
+        amount,
+        date,
+        status,
+        tags,
+        receipt_url: finalReceiptUrls.join(', ')
+      };
+
+      let error;
+      if (editId) {
+        ({error} = await sb.from('transactions').update(payload).eq('id', editId));
+      } else {
+        ({error} = await sb.from('transactions').insert([payload]));
+      }
+
+      submitBtn.disabled = false;
+
+      if (error) {
+        alert("Error saving transaction: " + error.message);
+        submitBtn.textContent = editId ? "Update Transaction" : "Save Transaction";
+        return;
+      }
+
+      toggleTxModal(false);
+      if (activeAccountId) {
+        fetchTransactions(activeAccountId);
+      }
+      fetchAccounts();
+    }
+
+    async function handleDeleteTxFromModal() {
+      const id = document.getElementById('editingTxId').value;
+      const desc = document.getElementById('txDesc').value || 'this transaction';
+      if (!id) return;
+
+      if (!confirm(`Are you sure you want to delete transaction "${desc}"?`)) return;
+
+      const {error} = await sb.from('transactions').delete().eq('id', id);
+      if (error) {
+        alert("Error deleting transaction: " + error.message);
+        return;
+      }
+
+      toggleTxModal(false);
+      if (activeAccountId) {
+        fetchTransactions(activeAccountId);
+      }
+      fetchAccounts();
+    }
+
+    async function deleteTx(id, description = 'this transaction') {
+      if (!confirm(`Delete "${description}"?`)) return;
+      const {error} = await sb.from('transactions').delete().eq('id', id);
+      if (error) {
+        alert("Error deleting transaction: " + error.message);
+        return;
+      }
+      if (activeAccountId) {
+        fetchTransactions(activeAccountId);
+      }
+      fetchAccounts();
+    }
+
+    function openAccountModal(accountId = null) {
+      const form = document.getElementById('account-form');
+      form.reset();
       const deleteBtn = document.getElementById('deleteBtn');
 
-      if (accId) {
-        const acc = accounts.find(a => a.id === accId);
-        if (acc) {
-          title.textContent = 'Edit Account';
-          submitBtn.textContent = 'Save Changes';
-          deleteBtn.classList.remove('hidden');
-          document.getElementById('accName').value = acc.name || '';
-          document.getElementById('accType').value = acc.type || 'checking';
-          document.getElementById('accBalance').value = acc.initial_balance || 0;
-          document.getElementById('accInstitution').value = acc.institution || '';
-          document.getElementById('accNumber').value = acc.account_number || '';
-        }
+      if (accountId) {
+        const acc = accounts.find(a => a.id === accountId);
+        if (!acc) return;
+        document.getElementById('modal-title').textContent = "Edit Account";
+        document.getElementById('submitBtn').textContent = "Update Account";
+        document.getElementById('editingAccId').value = acc.id;
+        document.getElementById('accName').value = acc.name || '';
+        document.getElementById('accType').value = acc.type || 'checking';
+        document.getElementById('accBalance').value = acc ? acc.initial_balance : '';
+        document.getElementById('accInstitution').value = acc.institution || '';
+        document.getElementById('accNumber').value = acc.account_number || '';
+        deleteBtn.classList.remove('hidden');
       } else {
-        title.textContent = 'Add New Account';
-        submitBtn.textContent = 'Create Account';
+        document.getElementById('modal-title').textContent = "Add New Account";
+        document.getElementById('submitBtn').textContent = "Create Account";
+        document.getElementById('editingAccId').value = "";
         deleteBtn.classList.add('hidden');
       }
 
@@ -791,177 +984,66 @@
 
     async function handleAccountSubmit(e) {
       e.preventDefault();
-      const id = document.getElementById('editingAccId').value;
+      const submitBtn = document.getElementById('submitBtn');
+      submitBtn.disabled = true;
+
+      const editId = document.getElementById('editingAccId').value;
       const payload = {
-        name: document.getElementById('accName').value.trim(),
+        name: document.getElementById('accName').value,
         type: document.getElementById('accType').value,
-        initial_balance: parseFloat(document.getElementById('accBalance').value || 0),
-        institution: document.getElementById('accInstitution').value.trim(),
-        account_number: document.getElementById('accNumber').value.trim()
+        initial_balance: parseFloat(document.getElementById('accBalance').value) || 0,
+        institution: document.getElementById('accInstitution').value,
+        account_number: document.getElementById('accNumber').value
       };
 
-      try {
-        if (id) {
-          const {error} = await sb.from('accounts').update(payload).eq('id', id);
-          if (error) throw error;
-        } else {
-          const {error} = await sb.from('accounts').insert([payload]);
-          if (error) throw error;
-        }
-        toggleAccountModal(false);
-        fetchAccounts();
-      } catch (err) {
-        alert("Error saving account: " + err.message);
+      let error;
+      if (editId) {
+        ({error} = await sb.from('accounts').update(payload).eq('id', editId));
+      } else {
+        ({error} = await sb.from('accounts').insert([payload]));
       }
+
+      submitBtn.disabled = false;
+
+      if (error) {
+        alert("Error saving account: " + error.message);
+        return;
+      }
+
+      toggleAccountModal(false);
+      fetchAccounts();
     }
 
     async function handleDeleteFromModal() {
       const id = document.getElementById('editingAccId').value;
-      if (!id || !confirm("Are you sure you want to delete this account? All linked transactions will be removed.")) return;
+      const name = document.getElementById('accName').value || 'this account';
+      if (!id) return;
 
-      try {
-        const {error} = await sb.from('accounts').delete().eq('id', id);
-        if (error) throw error;
-        toggleAccountModal(false);
-        if (activeAccountId === id) showAccountsView();
-        fetchAccounts();
-      } catch (err) {
-        alert("Error deleting account: " + err.message);
+      if (!confirm(`Are you sure you want to delete "${name}"? This will also remove associated transactions.`)) return;
+
+      const {error} = await sb.from('accounts').delete().eq('id', id);
+      if (error) {
+        alert("Error deleting account: " + error.message);
+        return;
       }
+
+      toggleAccountModal(false);
+      fetchAccounts();
+    }
+
+    function toggleAccountModal(show) {
+      const modal = document.getElementById('account-modal');
+      if (show) modal.classList.remove('hidden');
+      else modal.classList.add('hidden');
     }
 
     function toggleTxModal(show) {
-      document.getElementById('tx-modal').classList.toggle('hidden', !show);
+      const modal = document.getElementById('tx-modal');
+      if (show) modal.classList.remove('hidden');
+      else modal.classList.add('hidden');
     }
 
-    function openTxModal(txId = null) {
-      document.getElementById('tx-form').reset();
-      document.getElementById('editingTxId').value = txId || '';
-      activeReceiptFiles = [];
-      activeReceiptUrls = [];
-
-      populateAccountDropdown();
-      const title = document.getElementById('tx-modal-title');
-      const submitBtn = document.getElementById('txSubmitBtn');
-      const deleteBtn = document.getElementById('txDeleteBtn');
-
-      if (txId) {
-        const tx = transactions.find(t => t.id === txId);
-        if (tx) {
-          title.textContent = 'Edit Transaction';
-          submitBtn.textContent = 'Save Changes';
-          deleteBtn.classList.remove('hidden');
-
-          document.getElementById('txAccount').value = tx.account_id;
-          document.getElementById('txPayee').value = tx.payee || '';
-          document.getElementById('txDesc').value = tx.description || '';
-          
-          const rawAmt = parseFloat(tx.amount || 0);
-          document.getElementById('txAmount').value = Math.abs(rawAmt);
-          document.getElementById('txType').value = rawAmt < 0 ? 'expense' : 'income';
-          
-          document.getElementById('txPaymentMethod').value = tx.payment_method || 'debit';
-          document.getElementById('txDate').value = tx.date || '';
-          document.getElementById('txStatus').value = tx.status || 'pending';
-          document.getElementById('txTags').value = Array.isArray(tx.tags) ? tx.tags.join(', ') : '';
-
-          if (tx.receipt_url) {
-            activeReceiptUrls = tx.receipt_url.split(',').map(u => u.trim()).filter(Boolean);
-          }
-        }
-      } else {
-        title.textContent = 'Add Transaction';
-        submitBtn.textContent = 'Save Transaction';
-        deleteBtn.classList.add('hidden');
-        document.getElementById('txDate').value = new Date().toISOString().split('T')[0];
-        autoSelectPaymentMethod();
-      }
-
-      updatePayeeLabel();
-      renderModalReceiptList();
-      toggleTxModal(true);
-    }
-
-    async function uploadReceiptFiles() {
-      const uploadedUrls = [];
-      for (const file of activeReceiptFiles) {
-        const path = `receipts/${Date.now()}_${file.name}`;
-        const {data, error} = await sb.storage.from('receipts').upload(path, file);
-        if (error) {
-          console.warn("Storage upload error:", error);
-          continue;
-        }
-        const {data: pubUrl} = sb.storage.from('receipts').getPublicUrl(path);
-        if (pubUrl) uploadedUrls.push(pubUrl.publicUrl);
-      }
-      return uploadedUrls;
-    }
-
-    async function handleTxSubmit(e) {
-      e.preventDefault();
-      const id = document.getElementById('editingTxId').value;
-      const type = document.getElementById('txType').value;
-      let rawAmt = parseFloat(document.getElementById('txAmount').value || 0);
-      
-      if (type === 'expense' && rawAmt > 0) rawAmt = -rawAmt;
-      if (type === 'income' && rawAmt < 0) rawAmt = Math.abs(rawAmt);
-
-      const tagInput = document.getElementById('txTags').value;
-      const tagsArray = tagInput ? tagInput.split(',').map(t => t.trim().toLowerCase().replace(/^#/, '')).filter(Boolean) : [];
-
-      let uploadedUrls = [];
-      if (activeReceiptFiles.length > 0) {
-        uploadedUrls = await uploadReceiptFiles();
-      }
-      
-      const allReceiptUrls = [...activeReceiptUrls, ...uploadedUrls].join(',');
-
-      const payload = {
-        account_id: document.getElementById('txAccount').value,
-        payee: document.getElementById('txPayee').value.trim(),
-        description: document.getElementById('txDesc').value.trim(),
-        amount: rawAmt,
-        payment_method: document.getElementById('txPaymentMethod').value,
-        date: document.getElementById('txDate').value,
-        status: document.getElementById('txStatus').value,
-        tags: tagsArray,
-        receipt_url: allReceiptUrls || null
-      };
-
-      try {
-        if (id) {
-          const {error} = await sb.from('transactions').update(payload).eq('id', id);
-          if (error) throw error;
-        } else {
-          const {error} = await sb.from('transactions').insert([payload]);
-          if (error) throw error;
-        }
-        toggleTxModal(false);
-        if (activeAccountId) fetchTransactions(activeAccountId);
-        fetchAccounts();
-      } catch (err) {
-        alert("Error saving transaction: " + err.message);
-      }
-    }
-
-    async function deleteTx(id, name) {
-      if (!confirm(`Delete transaction "${name}"?`)) return;
-      try {
-        const {error} = await sb.from('transactions').delete().eq('id', id);
-        if (error) throw error;
-        if (activeAccountId) fetchTransactions(activeAccountId);
-        fetchAccounts();
-      } catch (err) {
-        alert("Error deleting transaction: " + err.message);
-      }
-    }
-
-    async function handleDeleteTxFromModal() {
-      const id = document.getElementById('editingTxId').value;
-      if (!id) return;
-      await deleteTx(id, 'Selected Item');
-      toggleTxModal(false);
-    }
+    window.onload = init;
   </script>
 </body>
 
