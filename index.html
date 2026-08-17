@@ -998,30 +998,37 @@ function openTxModal(txId = null) {
 
       if (!confirm(`Are you sure you want to delete transaction "${desc}"?`)) return;
 
-      const {error} = await sb.from('transactions').delete().eq('id', id);
+      const { error } = await sb.from('transactions').delete().eq('id', id);
       if (error) {
         alert("Error deleting transaction: " + error.message);
         return;
       }
 
       toggleTxModal(false);
-      if (activeAccountId) {
-        fetchTransactions(activeAccountId);
+
+      // Re-fetch everything from Supabase and refresh views
+      await fetchData();
+      renderAccounts();
+      if (window.currentAccountId) {
+        showTransactionsView(window.currentAccountId);
       }
-      fetchAccounts();
     }
 
     async function deleteTx(id, description = 'this transaction') {
       if (!confirm(`Delete "${description}"?`)) return;
-      const {error} = await sb.from('transactions').delete().eq('id', id);
+
+      const { error } = await sb.from('transactions').delete().eq('id', id);
       if (error) {
         alert("Error deleting transaction: " + error.message);
         return;
       }
-      if (activeAccountId) {
-        fetchTransactions(activeAccountId);
+
+      // Re-fetch everything from Supabase and refresh views
+      await fetchData();
+      renderAccounts();
+      if (window.currentAccountId) {
+        showTransactionsView(window.currentAccountId);
       }
-      fetchAccounts();
     }
 
     function openAccountModal(accountId = null) {
