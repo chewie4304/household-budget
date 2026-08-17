@@ -367,7 +367,19 @@
       list.innerHTML = accounts.map(acc => {
         const initialBal = parseFloat(acc.initial_balance || 0);
 // Pull from global transactions array filtered by account ID:
-const txList = (typeof transactions !== 'undefined' ? transactions : []).filter(tx => tx.account_id === acc.id);
+const initialBal = parseFloat(acc.initial_balance || 0);
+
+// Grab transactions from global array, falling back to acc.transactions if empty:
+const globalTxs = (typeof transactions !== 'undefined' && transactions.length > 0)
+  ? transactions.filter(tx => (tx.account_id === acc.id || tx.accountId === acc.id))
+  : [];
+
+const txList = globalTxs.length > 0 
+  ? globalTxs 
+  : (Array.isArray(acc.transactions) ? acc.transactions : []);
+
+const totalTxSum = txList.reduce((sum, tx) => sum + parseFloat(tx.amount || 0), 0);
+const currentBal = initialBal + totalTxSum;
 
         const totalTxSum = txList.reduce((sum, tx) => sum + parseFloat(tx.amount || 0), 0);
         const currentBal = initialBal + totalTxSum;
