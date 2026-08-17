@@ -946,28 +946,31 @@ function openTxModal(txId = null) {
   if (editId) {
     ({ error } = await sb.from('transactions').update(payload).eq('id', editId));
   } else if (txType === 'transfer') {
-    // Fetch account names for auto-generated payees
+    // Generate a unique link key for both ends of the transfer
+    const transferId = crypto.randomUUID();
+
     const sourceAccount = accounts.find(a => a.id === targetAccountId);
     const targetAccount = accounts.find(a => a.id === destinationAccountId);
 
-    // 1. Debit from source account (negative amount)
+    // 1. Debit from source account
     const sourcePayload = {
       ...payload,
       amount: -Math.abs(amount),
-      payee: payee || `Transfer to ${targetAccount ? targetAccount.name : 'Account'}`
+      payee: payee || `Transfer to ${targetAccount ? targetAccount.name : 'Account'}`,
+      transfer_id: transferId
     };
 
-    // 2. Deposit into destination account (positive amount)
+    // 2. Deposit into destination account
     const targetPayload = {
       ...payload,
       account_id: destinationAccountId,
       amount: Math.abs(amount),
-      payee: payee || `Transfer from ${sourceAccount ? sourceAccount.name : 'Account'}`
+      payee: payee || `Transfer from ${sourceAccount ? sourceAccount.name : 'Account'}`,
+      transfer_id: transferId
     };
 
     ({ error } = await sb.from('transactions').insert([sourcePayload, targetPayload]));
   } else {
-    // Standard Expense or Income transaction
     const adjustedPayload = {
       ...payload,
       amount: txType === 'expense' ? -Math.abs(amount) : Math.abs(amount)
@@ -983,13 +986,9 @@ function openTxModal(txId = null) {
   } else {
     toggleTxModal(false);
     
-    // 1. Pull fresh data from Supabase
     await fetchData(); 
-
-    // 2. Always refresh the main accounts list state
     renderAccounts();
 
-    // 3. If viewing a specific account, refresh and stay on that view
     if (window.currentAccountId) {
       showTransactionsView(window.currentAccountId);
     }
@@ -997,27 +996,34 @@ function openTxModal(txId = null) {
 }
 
     async function handleDeleteTxFromModal() {
-      const id = document.getElementById('editingTxId').value;
-      const desc = document.getElementById('txDesc').value || 'this transaction';
-      if (!id) return;
+  const id = document.getElementById('editingTxId').value;
+  const desc = document.getElementById('txDesc').value || 'this transaction';
+  if (!id) return;
 
-      if (!confirm(`Are you sure you want to delete transaction "${desc}"?`)) return;
+  if (!confirm(`Are you sure you want to delete transaction "${desc}"?`)) return;
 
-      const { error } = await sb.from('transactions').delete().eq('id', id);
-      if (error) {
-        alert("Error deleting transaction: " + error.message);
-        return;
-      }
+  const targetTx = transactions.find(t => t.id == id);
+  let query = sb.from('transactions').delete();
 
-      toggleTxModal(false);
+  if (targetTx && targetTx.transfer_id) {
+    query = query.eq('transfer_id', targetTx.transfer_id);
+  } else {
+    query = query.eq('id', id);
+  }
 
-      // Re-fetch everything from Supabase and refresh views
-      await fetchData();
-      renderAccounts();
-      if (window.currentAccountId) {
-        showTransactionsView(window.currentAccountId);
-      }
-    }
+  const { error } = await query;
+  if (error) {
+    alert("Error deleting transaction: " + error.message);
+    return;
+  }
+
+  toggleTxModal(false);
+  await fetchData();
+  renderAccounts();
+  if (window.currentAccountId) {
+    showTransactionsView(window.currentAccountId);
+  }
+}
 
     async function deleteTx(id, description = 'this transaction') {
       if (!confirm(`Delete "${description}"?`)) return;
@@ -1095,22 +1101,30 @@ function openTxModal(txId = null) {
       fetchAccounts();
     }
 
-    async function handleDeleteFromModal() {
-      const id = document.getElementById('editingAccId').value;
-      const name = document.getElementById('accName').value || 'this account';
-      if (!id) return;
+    async function deleteTx(id, description = 'this transaction') {
+  if (!confirm(`Delete "${description}"?`)) return;
 
-      if (!confirm(`Are you sure you want to delete "${name}"? This will also remove associated transactions.`)) return;
+  const targetTx = transactions.find(t => t.id == id);
+  let query = sb.from('transactions').delete();
 
-      const {error} = await sb.from('accounts').delete().eq('id', id);
-      if (error) {
-        alert("Error deleting account: " + error.message);
-        return;
-      }
+  if (targetTx && targetTx.transfer_id) {
+    query = query.eq('transfer_id', targetTx.transfer_id);
+  } else {
+    query = query.eq('id', id);
+  }
 
-      toggleAccountModal(false);
-      fetchAccounts();
-    }
+  const { error } = await query;
+  if (error) {
+    alert("Error deleting transaction: " + error.message);
+    return;
+  }
+
+  await fetchData();
+  renderAccounts();
+  if (window.currentAccountId) {
+    showTransactionsView(window.currentAccountId);
+  }
+}
 
     function toggleAccountModal(show) {
       const modal = document.getElementById('account-modal');
