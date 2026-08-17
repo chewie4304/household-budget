@@ -877,8 +877,8 @@ function openTxModal(txId = null) {
 }
 
     async function fetchData() {
-  // Fetch with explicit sorting so order stays fixed
-  const { data: accData, error: accError } = await sb.from('accounts').select('*').order('id', { ascending: true });
+  // Try ordering by created_at or name if 'id' isn't sequential
+  const { data: accData, error: accError } = await sb.from('accounts').select('*').order('created_at', { ascending: true });
   const { data: txData, error: txError } = await sb.from('transactions').select('*').order('date', { ascending: false });
 
   if (accError) console.error("Error fetching accounts:", accError);
@@ -887,7 +887,7 @@ function openTxModal(txId = null) {
   if (accData) accounts = accData;
   if (txData) transactions = txData;
 
-  // Re-render the active view
+  // Re-render active view
   if (window.currentAccountId) {
     showTransactionsView(window.currentAccountId);
   } else {
@@ -978,14 +978,15 @@ function openTxModal(txId = null) {
   } else {
     toggleTxModal(false);
     
-    // Re-fetch fresh data from Supabase, then refresh whichever view is active
+    // 1. Pull fresh data from Supabase
     await fetchData(); 
 
-    // If currently inside a specific account view, re-render that account
-    if (typeof currentAccountId !== 'undefined' && currentAccountId) {
-      showTransactionsView(currentAccountId);
-    } else {
-      renderAccounts();
+    // 2. Always refresh the main accounts list state
+    renderAccounts();
+
+    // 3. If viewing a specific account, refresh and stay on that view
+    if (window.currentAccountId) {
+      showTransactionsView(window.currentAccountId);
     }
   }
 }
