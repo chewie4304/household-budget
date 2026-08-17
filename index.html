@@ -948,8 +948,8 @@ function openTxModal(txId = null) {
       };
 
       let error;
-let error;
-if (editId) {
+
+      if (editId) {
   ({error} = await sb.from('transactions').update(payload).eq('id', editId));
 } else if (txType === 'transfer') {
   // Fetch account names for auto-generated payees
