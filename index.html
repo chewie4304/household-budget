@@ -414,6 +414,7 @@ const txList = globalTxs.length > 0
     }
 
     async function showTransactionsView(accId) {
+      window.currentAccountId = accId; // Store active account globally
       activeAccountId = accId;
       selectedTagFilter = null;
       const acc = accounts.find(a => a.id === accId);
@@ -432,6 +433,7 @@ const txList = globalTxs.length > 0
     }
 
     function showAccountsView() {
+      window.currentAccountId = null; // Clear active account
       activeAccountId = null;
       selectedTagFilter = null;
       document.getElementById('transactions-view').classList.add('hidden');
@@ -875,9 +877,9 @@ function openTxModal(txId = null) {
 }
 
     async function fetchData() {
-  // Pull fresh accounts and transactions from Supabase
-  const { data: accData, error: accError } = await sb.from('accounts').select('*');
-  const { data: txData, error: txError } = await sb.from('transactions').select('*');
+  // Fetch with explicit sorting so order stays fixed
+  const { data: accData, error: accError } = await sb.from('accounts').select('*').order('id', { ascending: true });
+  const { data: txData, error: txError } = await sb.from('transactions').select('*').order('date', { ascending: false });
 
   if (accError) console.error("Error fetching accounts:", accError);
   if (txError) console.error("Error fetching transactions:", txError);
@@ -885,17 +887,11 @@ function openTxModal(txId = null) {
   if (accData) accounts = accData;
   if (txData) transactions = txData;
 
-  // Re-render the active view with fresh data
-  if (typeof currentAccountId !== 'undefined' && currentAccountId) {
-    // If you are inside an account details view, keep you there & refresh it
-    if (typeof showTransactionsView === 'function') {
-      showTransactionsView(currentAccountId);
-    }
+  // Re-render the active view
+  if (window.currentAccountId) {
+    showTransactionsView(window.currentAccountId);
   } else {
-    // Otherwise refresh the main accounts list
-    if (typeof renderAccounts === 'function') {
-      renderAccounts();
-    }
+    renderAccounts();
   }
 }
     
