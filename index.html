@@ -620,20 +620,26 @@ const txList = globalTxs.length > 0
     }
 
     function handleTypeChange() {
-      const type = document.getElementById('txType').value;
-      const wrapper = document.getElementById('transferTargetWrapper');
-    
-      if (type === 'transfer') {
-        wrapper.classList.remove('hidden');
-        populateTargetAccountDropdown();
-      } else {
-        wrapper.classList.add('hidden');
-      }
-    
-      if (typeof updatePayeeLabel === 'function') {
-        updatePayeeLabel();
-      }
+  const type = document.getElementById('txType').value;
+  const wrapper = document.getElementById('transferTargetWrapper');
+  const paymentSelect = document.getElementById('txPaymentType') || document.getElementById('tx-payment-type');
+
+  if (type === 'transfer') {
+    wrapper.classList.remove('hidden');
+    populateTargetAccountDropdown();
+
+    // Automatically default Payment Type to Bank Transfer
+    if (paymentSelect) {
+      paymentSelect.value = 'Bank Transfer';
     }
+  } else {
+    wrapper.classList.add('hidden');
+  }
+
+  if (typeof updatePayeeLabel === 'function') {
+    updatePayeeLabel();
+  }
+}
     
     function populateTargetAccountDropdown() {
       const targetSelect = document.getElementById('txTargetAccount');
