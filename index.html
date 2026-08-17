@@ -873,6 +873,31 @@ function openTxModal(txId = null) {
   handleTypeChange();
   toggleTxModal(true);
 }
+
+    async function fetchData() {
+  // Pull fresh accounts and transactions from Supabase
+  const { data: accData, error: accError } = await sb.from('accounts').select('*');
+  const { data: txData, error: txError } = await sb.from('transactions').select('*');
+
+  if (accError) console.error("Error fetching accounts:", accError);
+  if (txError) console.error("Error fetching transactions:", txError);
+
+  if (accData) accounts = accData;
+  if (txData) transactions = txData;
+
+  // Re-render the active view with fresh data
+  if (typeof currentAccountId !== 'undefined' && currentAccountId) {
+    // If you are inside an account details view, keep you there & refresh it
+    if (typeof showTransactionsView === 'function') {
+      showTransactionsView(currentAccountId);
+    }
+  } else {
+    // Otherwise refresh the main accounts list
+    if (typeof renderAccounts === 'function') {
+      renderAccounts();
+    }
+  }
+}
     
     async function handleTxSubmit(e) {
   e.preventDefault();
@@ -956,7 +981,16 @@ function openTxModal(txId = null) {
     alert("Error saving transaction: " + error.message);
   } else {
     toggleTxModal(false);
-    fetchData(); // Reload UI
+    
+    // Re-fetch fresh data from Supabase, then refresh whichever view is active
+    await fetchData(); 
+
+    // If currently inside a specific account view, re-render that account
+    if (typeof currentAccountId !== 'undefined' && currentAccountId) {
+      showTransactionsView(currentAccountId);
+    } else {
+      renderAccounts();
+    }
   }
 }
 
