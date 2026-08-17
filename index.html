@@ -367,7 +367,6 @@
       list.innerHTML = accounts.map(acc => {
         const initialBal = parseFloat(acc.initial_balance || 0);
 // Pull from global transactions array filtered by account ID:
-const initialBal = parseFloat(acc.initial_balance || 0);
 
 // Grab transactions from global array, falling back to acc.transactions if empty:
 const globalTxs = (typeof transactions !== 'undefined' && transactions.length > 0)
