@@ -948,12 +948,38 @@ function openTxModal(txId = null) {
       };
 
       let error;
+let error;
 if (editId) {
   ({error} = await sb.from('transactions').update(payload).eq('id', editId));
 } else if (txType === 'transfer') {
   // Fetch account names for auto-generated payees
   const sourceAccount = accounts.find(a => a.id === targetAccountId);
   const targetAccount = accounts.find(a => a.id === destinationAccountId);
+
+  // 1. Debit from source account (negative amount)
+  const sourcePayload = {
+    ...payload,
+    amount: -Math.abs(amount),
+    payee: payee || `Transfer to ${targetAccount ? targetAccount.name : 'Account'}`
+  };
+
+  // 2. Deposit into destination account (positive amount)
+  const targetPayload = {
+    ...payload,
+    account_id: destinationAccountId,
+    amount: Math.abs(amount),
+    payee: payee || `Transfer from ${sourceAccount ? sourceAccount.name : 'Account'}`
+  };
+
+  ({error} = await sb.from('transactions').insert([sourcePayload, targetPayload]));
+} else {
+  // Standard Expense or Income transaction
+  const adjustedPayload = {
+    ...payload,
+    amount: txType === 'expense' ? -Math.abs(amount) : Math.abs(amount)
+  };
+  ({error} = await sb.from('transactions').insert([adjustedPayload]));
+}
 
   // 1. Debit from source account
   const sourcePayload = {
