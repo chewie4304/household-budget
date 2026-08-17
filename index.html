@@ -881,8 +881,9 @@ function openTxModal(txId = null) {
   let amount = parseFloat(document.getElementById('txAmount').value) || 0;
   const date = document.getElementById('txDate').value;
   const status = document.getElementById('txStatus').value;
-  const tags = document.getElementById('txTags').value;
-
+  const tagsRaw = document.getElementById('txTags')?.value || '';
+  const tags = tagsRaw.split(',').map(t => t.trim()).filter(Boolean);
+      
   // Validation for Transfers
   if (txType === 'transfer' && !editId) {
     if (!destinationAccountId || targetAccountId === destinationAccountId) {
