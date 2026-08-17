@@ -163,11 +163,17 @@
         <!-- Account Selection (Required) -->
         <div>
           <label class="text-xs font-semibold text-gray-600">Account</label>
-          <select id="txAccount" required onchange="autoSelectPaymentMethod()" class="w-full border p-2 rounded-lg mt-1 bg-white font-medium text-gray-800">
+          <select id="txAccount" required onchange="autoSelectPaymentMethod(); populateToAccountDropdown();" class="w-full border p-2 rounded-lg mt-1 bg-white font-medium text-gray-800">
             <!-- Dynamically populated -->
           </select>
         </div>
 
+        <!-- To Account Selection (Transfer Only) -->
+        <div id="transferToContainer" class="hidden mt-2">
+          <label class="text-xs font-semibold text-gray-600">To Account</label>
+          <select id="txToAccount" class="w-full border p-2 rounded-lg mt-1 bg-white"></select>
+        </div>
+        
         <!-- Description (Optional) -->
         <div>
           <label class="text-xs font-semibold text-gray-600">Description</label>
@@ -189,6 +195,7 @@
             <select id="txType" onchange="updatePayeeLabel()" class="w-full border p-2 rounded-lg mt-1 bg-white">
               <option value="expense">Expense (-)</option>
               <option value="income">Income (+)</option>
+              <option value="transfer">Transfer (↔)</option>
             </select>
           </div>
           <div>
@@ -595,12 +602,42 @@
 
     function updatePayeeLabel() {
       const type = document.getElementById('txType').value;
-      const label = document.getElementById('txPayeeLabel');
-      if (label) {
-        label.textContent = type === 'income' ? 'Payer' : 'Payee';
+      const payeeLabel = document.querySelector('label[for="txPayee"]') || document.getElementById('txPayee')?.previousElementSibling;
+      const transferContainer = document.getElementById('transferToContainer');
+      const accountLabel = document.querySelector('label[for="txAccount"]') || document.getElementById('txAccount')?.previousElementSibling;
+    
+      if (type === 'transfer') {
+        if (payeeLabel) payeeLabel.textContent = 'Transfer Details / Payee (Optional)';
+        if (accountLabel) accountLabel.textContent = 'From Account';
+        if (transferContainer) transferContainer.classList.remove('hidden');
+        populateToAccountDropdown();
+      } else {
+        if (payeeLabel) payeeLabel.textContent = type === 'income' ? 'Payer / Source' : 'Payer / Payee';
+        if (accountLabel) accountLabel.textContent = 'Account';
+        if (transferContainer) transferContainer.classList.add('hidden');
       }
     }
 
+    function populateToAccountDropdown() {
+      const fromAccountId = document.getElementById('txAccount').value;
+      const toSelect = document.getElementById('txToAccount');
+      if (!toSelect || !Array.isArray(accounts)) return;
+    
+      const currentToValue = toSelect.value;
+      
+      // Filter out the source account so you can't transfer to the same account
+      const availableAccounts = accounts.filter(acc => String(acc.id) !== String(fromAccountId));
+    
+      toSelect.innerHTML = availableAccounts
+        .map(acc => `<option value="${acc.id}">${acc.name}</option>`)
+        .join('');
+    
+      // Keep previous selection if still valid, otherwise pick the first available
+      if (availableAccounts.some(acc => String(acc.id) === String(currentToValue))) {
+        toSelect.value = currentToValue;
+      }
+    }
+    
     function populateAccountDropdown(selectedId = null) {
       const select = document.getElementById('txAccount');
       if (!accounts || accounts.length === 0) {
@@ -888,24 +925,27 @@ function openTxModal(txId = null) {
         }
       }
 
-      const payload = {
-        account_id: targetAccountId,
-        description: description || payee || 'Transaction',
-        payee,
-        payment_method,
-        amount,
-        date,
-        status,
-        tags,
-        receipt_url: finalReceiptUrls.join(', ')
-      };
-
-      let error;
       if (editId) {
-        ({error} = await sb.from('transactions').update(payload).eq('id', editId));
-      } else {
-        ({error} = await sb.from('transactions').insert([payload]));
+          ({error} = await sb.from('transactions').update(payload).eq('id', editId));
+        } else {
+          ({error} = await sb.from('transactions').insert([payload]));
+        }
       }
+
+      submitBtn.disabled = false;
+
+      if (error) {
+        alert("Error saving transaction: " + error.message);
+        submitBtn.textContent = editId ? "Update Transaction" : "Save Transaction";
+        return;
+      }
+
+      toggleTxModal(false);
+      if (activeAccountId) {
+        fetchTransactions(activeAccountId);
+      }
+      fetchAccounts();
+    }
 
       submitBtn.disabled = false;
 
