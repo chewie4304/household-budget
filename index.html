@@ -622,9 +622,7 @@ const txList = globalTxs.length > 0
     function handleTypeChange() {
   const type = document.getElementById('txType').value;
   const wrapper = document.getElementById('transferTargetWrapper');
-  const paymentSelect = document.getElementById('txPaymentType') 
-                     || document.getElementById('tx-payment-type')
-                     || document.getElementById('paymentType');
+  const paymentSelect = document.getElementById('txPaymentMethod');
 
   if (type === 'transfer') {
     wrapper.classList.remove('hidden');
