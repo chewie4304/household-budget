@@ -377,9 +377,6 @@ const txList = globalTxs.length > 0
   ? globalTxs 
   : (Array.isArray(acc.transactions) ? acc.transactions : []);
 
-const totalTxSum = txList.reduce((sum, tx) => sum + parseFloat(tx.amount || 0), 0);
-const currentBal = initialBal + totalTxSum;
-
         const totalTxSum = txList.reduce((sum, tx) => sum + parseFloat(tx.amount || 0), 0);
         const currentBal = initialBal + totalTxSum;
 
