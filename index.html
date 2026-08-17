@@ -866,157 +866,89 @@ function openTxModal(txId = null) {
 }
     
     async function handleTxSubmit(e) {
-      e.preventDefault();
-      const submitBtn = document.getElementById('txSubmitBtn');
-      submitBtn.disabled = true;
-      submitBtn.textContent = "Saving...";
+  e.preventDefault();
+  const submitBtn = document.getElementById('txSubmitBtn');
+  submitBtn.disabled = true;
+  submitBtn.textContent = "Saving...";
 
-      const editId = document.getElementById('editingTxId').value;
-      const targetAccountId = document.getElementById('txAccount').value;
-      const destinationAccountId = document.getElementById('txTargetAccount')?.value; // ADDED
-      const description = document.getElementById('txDesc').value;
-      const payee = document.getElementById('txPayee').value;
-      const payment_method = document.getElementById('txPaymentMethod').value;
-      const txType = document.getElementById('txType').value;
-      let amount = parseFloat(document.getElementById('txAmount').value) || 0;
-      const date = document.getElementById('txDate').value;
-      const status = document.getElementById('txStatus').value;
+  const editId = document.getElementById('editingTxId').value;
+  const targetAccountId = document.getElementById('txAccount').value;
+  const destinationAccountId = document.getElementById('txTargetAccount')?.value;
+  const description = document.getElementById('txDesc').value;
+  const payee = document.getElementById('txPayee').value;
+  const payment_method = document.getElementById('txPaymentMethod').value;
+  const txType = document.getElementById('txType').value;
+  let amount = parseFloat(document.getElementById('txAmount').value) || 0;
+  const date = document.getElementById('txDate').value;
+  const status = document.getElementById('txStatus').value;
+  const tags = document.getElementById('txTags').value;
 
-      // Validation for Transfers (ADDED)
-      if (txType === 'transfer' && !editId) {
-        if (!destinationAccountId || targetAccountId === destinationAccountId) {
-          alert("Please select a different destination account for the transfer.");
-          submitBtn.disabled = false;
-          submitBtn.textContent = "Save Transaction";
-          return;
-        }
-      }
-
-      if (!targetAccountId) {
-        alert("Please select an account.");
-        submitBtn.disabled = false;
-        submitBtn.textContent = editId ? "Update Transaction" : "Save Transaction";
-        return;
-      }
-
-      const rawTags = document.getElementById('txTags').value;
-      const tags = rawTags
-        .split(',')
-        .map(t => t.trim().toLowerCase())
-        .filter(t => t.length > 0);
-
-      if (txType === 'expense' && amount > 0) {
-        amount = -amount;
-      }
-
-      let finalReceiptUrls = [...activeReceiptUrls];
-
-      if (activeReceiptFiles.length > 0) {
-        for (const file of activeReceiptFiles) {
-          const fileExt = file.name.split('.').pop();
-          const fileName = `${Date.now()}_${Math.random().toString(36).substring(2, 7)}.${fileExt}`;
-
-          const {error: uploadError} = await sb.storage
-            .from('receipts')
-            .upload(fileName, file);
-
-          if (uploadError) {
-            alert(`Error uploading file: ${uploadError.message}`);
-            submitBtn.disabled = false;
-            submitBtn.textContent = editId ? "Update Transaction" : "Save Transaction";
-            return;
-          }
-
-          const {data: publicUrlData} = sb.storage
-            .from('receipts')
-            .getPublicUrl(fileName);
-
-          finalReceiptUrls.push(publicUrlData.publicUrl);
-        }
-      }
-
-      const payload = {
-        account_id: targetAccountId,
-        description: description || payee || 'Transaction',
-        payee,
-        payment_method,
-        amount,
-        date,
-        status,
-        tags,
-        receipt_url: finalReceiptUrls.join(', ')
-      };
-
-      let error;
-
-      if (editId) {
-  ({error} = await sb.from('transactions').update(payload).eq('id', editId));
-} else if (txType === 'transfer') {
-  // Fetch account names for auto-generated payees
-  const sourceAccount = accounts.find(a => a.id === targetAccountId);
-  const targetAccount = accounts.find(a => a.id === destinationAccountId);
-
-  // 1. Debit from source account (negative amount)
-  const sourcePayload = {
-    ...payload,
-    amount: -Math.abs(amount),
-    payee: payee || `Transfer to ${targetAccount ? targetAccount.name : 'Account'}`
-  };
-
-  // 2. Deposit into destination account (positive amount)
-  const targetPayload = {
-    ...payload,
-    account_id: destinationAccountId,
-    amount: Math.abs(amount),
-    payee: payee || `Transfer from ${sourceAccount ? sourceAccount.name : 'Account'}`
-  };
-
-  ({error} = await sb.from('transactions').insert([sourcePayload, targetPayload]));
-} else {
-  // Standard Expense or Income transaction
-  const adjustedPayload = {
-    ...payload,
-    amount: txType === 'expense' ? -Math.abs(amount) : Math.abs(amount)
-  };
-  ({error} = await sb.from('transactions').insert([adjustedPayload]));
-}
-
-  // 1. Debit from source account
-  const sourcePayload = {
-    ...payload,
-    type: 'expense',
-    amount: -Math.abs(amount),
-    payee: payee || `Transfer to ${targetAccount ? targetAccount.name : 'Account'}`
-  };
-
-  // 2. Deposit into destination account
-  const targetPayload = {
-    ...payload,
-    account_id: destinationAccountId,
-    type: 'income',
-    amount: Math.abs(amount),
-    payee: payee || `Transfer from ${sourceAccount ? sourceAccount.name : 'Account'}`
-  };
-
-  ({error} = await sb.from('transactions').insert([sourcePayload, targetPayload]));
-} else {
-  ({error} = await sb.from('transactions').insert([payload]));
-}
-
-submitBtn.disabled = false;
-
-      if (error) {
-        alert("Error saving transaction: " + error.message);
-        submitBtn.textContent = editId ? "Update Transaction" : "Save Transaction";
-        return;
-      }
-
-      toggleTxModal(false);
-      if (activeAccountId) {
-        fetchTransactions(activeAccountId);
-      }
-      fetchAccounts();
+  // Validation for Transfers
+  if (txType === 'transfer' && !editId) {
+    if (!destinationAccountId || targetAccountId === destinationAccountId) {
+      alert("Please select a different destination account for the transfer.");
+      submitBtn.disabled = false;
+      submitBtn.textContent = "Save Transaction";
+      return;
     }
+  }
+
+  const payload = {
+    account_id: targetAccountId,
+    description: description || payee || 'Transaction',
+    payee,
+    payment_method,
+    amount,
+    date,
+    status,
+    tags,
+    receipt_url: typeof finalReceiptUrls !== 'undefined' ? finalReceiptUrls.join(', ') : ''
+  };
+
+  let error;
+
+  if (editId) {
+    ({ error } = await sb.from('transactions').update(payload).eq('id', editId));
+  } else if (txType === 'transfer') {
+    // Fetch account names for auto-generated payees
+    const sourceAccount = accounts.find(a => a.id === targetAccountId);
+    const targetAccount = accounts.find(a => a.id === destinationAccountId);
+
+    // 1. Debit from source account (negative amount)
+    const sourcePayload = {
+      ...payload,
+      amount: -Math.abs(amount),
+      payee: payee || `Transfer to ${targetAccount ? targetAccount.name : 'Account'}`
+    };
+
+    // 2. Deposit into destination account (positive amount)
+    const targetPayload = {
+      ...payload,
+      account_id: destinationAccountId,
+      amount: Math.abs(amount),
+      payee: payee || `Transfer from ${sourceAccount ? sourceAccount.name : 'Account'}`
+    };
+
+    ({ error } = await sb.from('transactions').insert([sourcePayload, targetPayload]));
+  } else {
+    // Standard Expense or Income transaction
+    const adjustedPayload = {
+      ...payload,
+      amount: txType === 'expense' ? -Math.abs(amount) : Math.abs(amount)
+    };
+    ({ error } = await sb.from('transactions').insert([adjustedPayload]));
+  }
+
+  submitBtn.disabled = false;
+  submitBtn.textContent = "Save Transaction";
+
+  if (error) {
+    alert("Error saving transaction: " + error.message);
+  } else {
+    toggleTxModal(false);
+    fetchData(); // Reload UI
+  }
+}
 
     async function handleDeleteTxFromModal() {
       const id = document.getElementById('editingTxId').value;
