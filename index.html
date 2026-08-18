@@ -37,9 +37,23 @@
     <!-- Content Container -->
     <div class="max-w-md mx-auto p-4 space-y-4">
       <div class="space-y-3">
-        <h2 class="text-xl font-bold text-gray-800">Your Accounts</h2>
+        <h2 id="home-view-title" class="text-xl font-bold text-gray-800">Your Accounts</h2>
+
+        <div class="flex gap-2">
+          <button id="home-accounts-tab" onclick="showHomeAccounts()" class="flex-1 bg-blue-600 text-white px-3 py-2 rounded-lg text-sm font-semibold shadow-sm">
+            Accounts
+          </button>
+          <button id="home-transactions-tab" onclick="showAllTransactions()" class="flex-1 bg-white text-gray-700 border border-gray-200 px-3 py-2 rounded-lg text-sm font-semibold shadow-sm">
+            Transactions
+          </button>
+        </div>
+
         <div id="accounts-list" class="space-y-3">
           <p class="text-sm text-gray-500">Loading accounts...</p>
+        </div>
+
+        <div id="all-transactions-list" class="hidden space-y-3">
+          <p class="text-sm text-gray-500">Loading transactions...</p>
         </div>
       </div>
     </div>
@@ -476,13 +490,15 @@
     }
 
     async function init() {
-      await fetchAccounts();
+      await fetchData();
+      showHomeAccounts();
       try {
         sb.channel('db-changes')
           .on('postgres_changes', {event: '*', schema: 'public', table: 'accounts'}, () => fetchAccounts())
           .on('postgres_changes', {event: '*', schema: 'public', table: 'transactions'}, () => {
             if (activeAccountId) fetchTransactions(activeAccountId);
             fetchAccounts();
+            fetchData();
           })
           .subscribe();
       } catch (err) {
@@ -522,6 +538,87 @@
           </div>
         `;
       }
+    }
+
+    function showHomeAccounts() {
+      const accountsList = document.getElementById('accounts-list');
+      const allTransactionsList = document.getElementById('all-transactions-list');
+      const accountsTab = document.getElementById('home-accounts-tab');
+      const transactionsTab = document.getElementById('home-transactions-tab');
+      const title = document.getElementById('home-view-title');
+
+      accountsList.classList.remove('hidden');
+      allTransactionsList.classList.add('hidden');
+      title.textContent = 'Your Accounts';
+      accountsTab.classList.add('bg-blue-600', 'text-white');
+      accountsTab.classList.remove('bg-white', 'text-gray-700', 'border', 'border-gray-200');
+      transactionsTab.classList.add('bg-white', 'text-gray-700', 'border', 'border-gray-200');
+      transactionsTab.classList.remove('bg-blue-600', 'text-white');
+    }
+
+    function showAllTransactions() {
+      renderAllTransactions();
+
+      const accountsList = document.getElementById('accounts-list');
+      const allTransactionsList = document.getElementById('all-transactions-list');
+      const accountsTab = document.getElementById('home-accounts-tab');
+      const transactionsTab = document.getElementById('home-transactions-tab');
+      const title = document.getElementById('home-view-title');
+
+      accountsList.classList.add('hidden');
+      allTransactionsList.classList.remove('hidden');
+      title.textContent = 'Your Transactions';
+      transactionsTab.classList.add('bg-blue-600', 'text-white');
+      transactionsTab.classList.remove('bg-white', 'text-gray-700', 'border', 'border-gray-200');
+      accountsTab.classList.add('bg-white', 'text-gray-700', 'border', 'border-gray-200');
+      accountsTab.classList.remove('bg-blue-600', 'text-white');
+    }
+
+    function renderAllTransactions() {
+      const list = document.getElementById('all-transactions-list');
+      if (!Array.isArray(transactions) || transactions.length === 0) {
+        list.innerHTML = `
+          <div class="bg-white p-6 rounded-xl border border-gray-200 text-center space-y-2">
+            <p class="text-gray-600 font-medium">No transactions found.</p>
+            <p class="text-xs text-gray-400">Add a transaction to start tracking your cash flow.</p>
+          </div>
+        `;
+        return;
+      }
+
+      list.innerHTML = transactions.map(tx => {
+        const acc = accounts.find(a => a.id === tx.account_id);
+        const amount = parseFloat(tx.amount || 0);
+        const isPositive = amount >= 0;
+        const status = tx.status || 'pending';
+        const tags = Array.isArray(tx.tags) ? tx.tags : [];
+        const tagsHtml = tags.length > 0 ? `
+          <div class="flex flex-wrap gap-1 mt-1">
+            ${tags.map(t => `<span class="text-[10px] bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded font-medium">#${t}</span>`).join('')}
+          </div>
+        ` : '';
+
+        return `
+          <div onclick="showTransactionsView('${tx.account_id}')" class="bg-white p-3 rounded-xl shadow-sm border border-gray-100 cursor-pointer hover:border-blue-300 transition-all">
+            <div class="flex justify-between items-start gap-3">
+              <div>
+                <p class="font-semibold text-gray-900 text-sm">${tx.payee || tx.description || 'Transaction'}</p>
+                <p class="text-xs text-gray-500 mt-0.5">${acc ? acc.name : 'Account'} • ${tx.date || 'No date'}</p>
+                ${tx.description && tx.description !== tx.payee ? `<p class="text-xs text-gray-500 mt-0.5">${tx.description}</p>` : ''}
+                ${tagsHtml}
+              </div>
+              <div class="text-right">
+                <div class="font-bold text-sm ${isPositive ? 'text-emerald-600' : 'text-gray-900'}">
+                  ${isPositive ? '+' : ''}$${amount.toFixed(2)}
+                </div>
+                <div class="text-[10px] ${status === 'pending' ? 'text-amber-600' : 'text-emerald-600'} font-semibold uppercase tracking-wide">
+                  ${status}
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
     }
 
     function renderAccounts() {
