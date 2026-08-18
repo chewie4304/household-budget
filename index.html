@@ -39,6 +39,35 @@
       <div class="space-y-3">
         <h2 id="home-view-title" class="text-xl font-bold text-gray-800">Your Accounts</h2>
 
+        <div id="monthly-summary" class="hidden rounded-2xl bg-white border border-gray-200 shadow-sm p-4 space-y-3">
+          <div class="flex items-center justify-between gap-2">
+            <div>
+              <p class="text-[10px] font-bold uppercase tracking-wider text-gray-500">Monthly Summary</p>
+              <p id="monthly-summary-month" class="text-sm font-semibold text-gray-700">This Month</p>
+            </div>
+            <div class="flex items-center gap-2">
+              <span id="summary-live-badge" class="hidden text-[10px] font-semibold text-blue-600 bg-blue-50 rounded-full px-2 py-1">Live</span>
+              <select id="summary-month-select" onchange="setSelectedSummaryMonth(this.value)" class="rounded-lg border border-gray-200 bg-gray-50 px-2 py-1 text-xs font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-200">
+              </select>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-3 gap-2 text-center">
+            <button type="button" onclick="showAllTransactions('income')" class="rounded-xl bg-emerald-50 border border-emerald-100 p-2 text-left transition hover:bg-emerald-100">
+              <p class="text-[10px] font-bold uppercase tracking-wider text-emerald-700">Income</p>
+              <p id="monthly-income" class="mt-1 text-sm font-extrabold text-emerald-700">$0.00</p>
+            </button>
+            <button type="button" onclick="showAllTransactions('expense')" class="rounded-xl bg-red-50 border border-red-100 p-2 text-left transition hover:bg-red-100">
+              <p class="text-[10px] font-bold uppercase tracking-wider text-red-700">Expenses</p>
+              <p id="monthly-expenses" class="mt-1 text-sm font-extrabold text-red-700">$0.00</p>
+            </button>
+            <div class="rounded-xl bg-blue-50 border border-blue-100 p-2">
+              <p class="text-[10px] font-bold uppercase tracking-wider text-blue-700">Remaining</p>
+              <p id="monthly-remaining" class="mt-1 text-sm font-extrabold text-blue-700">$0.00</p>
+            </div>
+          </div>
+        </div>
+
         <div class="flex gap-2">
           <button id="home-accounts-tab" onclick="showHomeAccounts()" class="flex-1 bg-blue-600 text-white px-3 py-2 rounded-lg text-sm font-semibold shadow-sm">
             Accounts
@@ -387,6 +416,7 @@
 
     let accounts = [];
     let transactions = [];
+    let currentAccountTransactions = [];
     let activeAccountId = null;
     let selectedTagFilter = null;
     let activeReceiptFiles = [];
@@ -582,6 +612,7 @@
     }
 
     async function init() {
+      buildMonthOptions();
       restoreViewState();
       await detectCheckNumberColumn();
       await fetchData();
@@ -670,7 +701,11 @@
       saveViewState();
     }
 
-    function showAllTransactions() {
+    let selectedSummaryTransactionType = null;
+    let filteredTransactionsLookup = {};
+
+    function showAllTransactions(type = null) {
+      selectedSummaryTransactionType = type ?? null;
       renderAllTransactions();
 
       const accountsList = document.getElementById('accounts-list');
@@ -687,7 +722,15 @@
       allTransactionsList.classList.remove('hidden');
       accountSearchWrap.classList.add('hidden');
       transactionSearchWrap.classList.remove('hidden');
-      title.textContent = 'Your Transactions';
+      const monthLabel = selectedSummaryMonth
+        ? new Date(`${selectedSummaryMonth}-01T00:00:00`).toLocaleString('en-US', { month: 'long', year: 'numeric' })
+        : 'Selected Month';
+
+      title.textContent = selectedSummaryTransactionType === 'income'
+        ? `Income - ${monthLabel}`
+        : selectedSummaryTransactionType === 'expense'
+          ? `Expenses - ${monthLabel}`
+          : `Transactions - ${monthLabel}`;
       transactionsTab.classList.add('bg-blue-600', 'text-white');
       transactionsTab.classList.remove('bg-white', 'text-gray-700', 'border', 'border-gray-200');
       accountsTab.classList.add('bg-white', 'text-gray-700', 'border', 'border-gray-200');
@@ -695,31 +738,179 @@
       saveViewState();
     }
 
+    let selectedSummaryMonth = (() => {
+      const now = new Date();
+      return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    })();
+
+    function buildMonthOptions() {
+      const selector = document.getElementById('summary-month-select');
+      if (!selector) return;
+
+      const now = new Date();
+      const options = [];
+
+      for (let i = 11; i >= 0; i--) {
+        const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+        const label = d.toLocaleString('en-US', { month: 'long', year: 'numeric' });
+        options.push(`<option value="${key}">${label}</option>`);
+      }
+
+      selector.innerHTML = options.join('');
+      selector.value = selectedSummaryMonth;
+    }
+
+    function setSelectedSummaryMonth(monthKey) {
+      selectedSummaryMonth = monthKey || selectedSummaryMonth;
+      const selector = document.getElementById('summary-month-select');
+      if (selector) selector.value = selectedSummaryMonth;
+      renderMonthlySummary();
+    }
+
+    function isTransferPartnerTransaction(tx) {
+      return !!(tx && tx.transfer_id);
+    }
+
+    function getSelectedMonthTransactions() {
+      const [year, month] = selectedSummaryMonth.split('-').map(Number);
+      if (!year || !month) return [];
+
+      const monthStart = new Date(year, month - 1, 1);
+      const monthEnd = new Date(year, month, 0, 23, 59, 59, 999);
+
+      return (Array.isArray(transactions) ? transactions : []).filter(tx => {
+        const txDate = tx && tx.date ? new Date(tx.date + 'T00:00:00') : null;
+        if (!txDate || Number.isNaN(txDate.getTime())) return false;
+        if (isTransferPartnerTransaction(tx)) return false;
+        return txDate >= monthStart && txDate <= monthEnd;
+      });
+    }
+
+    function renderMonthlySummary() {
+      const card = document.getElementById('monthly-summary');
+      const monthLabel = document.getElementById('monthly-summary-month');
+      const incomeEl = document.getElementById('monthly-income');
+      const expensesEl = document.getElementById('monthly-expenses');
+      const remainingEl = document.getElementById('monthly-remaining');
+      const selector = document.getElementById('summary-month-select');
+      const liveBadge = document.getElementById('summary-live-badge');
+
+      if (!card || !monthLabel || !incomeEl || !expensesEl || !remainingEl) return;
+
+      if (selector && selector.options.length === 0) {
+        buildMonthOptions();
+      }
+
+      if (selector) {
+        selector.value = selectedSummaryMonth;
+      }
+
+      if (liveBadge) {
+        const now = new Date();
+        const currentMonthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+        const isCurrentMonth = selectedSummaryMonth === currentMonthKey;
+        liveBadge.classList.toggle('hidden', !isCurrentMonth);
+      }
+
+      const monthTx = getSelectedMonthTransactions();
+      const totalIncome = monthTx
+        .filter(tx => parseFloat(tx.amount || 0) > 0)
+        .reduce((sum, tx) => sum + parseFloat(tx.amount || 0), 0);
+
+      const totalExpenses = Math.abs(monthTx
+        .filter(tx => parseFloat(tx.amount || 0) < 0)
+        .reduce((sum, tx) => sum + parseFloat(tx.amount || 0), 0));
+
+      const remaining = totalIncome - totalExpenses;
+      const [year, month] = selectedSummaryMonth.split('-').map(Number);
+      const monthName = new Date(year, month - 1, 1).toLocaleString('en-US', { month: 'long', year: 'numeric' });
+
+      monthLabel.textContent = monthName;
+      incomeEl.textContent = `$${totalIncome.toFixed(2)}`;
+      expensesEl.textContent = `$${totalExpenses.toFixed(2)}`;
+      remainingEl.textContent = `$${remaining.toFixed(2)}`;
+      remainingEl.classList.toggle('text-red-700', remaining < 0);
+      remainingEl.classList.toggle('text-blue-700', remaining >= 0);
+
+      card.classList.remove('hidden');
+    }
+
     function renderAllTransactions() {
       const list = document.getElementById('all-transactions-list');
       const searchInput = document.getElementById('transaction-search');
       const query = searchInput ? searchInput.value.trim() : '';
 
-      const filteredTransactions = Array.isArray(transactions)
-        ? transactions.filter(tx => matchesSearch(tx, query))
-        : [];
+      renderMonthlySummary();
 
-      if (filteredTransactions.length === 0) {
+      let baseTransactions = Array.isArray(transactions) ? transactions : [];
+
+      if (selectedSummaryTransactionType === 'income') {
+        baseTransactions = baseTransactions.filter(tx => parseFloat(tx.amount || 0) > 0 && !isTransferPartnerTransaction(tx));
+      } else if (selectedSummaryTransactionType === 'expense') {
+        baseTransactions = baseTransactions.filter(tx => parseFloat(tx.amount || 0) < 0 && !isTransferPartnerTransaction(tx));
+      }
+
+      const selectedMonthStart = new Date(`${selectedSummaryMonth}-01T00:00:00`);
+      const selectedMonthEnd = new Date(selectedMonthStart.getFullYear(), selectedMonthStart.getMonth() + 1, 0, 23, 59, 59, 999);
+
+      baseTransactions = baseTransactions.filter(tx => {
+        const txDate = tx && tx.date ? new Date(tx.date + 'T00:00:00') : null;
+        if (!txDate || Number.isNaN(txDate.getTime())) return false;
+        return txDate >= selectedMonthStart && txDate <= selectedMonthEnd;
+      });
+
+      const filteredTransactions = baseTransactions
+        .filter(tx => matchesSearch(tx, query))
+        .sort((a, b) => {
+          const dateA = a && a.date ? new Date(a.date + 'T00:00:00').getTime() : 0;
+          const dateB = b && b.date ? new Date(b.date + 'T00:00:00').getTime() : 0;
+          if (dateA !== dateB) return dateB - dateA;
+          if (a.transfer_id && b.transfer_id && a.transfer_id === b.transfer_id) return 0;
+          return (a.transfer_id && !b.transfer_id) ? -1 : (!a.transfer_id && b.transfer_id) ? 1 : 0;
+        });
+
+      const groupedTransactions = [];
+      const seen = new Set();
+      filteredTransactions.forEach(tx => {
+        if (seen.has(tx.id)) return;
+
+        if (tx.transfer_id) {
+          const partner = filteredTransactions.find(candidate => candidate.transfer_id === tx.transfer_id && candidate.id !== tx.id);
+          if (partner) {
+            groupedTransactions.push(tx, partner);
+            seen.add(tx.id);
+            seen.add(partner.id);
+            return;
+          }
+        }
+
+        groupedTransactions.push(tx);
+        seen.add(tx.id);
+      });
+
+      const finalTransactions = groupedTransactions;
+
+      if (finalTransactions.length === 0) {
         list.innerHTML = `
           <div class="bg-white p-6 rounded-xl border border-gray-200 text-center space-y-2">
-            <p class="text-gray-600 font-medium">${query ? 'No matching transactions found.' : 'No transactions found.'}</p>
+            <p class="text-gray-600 font-medium">${query ? 'No matching transactions found.' : selectedSummaryTransactionType === 'income' ? 'No income transactions found for this month.' : selectedSummaryTransactionType === 'expense' ? 'No expense transactions found for this month.' : 'No transactions found.'}</p>
             <p class="text-xs text-gray-400">${query ? 'Try a different search term.' : 'Add a transaction to start tracking your cash flow.'}</p>
           </div>
         `;
         return;
       }
 
-      list.innerHTML = filteredTransactions.map(tx => {
+      filteredTransactionsLookup = Object.fromEntries(filteredTransactions.map(tx => [tx.id, tx]));
+
+      const renderTransactionCard = (tx) => {
         const acc = accounts.find(a => a.id === tx.account_id);
         const amount = parseFloat(tx.amount || 0);
         const isPositive = amount >= 0;
         const status = tx.status || 'pending';
+        const isPending = status === 'pending';
         const tags = Array.isArray(tx.tags) ? tx.tags : [];
+        const isTransfer = !!tx.transfer_id;
         const tagsHtml = tags.length > 0 ? `
           <div class="flex flex-wrap gap-1 mt-1">
             ${tags.map(t => `<span class="text-[10px] bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded font-medium">#${t}</span>`).join('')}
@@ -727,29 +918,76 @@
         ` : '';
 
         return `
-          <div onclick="openTxModal('${tx.id}')" class="bg-white p-3 rounded-xl shadow-sm border border-gray-100 cursor-pointer hover:border-blue-300 transition-all">
+          <div id="tx-row-${tx.id}" onclick="openTxModal('${tx.id}')" class="${isTransfer ? 'bg-purple-50 border border-purple-200 shadow-sm' : 'bg-white border border-gray-100'} p-3 rounded-xl cursor-pointer hover:border-blue-300 transition-all">
             <div class="flex justify-between items-start gap-3">
               <div>
-                <p class="font-semibold text-gray-900 text-sm">${tx.payee || tx.description || 'Transaction'}</p>
+                <div class="flex items-center gap-2">
+                  <p class="font-semibold text-gray-900 text-sm">${tx.payee || tx.description || 'Transaction'}</p>
+                </div>
                 <p class="text-xs text-gray-500 mt-0.5">${acc ? acc.name : 'Account'} • ${tx.date || 'No date'}</p>
                 ${tx.description && tx.description !== tx.payee ? `<p class="text-xs text-gray-500 mt-0.5">${tx.description}</p>` : ''}
                 ${tagsHtml}
               </div>
-              <div class="text-right">
-                <div class="font-bold text-sm ${isPositive ? 'text-emerald-600' : 'text-gray-900'}">
-                  ${isPositive ? '+' : ''}$${amount.toFixed(2)}
+              <div class="flex items-center gap-2">
+                <div class="text-right">
+                  <div class="font-bold text-sm ${isPositive ? 'text-emerald-600' : 'text-gray-900'}">
+                    ${isPositive ? '+' : ''}$${amount.toFixed(2)}
+                  </div>
                 </div>
-                <div class="text-[10px] ${status === 'pending' ? 'text-amber-600' : 'text-emerald-600'} font-semibold uppercase tracking-wide">
-                  ${status}
-                </div>
+                <button 
+                  onclick="event.stopPropagation(); toggleTxStatus('${tx.id}', '${status}')" 
+                  title="Status: ${status}. Click to toggle"
+                  class="px-2 py-0.5 text-xs font-bold rounded-full transition-colors ${isPending ? 'bg-amber-100 text-amber-700 hover:bg-amber-200' : 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200'}">
+                  ${isPending ? 'P' : 'R'}
+                </button>
+                <button onclick="event.stopPropagation(); deleteTx('${tx.id}', '${tx.payee || tx.description || 'transaction'}')" class="text-red-400 hover:text-red-600 text-base font-bold px-1">&times;</button>
               </div>
             </div>
           </div>
         `;
-      }).join('');
+      };
+
+      const txCardsHtml = [];
+      for (let i = 0; i < finalTransactions.length; i++) {
+        const tx = finalTransactions[i];
+        const nextTx = finalTransactions[i + 1];
+        const isPairedTransfer = tx.transfer_id && nextTx && nextTx.transfer_id === tx.transfer_id && nextTx.id !== tx.id;
+
+        if (isPairedTransfer) {
+          txCardsHtml.push(`
+            <div class="rounded-2xl border border-purple-300 bg-gradient-to-br from-purple-300 via-purple-200 to-purple-100 p-1.5 shadow-sm">
+              <div class="space-y-2">
+                ${renderTransactionCard(tx)}
+                ${renderTransactionCard(nextTx)}
+              </div>
+            </div>
+          `);
+          i += 1;
+        } else {
+          txCardsHtml.push(renderTransactionCard(tx));
+        }
+      }
+
+      list.innerHTML = txCardsHtml.join('');
+    }
+
+    function jumpToTransferPartner(transferId, currentId) {
+      const allRows = Array.from(document.querySelectorAll('[id^="tx-row-"]'));
+      const partnerRow = allRows.find(row => {
+        const rowId = row.id.replace('tx-row-', '');
+        const tx = filteredTransactionsLookup?.[rowId];
+        return tx && tx.transfer_id === transferId && rowId !== currentId;
+      });
+
+      if (partnerRow) {
+        partnerRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        partnerRow.classList.add('ring-2', 'ring-purple-300', 'ring-offset-1');
+        setTimeout(() => partnerRow.classList.remove('ring-2', 'ring-purple-300', 'ring-offset-1'), 1800);
+      }
     }
 
     function renderAccounts() {
+      renderMonthlySummary();
       const list = document.getElementById('accounts-list');
       const searchInput = document.getElementById('account-search');
       const query = searchInput ? searchInput.value.trim() : '';
@@ -875,17 +1113,17 @@
         const {data, error} = await sb.from('transactions').select('*').eq('account_id', accId).order('date', {ascending: false});
         if (error) throw error;
 
-        transactions = data || [];
+        currentAccountTransactions = data || [];
 
         const acc = accounts.find(a => a.id === accId);
         const initialBal = parseFloat(acc ? acc.initial_balance : 0);
 
-        const totalTxSum = transactions.reduce((sum, tx) => sum + parseFloat(tx.amount || 0), 0);
+        const totalTxSum = currentAccountTransactions.reduce((sum, tx) => sum + parseFloat(tx.amount || 0), 0);
         document.getElementById('tx-acc-balance').textContent = `$${(initialBal + totalTxSum).toFixed(2)}`;
 
         checkAccountBalanceAlerts();
 
-        const clearedTxSum = transactions.reduce((sum, tx) => {
+        const clearedTxSum = currentAccountTransactions.reduce((sum, tx) => {
           return tx.status === 'reconciled' ? sum + parseFloat(tx.amount || 0) : sum;
         }, 0);
         document.getElementById('tx-acc-cleared').textContent = `$${(initialBal + clearedTxSum).toFixed(2)}`;
@@ -908,7 +1146,7 @@
       const chipsContainer = document.getElementById('tag-filter-chips');
 
       const allTags = new Set();
-      transactions.forEach(tx => {
+      currentAccountTransactions.forEach(tx => {
         if (Array.isArray(tx.tags)) {
           tx.tags.forEach(t => allTags.add(t));
         }
@@ -952,9 +1190,9 @@
     function renderTransactions() {
       const list = document.getElementById('transactions-list');
 
-      let filteredTx = transactions;
+      let filteredTx = currentAccountTransactions;
       if (selectedTagFilter) {
-        filteredTx = transactions.filter(tx => Array.isArray(tx.tags) && tx.tags.includes(selectedTagFilter));
+        filteredTx = currentAccountTransactions.filter(tx => Array.isArray(tx.tags) && tx.tags.includes(selectedTagFilter));
       }
 
       const addButton = `
@@ -979,6 +1217,7 @@
         const status = tx.status || 'pending';
         const isPending = status === 'pending';
         const tags = Array.isArray(tx.tags) ? tx.tags : [];
+        const isTransfer = !!tx.transfer_id;
 
         // Main Title: Payer/Payee
         const displayTitle = tx.payee || 'Transaction';
@@ -994,6 +1233,14 @@
           </div>
         ` : '';
 
+        const transferButtonHtml = isTransfer
+          ? `
+            <button type="button" onclick="event.stopPropagation(); jumpToTransferPartnerAcrossAccounts('${tx.transfer_id}', '${tx.id}', '${activeAccountId || tx.account_id}')" class="ml-2 inline-flex items-center rounded-full bg-purple-100 text-purple-700 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide hover:bg-purple-200">
+              Transfer
+            </button>
+          `
+          : '';
+
         const receiptUrls = tx.receipt_url ? tx.receipt_url.split(',').map(u => u.trim()).filter(Boolean) : [];
         const receiptBtn = receiptUrls.length > 0 ? `
           <div class="flex gap-1 flex-wrap mt-0.5">
@@ -1006,34 +1253,72 @@
         ` : '';
 
         return `
-          <div onclick="openTxModal('${tx.id}')" class="bg-white p-3 rounded-xl shadow-sm border border-gray-100 flex justify-between items-center cursor-pointer hover:border-blue-300 transition-all">
-            <div>
-              <div class="flex items-center gap-2">
-                <p class="font-semibold text-gray-900 text-sm">${displayTitle}</p>
+          <div id="tx-row-${tx.id}" onclick="openTxModal('${tx.id}')" class="${isTransfer ? 'bg-purple-50 border border-purple-200 shadow-sm' : 'bg-white border border-gray-100'} p-3 rounded-xl shadow-sm cursor-pointer hover:border-blue-300 transition-all">
+            <div class="flex justify-between items-start gap-3">
+              <div>
+                <div class="flex items-center gap-2">
+                  <p class="font-semibold text-gray-900 text-sm">${displayTitle}</p>
+                  ${transferButtonHtml}
+                </div>
+                ${receiptBtn}
+                ${subTitle ? `<p class="text-xs text-gray-500 font-medium mt-0.5">${subTitle}</p>` : ''}
+                <p class="text-xs text-gray-400 mt-0.5">${tx.date}</p>
+                ${tagsHtml}
               </div>
-              ${receiptBtn}
-              ${subTitle ? `<p class="text-xs text-gray-500 font-medium mt-0.5">${subTitle}</p>` : ''}
-              <p class="text-xs text-gray-400 mt-0.5">${tx.date}</p>
-              ${tagsHtml}
-            </div>
-            <div class="flex items-center gap-2">
-              <span class="font-bold text-sm ${isPositive ? 'text-emerald-600' : 'text-gray-900'}">
-                ${isPositive ? '+' : ''}$${amt.toFixed(2)}
-              </span>
-              <button 
-                onclick="event.stopPropagation(); toggleTxStatus('${tx.id}', '${status}')" 
-                title="Status: ${status}. Click to toggle"
-                class="px-2 py-0.5 text-xs font-bold rounded-full transition-colors ${isPending
+              <div class="flex items-center gap-2">
+                <span class="font-bold text-sm ${isPositive ? 'text-emerald-600' : 'text-gray-900'}">
+                  ${isPositive ? '+' : ''}$${amt.toFixed(2)}
+                </span>
+                <button 
+                  onclick="event.stopPropagation(); toggleTxStatus('${tx.id}', '${status}')" 
+                  title="Status: ${status}. Click to toggle"
+                  class="px-2 py-0.5 text-xs font-bold rounded-full transition-colors ${isPending
             ? 'bg-amber-100 text-amber-700 hover:bg-amber-200'
             : 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200'
           }">
-                ${isPending ? 'P' : 'R'}
-              </button>
-              <button onclick="event.stopPropagation(); deleteTx('${tx.id}', '${displayTitle}')" class="text-red-400 hover:text-red-600 text-base font-bold px-1">&times;</button>
+                  ${isPending ? 'P' : 'R'}
+                </button>
+                <button onclick="event.stopPropagation(); deleteTx('${tx.id}', '${displayTitle}')" class="text-red-400 hover:text-red-600 text-base font-bold px-1">&times;</button>
+              </div>
             </div>
           </div>
         `;
       }).join('');
+    }
+
+    async function jumpToTransferPartnerAcrossAccounts(transferId, currentId, currentAccountId) {
+      const partnerTx = (Array.isArray(transactions) ? transactions : []).find(tx => {
+        return tx && tx.transfer_id === transferId && tx.account_id !== currentAccountId && tx.id !== currentId;
+      });
+
+      if (partnerTx) {
+        if (activeAccountId !== partnerTx.account_id) {
+          await showTransactionsView(partnerTx.account_id);
+        }
+
+        setTimeout(() => {
+          const partnerRow = document.querySelector(`#tx-row-${partnerTx.id}`);
+          if (partnerRow) {
+            partnerRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            partnerRow.classList.add('ring-2', 'ring-purple-300', 'ring-offset-1');
+            setTimeout(() => partnerRow.classList.remove('ring-2', 'ring-purple-300', 'ring-offset-1'), 1800);
+          }
+        }, 150);
+        return;
+      }
+
+      const allRows = Array.from(document.querySelectorAll('[id^="tx-row-"]'));
+      const partnerRow = allRows.find(row => {
+        const rowId = row.id.replace('tx-row-', '');
+        const tx = currentAccountTransactions.find(candidate => candidate.id === rowId);
+        return tx && tx.transfer_id === transferId && rowId !== currentId;
+      });
+
+      if (partnerRow) {
+        partnerRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        partnerRow.classList.add('ring-2', 'ring-purple-300', 'ring-offset-1');
+        setTimeout(() => partnerRow.classList.remove('ring-2', 'ring-purple-300', 'ring-offset-1'), 1800);
+      }
     }
 
     async function toggleTxStatus(id, currentStatus) {
