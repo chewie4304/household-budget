@@ -105,7 +105,7 @@
 
         <div id="transaction-search-wrap" class="hidden space-y-2 lg:ml-auto lg:w-[calc((100%-24px)/3)]">
           <input id="transaction-search" type="text" oninput="renderAllTransactions()" placeholder="Search transactions..."
-            class="w-full border border-gray-200 bg-white px-3 py-2 rounded-lg text-sm text-gray-800 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-200" />
+            class="w-full border border-slate-200 bg-white px-3 py-2.5 rounded-xl text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-200 shadow-sm" />
         </div>
 
         <div id="accounts-list" class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
@@ -943,29 +943,31 @@
         ` : '';
 
         return `
-          <div id="tx-row-${tx.id}" onclick="openTxModal('${tx.id}')" class="${isTransfer ? 'bg-purple-50 border border-purple-200 shadow-sm' : 'bg-white border border-gray-100'} p-3 rounded-xl cursor-pointer hover:border-blue-300 transition-all">
+          <div id="tx-row-${tx.id}" onclick="openTxModal('${tx.id}')" class="${isTransfer ? 'bg-purple-50 border border-purple-200 shadow-sm' : 'bg-white border border-slate-200 shadow-sm'} p-4 rounded-2xl cursor-pointer hover:border-blue-300 transition-all duration-150">
             <div class="flex justify-between items-start gap-3">
-              <div>
+              <div class="min-w-0 flex-1 pr-2">
                 <div class="flex items-center gap-2">
-                  <p class="font-semibold text-gray-900 text-sm">${tx.payee || tx.description || 'Transaction'}</p>
+                  <p class="font-bold text-slate-900 text-base">${tx.payee || tx.description || 'Transaction'}</p>
                 </div>
-                <p class="text-xs text-gray-500 mt-0.5">${acc ? acc.name : 'Account'} • ${tx.date || 'No date'}</p>
+                <p class="mt-1 text-[11px] text-slate-500 uppercase tracking-[0.14em]">${acc ? acc.name : 'Account'} • ${tx.date || 'No date'}</p>
                 ${tx.description && tx.description !== tx.payee ? `<p class="text-xs text-gray-500 mt-0.5">${tx.description}</p>` : ''}
                 ${tagsHtml}
               </div>
-              <div class="flex items-center gap-2">
+              <div class="flex shrink-0 self-stretch flex-col items-end justify-between gap-2">
                 <div class="text-right">
-                  <div class="font-bold text-sm ${isPositive ? 'text-emerald-600' : 'text-gray-900'}">
+                  <div class="text-lg font-extrabold ${isPositive ? 'text-emerald-600' : 'text-slate-900'}">
                     ${isPositive ? '+' : ''}$${amount.toFixed(2)}
                   </div>
                 </div>
-                <button 
-                  onclick="event.stopPropagation(); toggleTxStatus('${tx.id}', '${status}')" 
-                  title="Status: ${status}. Click to toggle"
-                  class="px-2 py-0.5 text-xs font-bold rounded-full transition-colors ${isPending ? 'bg-amber-100 text-amber-700 hover:bg-amber-200' : 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200'}">
-                  ${isPending ? 'P' : 'R'}
-                </button>
-                <button onclick="event.stopPropagation(); deleteTx('${tx.id}', '${tx.payee || tx.description || 'transaction'}')" class="text-red-400 hover:text-red-600 text-base font-bold px-1">&times;</button>
+                <div class="flex items-center gap-2">
+                  <button 
+                    onclick="event.stopPropagation(); toggleTxStatus('${tx.id}', '${status}')" 
+                    title="Status: ${status}. Click to toggle"
+                    class="px-2 py-0.5 text-xs font-bold rounded-full transition-colors ${isPending ? 'bg-amber-100 text-amber-700 hover:bg-amber-200' : 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200'}">
+                    ${isPending ? 'P' : 'R'}
+                  </button>
+                  <button onclick="event.stopPropagation(); deleteTx('${tx.id}', '${tx.payee || tx.description || 'transaction'}')" class="text-red-400 hover:text-red-600 text-base font-bold px-1">&times;</button>
+                </div>
               </div>
             </div>
           </div>
@@ -1278,32 +1280,34 @@
         ` : '';
 
         return `
-          <div id="tx-row-${tx.id}" onclick="openTxModal('${tx.id}')" class="${isTransfer ? 'bg-purple-50 border border-purple-200 shadow-sm' : 'bg-white border border-gray-100'} p-3 rounded-xl shadow-sm cursor-pointer hover:border-blue-300 transition-all">
+          <div id="tx-row-${tx.id}" onclick="openTxModal('${tx.id}')" class="${isTransfer ? 'bg-purple-50 border border-purple-200 shadow-sm' : 'bg-white border border-slate-200 shadow-sm'} p-4 rounded-2xl cursor-pointer hover:border-blue-300 transition-all duration-150">
             <div class="flex justify-between items-start gap-3">
-              <div>
+              <div class="min-w-0 flex-1 pr-2">
                 <div class="flex items-center gap-2">
-                  <p class="font-semibold text-gray-900 text-sm">${displayTitle}</p>
+                  <p class="font-bold text-slate-900 text-base">${displayTitle}</p>
                   ${transferButtonHtml}
                 </div>
                 ${receiptBtn}
                 ${subTitle ? `<p class="text-xs text-gray-500 font-medium mt-0.5">${subTitle}</p>` : ''}
-                <p class="text-xs text-gray-400 mt-0.5">${tx.date}</p>
+                <p class="mt-1 text-[11px] text-slate-500 uppercase tracking-[0.14em]">${tx.date}</p>
                 ${tagsHtml}
               </div>
-              <div class="flex items-center gap-2">
-                <span class="font-bold text-sm ${isPositive ? 'text-emerald-600' : 'text-gray-900'}">
+              <div class="flex shrink-0 self-stretch flex-col items-end justify-between gap-2">
+                <span class="text-lg font-extrabold ${isPositive ? 'text-emerald-600' : 'text-slate-900'}">
                   ${isPositive ? '+' : ''}$${amt.toFixed(2)}
                 </span>
-                <button 
-                  onclick="event.stopPropagation(); toggleTxStatus('${tx.id}', '${status}')" 
-                  title="Status: ${status}. Click to toggle"
-                  class="px-2 py-0.5 text-xs font-bold rounded-full transition-colors ${isPending
-            ? 'bg-amber-100 text-amber-700 hover:bg-amber-200'
-            : 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200'
-          }">
-                  ${isPending ? 'P' : 'R'}
-                </button>
-                <button onclick="event.stopPropagation(); deleteTx('${tx.id}', '${displayTitle}')" class="text-red-400 hover:text-red-600 text-base font-bold px-1">&times;</button>
+                <div class="flex items-center gap-2">
+                  <button 
+                    onclick="event.stopPropagation(); toggleTxStatus('${tx.id}', '${status}')" 
+                    title="Status: ${status}. Click to toggle"
+                    class="px-2 py-0.5 text-xs font-bold rounded-full transition-colors ${isPending
+              ? 'bg-amber-100 text-amber-700 hover:bg-amber-200'
+              : 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200'
+            }">
+                    ${isPending ? 'P' : 'R'}
+                  </button>
+                  <button onclick="event.stopPropagation(); deleteTx('${tx.id}', '${displayTitle}')" class="text-red-400 hover:text-red-600 text-base font-bold px-1">&times;</button>
+                </div>
               </div>
             </div>
           </div>
