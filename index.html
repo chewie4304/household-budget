@@ -1248,6 +1248,13 @@
       toggleCheckNumberField();
     }
 
+    function getLocalDateString(date = new Date()) {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    }
+
     function updateAutocompleteSuggestions() {
       const payeeList = document.getElementById('payee-suggestions');
       const descList = document.getElementById('desc-suggestions');
@@ -1301,7 +1308,7 @@
         document.getElementById('txAmount').value = Math.abs(amt);
         document.getElementById('txPaymentMethod').value = tx.payment_method || 'debit';
         document.getElementById('txCheckNumber').value = tx.check_number || '';
-        document.getElementById('txDate').value = tx.date || new Date().toISOString().split('T')[0];
+        document.getElementById('txDate').value = tx.date || getLocalDateString();
         document.getElementById('txStatus').value = tx.status || 'pending';
         document.getElementById('txTags').value = Array.isArray(tx.tags) ? tx.tags.join(', ') : '';
 
@@ -1320,7 +1327,7 @@
         autoSelectPaymentMethod();
 
         document.getElementById('txPayee').value = "";
-        document.getElementById('txDate').value = new Date().toISOString().split('T')[0];
+        document.getElementById('txDate').value = getLocalDateString();
         document.getElementById('txStatus').value = 'pending';
         document.getElementById('txTags').value = '';
 
