@@ -17,6 +17,13 @@
 
 <body class="bg-gray-100 text-gray-900 antialiased min-h-screen pb-10">
 
+  <div id="app-message" role="alert" class="fixed left-4 right-4 top-4 z-[100] hidden mx-auto max-w-md rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700 shadow-lg">
+    <div class="flex items-start justify-between gap-3">
+      <span id="app-message-text"></span>
+      <button type="button" onclick="hideAppMessage()" aria-label="Dismiss message" class="shrink-0 text-lg leading-none text-red-400 hover:text-red-600">&times;</button>
+    </div>
+  </div>
+
   <!-- Main View -->
   <div id="accounts-view">
     <!-- Header -->
@@ -338,6 +345,8 @@
             <option value="check">Check</option>
             <option value="credit">Credit Card</option>
             <option value="debit">Debit Card</option>
+            <option value="p2p">P2P</option>
+            <option value="web_payment">Web Payment</option>
           </select>
         </div>
 
@@ -438,6 +447,7 @@
   <script>
     const SUPABASE_URL = "https://raujjskhrprnyigfmkwq.supabase.co";
     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJhdWpqc2tocnBybnlpZ2Zta3dxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY3Njk0NzEsImV4cCI6MjEwMjM0NTQ3MX0.jEjU9BOmzpQpm-A4UlD8xrP2dpeQSiIEjj7-IuMbiVE";
+      const RECEIPTS_BUCKET = 'receipts';
 
     // Standard initialization without custom global headers override
     const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -454,6 +464,25 @@
     let currentViewState = 'home-accounts';
 
     let cropper = null;
+    let appMessageTimer = null;
+
+    function showAppMessage(message) {
+      const messageBox = document.getElementById('app-message');
+      const messageText = document.getElementById('app-message-text');
+      if (!messageBox || !messageText) return;
+
+      messageText.textContent = message;
+      messageBox.classList.remove('hidden');
+      clearTimeout(appMessageTimer);
+      appMessageTimer = setTimeout(hideAppMessage, 6000);
+    }
+
+    function hideAppMessage() {
+      const messageBox = document.getElementById('app-message');
+      if (messageBox) messageBox.classList.add('hidden');
+      clearTimeout(appMessageTimer);
+      appMessageTimer = null;
+    }
 
     function getSavedViewState() {
       try {
@@ -1361,7 +1390,7 @@
       const newStatus = currentStatus === 'pending' ? 'reconciled' : 'pending';
       const {error} = await sb.from('transactions').update({status: newStatus}).eq('id', id);
       if (error) {
-        alert("Error updating status: " + error.message);
+        showAppMessage("Error updating status: " + error.message);
         return;
       }
       fetchTransactions(activeAccountId);
@@ -1427,9 +1456,19 @@
       const file = input.files && input.files[0];
       if (!file) return;
 
-      if (!file.type || !file.type.startsWith('image/')) {
-        alert('Please choose an image file for the receipt.');
+      const isImage = file.type && file.type.startsWith('image/');
+      const isPdf = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
+
+      if (!isImage && !isPdf) {
+        showAppMessage('Please choose an image or PDF file for the receipt.');
         input.value = '';
+        return;
+      }
+
+      if (isPdf) {
+        activeReceiptFiles.push(file);
+        input.value = '';
+        renderModalReceiptList();
         return;
       }
 
@@ -1512,10 +1551,13 @@
       });
 
       activeReceiptFiles.forEach((file, idx) => {
+        const fileLabel = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')
+          ? `📄 PDF: ${file.name}`
+          : `📷 Cropped: ${file.name}`;
         html += `
           <div class="flex items-center justify-between bg-blue-50 border border-blue-200 p-2 rounded-lg text-xs">
             <span class="text-blue-700 font-semibold truncate max-w-[200px]">
-              📷 Cropped: ${file.name}
+              ${fileLabel}
             </span>
             <button type="button" onclick="removeNewReceipt(${idx})" class="bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 text-[11px] font-semibold px-2 py-0.5 rounded transition-colors">
               Remove
@@ -1535,6 +1577,30 @@
     function removeNewReceipt(index) {
       activeReceiptFiles.splice(index, 1);
       renderModalReceiptList();
+    }
+
+    async function uploadReceiptFiles() {
+      const uploadedUrls = [];
+
+      for (const file of activeReceiptFiles) {
+        const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+        const path = `${crypto.randomUUID()}-${safeName}`;
+        const {error: uploadError} = await sb.storage
+          .from(RECEIPTS_BUCKET)
+          .upload(path, file, {contentType: file.type, upsert: false});
+
+        if (uploadError) {
+          throw new Error(`Could not upload ${file.name}: ${uploadError.message}`);
+        }
+
+        const {data} = sb.storage.from(RECEIPTS_BUCKET).getPublicUrl(path);
+        if (!data?.publicUrl) {
+          throw new Error(`Could not create a URL for ${file.name}.`);
+        }
+        uploadedUrls.push(data.publicUrl);
+      }
+
+      return uploadedUrls;
     }
 
     function toggleCheckNumberField() {
@@ -1609,7 +1675,7 @@
 
     function openTxModal(txId = null) {
       if (accounts.length === 0) {
-        alert("Please create an account first before adding transactions.");
+        showAppMessage("Please create an account first before adding transactions.");
         return;
       }
 
@@ -1709,10 +1775,21 @@
       const tagsRaw = document.getElementById('txTags')?.value || '';
       const tags = tagsRaw.split(',').map(t => t.trim()).filter(Boolean);
 
+      let uploadedReceiptUrls;
+      try {
+        uploadedReceiptUrls = await uploadReceiptFiles();
+      } catch (uploadError) {
+        showAppMessage(uploadError.message);
+        submitBtn.disabled = false;
+        submitBtn.textContent = editId ? "Update Transaction" : "Save Transaction";
+        return;
+      }
+      const finalReceiptUrls = [...activeReceiptUrls, ...uploadedReceiptUrls];
+
       // Validation for Transfers
       if (txType === 'transfer' && !editId) {
         if (!destinationAccountId || targetAccountId === destinationAccountId) {
-          alert("Please select a different destination account for the transfer.");
+          showAppMessage("Please select a different destination account for the transfer.");
           submitBtn.disabled = false;
           submitBtn.textContent = "Save Transaction";
           return;
@@ -1728,7 +1805,7 @@
         date,
         status,
         tags,
-        receipt_url: typeof finalReceiptUrls !== 'undefined' ? finalReceiptUrls.join(', ') : ''
+        receipt_url: finalReceiptUrls.join(', ')
       };
 
       if (shouldStoreCheckNumber) {
@@ -1788,7 +1865,7 @@
       submitBtn.textContent = "Save Transaction";
 
       if (error) {
-        alert("Error saving transaction: " + error.message);
+        showAppMessage("Error saving transaction: " + error.message);
       } else {
         toggleTxModal(false);
 
@@ -1855,7 +1932,7 @@
 
           const {error} = await query;
           if (error) {
-            alert("Error deleting transaction: " + error.message);
+            showAppMessage("Error deleting transaction: " + error.message);
             return;
           }
 
@@ -1876,7 +1953,7 @@
         onConfirm: async () => {
           const {error} = await sb.from('transactions').delete().eq('id', id);
           if (error) {
-            alert("Error deleting transaction: " + error.message);
+            showAppMessage("Error deleting transaction: " + error.message);
             return;
           }
 
@@ -1983,7 +2060,7 @@
       submitBtn.disabled = false;
 
       if (error) {
-        alert("Error saving account: " + error.message);
+        showAppMessage("Error saving account: " + error.message);
         return;
       }
 
@@ -2007,7 +2084,7 @@
 
           const {error} = await query;
           if (error) {
-            alert("Error deleting transaction: " + error.message);
+            showAppMessage("Error deleting transaction: " + error.message);
             return;
           }
 
