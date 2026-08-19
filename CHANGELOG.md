@@ -3,7 +3,16 @@
 All notable changes to this project will be documented in this file.
 
 ## Unreleased
+
+## [v1.1.2] - 2026-08-19
+
+### Added
+- Feature to edit account Cleared Balance with auto-adjustment or initial balance update options.
 - Added deterministic transaction ordering by pending/reconciled status, date, and creation timestamp
+
+### Fixed
+- Rounded currency calculations and input values to 2 decimal places to eliminate floating-point precision bugs.
+- Fixed UI state sync so deleting/editing transactions immediately updates the Accounts card grid and alert badges.
 
 ## [1.1.1] - 2026-08-18
 - Added split transactions with multiple tagged allocations, descriptions, remainder amounts, validation, and expandable card details
