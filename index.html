@@ -82,15 +82,15 @@
           <div class="grid grid-cols-3 gap-2 text-center">
             <button type="button" onclick="showAllTransactions('income')" class="group rounded-2xl border border-emerald-200 bg-emerald-50 p-3 text-left transition-all duration-150 hover:-translate-y-0.5 hover:bg-emerald-100 hover:shadow-sm">
               <p class="text-[10px] font-bold uppercase tracking-[0.18em] text-emerald-700">Income</p>
-              <p id="monthly-income" class="mt-2 text-lg font-extrabold text-emerald-700">$0.00</p>
+              <p id="monthly-income" class="mt-2 pr-1 text-right text-base font-extrabold text-emerald-700 sm:text-lg">$0.00</p>
             </button>
             <button type="button" onclick="showAllTransactions('expense')" class="group rounded-2xl border border-red-200 bg-red-50 p-3 text-left transition-all duration-150 hover:-translate-y-0.5 hover:bg-red-100 hover:shadow-sm">
               <p class="text-[10px] font-bold uppercase tracking-[0.18em] text-red-700">Expenses</p>
-              <p id="monthly-expenses" class="mt-2 text-lg font-extrabold text-red-700">$0.00</p>
+              <p id="monthly-expenses" class="mt-2 pr-1 text-right text-base font-extrabold text-red-700 sm:text-lg">$0.00</p>
             </button>
             <div class="rounded-2xl border border-blue-200 bg-blue-50 p-3">
               <p class="text-[10px] font-bold uppercase tracking-[0.18em] text-blue-700">Remaining</p>
-              <p id="monthly-remaining" class="mt-2 text-lg font-extrabold text-blue-700">$0.00</p>
+              <p id="monthly-remaining" class="mt-2 pr-1 text-right text-base font-extrabold text-blue-700 sm:text-lg">$0.00</p>
             </div>
           </div>
         </div>
@@ -146,6 +146,11 @@
         <div>
           <h2 id="tx-acc-name" class="text-lg font-bold text-gray-900"></h2>
           <p id="tx-acc-sub" class="text-xs text-gray-500 uppercase tracking-wider"></p>
+          <button type="button" onclick="openAccountModal(activeAccountId)"
+            class="mt-2 inline-flex items-center gap-1 rounded-lg border border-blue-200 bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-700 transition hover:bg-blue-100">
+            <span aria-hidden="true">✎</span>
+            Edit Account
+          </button>
         </div>
         <div class="text-right space-y-1">
           <div>
@@ -288,7 +293,7 @@
 
         <!-- Account Selection (Required) -->
         <div>
-          <label class="text-xs font-semibold text-gray-600">Account</label>
+          <label id="tx-account-label" class="text-xs font-semibold text-gray-600">Account</label>
           <select id="txAccount" required onchange="autoSelectPaymentMethod(); populateTargetAccountDropdown();"
             class="w-full border p-2 rounded-lg mt-1 bg-white font-medium text-gray-800">
             <!-- Dynamically populated -->
@@ -303,7 +308,7 @@
         </div>
 
         <!-- Description (Optional) -->
-        <div>
+        <div id="tx-description-field">
           <label class="text-xs font-semibold text-gray-600">Description</label>
           <input type="text" id="txDesc" list="desc-suggestions"
             class="w-full border p-2 rounded-lg mt-1 font-medium text-gray-800"
@@ -312,7 +317,7 @@
         </div>
 
         <!-- Dynamic Payer / Payee Field (Optional) -->
-        <div>
+        <div id="tx-payee-field">
           <label class="text-xs font-semibold text-gray-600">Payer / Payee</label>
           <input type="text" id="txPayee" list="payee-suggestions"
             class="w-full border p-2 rounded-lg mt-1 font-medium text-gray-800" placeholder="e.g., Walmart" />
@@ -322,17 +327,22 @@
         <!-- Type & Amount -->
         <div class="grid grid-cols-2 gap-2">
           <div>
+            <label class="text-xs font-semibold text-gray-600">Amount ($)</label>
+            <input type="number" step="0.01" id="txAmount" placeholder="0.00" required
+              oninput="updateSplitRemainder()" class="w-full border p-2 rounded-lg mt-1" />
+            <label class="mt-1.5 inline-flex items-center gap-1.5 text-[11px] font-semibold text-gray-600">
+              Split
+              <input type="checkbox" id="txSplitEnabled" onchange="toggleSplitEditor()"
+                class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
+            </label>
+          </div>
+          <div>
             <label class="text-xs font-semibold text-gray-600">Type</label>
-            <select id="txType" onchange="handleTypeChange()" class="w-full border p-2 rounded-lg mt-1 bg-white">
+            <select id="txType" onchange="handleTypeChange()" class="h-[42px] w-full border p-2 rounded-lg mt-1 bg-white">
               <option value="expense">Expense (-)</option>
               <option value="income">Income (+)</option>
               <option value="transfer">Transfer</option>
             </select>
-          </div>
-          <div>
-            <label class="text-xs font-semibold text-gray-600">Amount ($)</label>
-            <input type="number" step="0.01" id="txAmount" placeholder="0.00" required
-              class="w-full border p-2 rounded-lg mt-1" />
           </div>
         </div>
 
@@ -372,10 +382,24 @@
         </div>
 
         <!-- Tags -->
-        <div>
+        <div id="tx-tags-field">
           <label class="text-xs font-semibold text-gray-600">Tags (comma-separated)</label>
           <input type="text" id="txTags" placeholder="e.g., groceries, vacation, tax"
             class="w-full border p-2 rounded-lg mt-1" />
+        </div>
+
+        <!-- Split transaction editor -->
+        <div id="txSplitEditor" class="hidden space-y-3 rounded-xl border border-emerald-200 bg-emerald-50 p-3">
+          <div>
+            <p class="text-sm font-bold text-emerald-800">Split details</p>
+            <p class="mt-0.5 text-[11px] text-emerald-700">Add tags, a description, and an amount for each part.</p>
+          </div>
+          <div class="space-y-2">
+            <div id="txSplitRows" class="space-y-2"></div>
+            <button type="button" onclick="addSplitRow()"
+              class="text-xs font-semibold text-emerald-700 hover:text-emerald-800">+ Add split</button>
+            <p class="text-[11px] text-emerald-700">Split amounts must equal the transaction total.</p>
+          </div>
         </div>
 
         <!-- Receipt Attachments Section -->
@@ -462,6 +486,7 @@
     let accountAlertState = {};
     let supportsCheckNumber = false;
     let currentViewState = 'home-accounts';
+    let splitDetailsExpanded = new Set();
 
     let cropper = null;
     let appMessageTimer = null;
@@ -983,11 +1008,12 @@
             <div class="flex justify-between items-start gap-3">
               <div class="min-w-0 flex-1 pr-2">
                 <div class="flex items-center gap-2">
-                  <p class="font-bold text-slate-900 text-base">${tx.payee || tx.description || 'Transaction'}</p>
+                  <p class="font-bold text-slate-900 text-base">${tx.payee || 'Transaction'}</p>
                 </div>
                 <p class="mt-1 text-[11px] text-slate-500 uppercase tracking-[0.14em]">${acc ? acc.name : 'Account'} • ${tx.date || 'No date'}</p>
                 ${tx.description && tx.description !== tx.payee ? `<p class="text-xs text-gray-500 mt-0.5">${tx.description}</p>` : ''}
                 ${tagsHtml}
+                ${renderSplitDetails(tx)}
               </div>
               <div class="flex shrink-0 self-stretch flex-col items-end justify-between gap-2">
                 <div class="text-right">
@@ -995,6 +1021,7 @@
                     ${isPositive ? '+' : ''}$${amount.toFixed(2)}
                   </div>
                 </div>
+                ${renderSplitButton(tx)}
                 <div class="flex items-center gap-2">
                   <button 
                     onclick="event.stopPropagation(); toggleTxStatus('${tx.id}', '${status}')" 
@@ -1210,9 +1237,7 @@
 
       const allTags = new Set();
       currentAccountTransactions.forEach(tx => {
-        if (Array.isArray(tx.tags)) {
-          tx.tags.forEach(t => allTags.add(t));
-        }
+        getTransactionTags(tx).forEach(tag => allTags.add(tag));
       });
 
       if (allTags.size === 0) {
@@ -1255,7 +1280,7 @@
 
       let filteredTx = currentAccountTransactions;
       if (selectedTagFilter) {
-        filteredTx = currentAccountTransactions.filter(tx => Array.isArray(tx.tags) && tx.tags.includes(selectedTagFilter));
+        filteredTx = currentAccountTransactions.filter(tx => getTransactionTags(tx).includes(selectedTagFilter));
       }
 
       const addButton = `
@@ -1298,7 +1323,7 @@
 
         const transferButtonHtml = isTransfer
           ? `
-            <button type="button" onclick="event.stopPropagation(); jumpToTransferPartnerAcrossAccounts('${tx.transfer_id}', '${tx.id}', '${activeAccountId || tx.account_id}')" class="ml-2 inline-flex items-center rounded-full bg-purple-100 text-purple-700 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide hover:bg-purple-200">
+            <button type="button" onclick="event.stopPropagation(); jumpToTransferPartnerAcrossAccounts('${tx.transfer_id}', '${tx.id}', '${activeAccountId || tx.account_id}')" class="inline-flex items-center rounded-full bg-purple-100 text-purple-700 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide hover:bg-purple-200">
               Transfer
             </button>
           `
@@ -1321,17 +1346,21 @@
               <div class="min-w-0 flex-1 pr-2">
                 <div class="flex items-center gap-2">
                   <p class="font-bold text-slate-900 text-base">${displayTitle}</p>
-                  ${transferButtonHtml}
                 </div>
                 ${receiptBtn}
                 ${subTitle ? `<p class="text-xs text-gray-500 font-medium mt-0.5">${subTitle}</p>` : ''}
                 <p class="mt-1 text-[11px] text-slate-500 uppercase tracking-[0.14em]">${tx.date}</p>
                 ${tagsHtml}
+                ${renderSplitDetails(tx)}
               </div>
               <div class="flex shrink-0 self-stretch flex-col items-end justify-between gap-2">
                 <span class="text-lg font-extrabold ${isPositive ? 'text-emerald-600' : 'text-slate-900'}">
                   ${isPositive ? '+' : ''}$${amt.toFixed(2)}
                 </span>
+                <div class="flex flex-col items-end gap-1">
+                  ${transferButtonHtml}
+                  ${renderSplitButton(tx)}
+                </div>
                 <div class="flex items-center gap-2">
                   <button 
                     onclick="event.stopPropagation(); toggleTxStatus('${tx.id}', '${status}')" 
@@ -1351,6 +1380,21 @@
       }).join('');
     }
 
+    async function focusTransactionRow(transactionId, attempt = 0) {
+      const row = document.getElementById(`tx-row-${transactionId}`);
+      if (!row && attempt < 10) {
+        await new Promise(resolve => setTimeout(resolve, 50));
+        return focusTransactionRow(transactionId, attempt + 1);
+      }
+
+      if (!row) return false;
+
+      row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      row.classList.add('ring-2', 'ring-purple-300', 'ring-offset-1');
+      setTimeout(() => row.classList.remove('ring-2', 'ring-purple-300', 'ring-offset-1'), 1800);
+      return true;
+    }
+
     async function jumpToTransferPartnerAcrossAccounts(transferId, currentId, currentAccountId) {
       const partnerTx = (Array.isArray(transactions) ? transactions : []).find(tx => {
         return tx && tx.transfer_id === transferId && tx.account_id !== currentAccountId && tx.id !== currentId;
@@ -1360,29 +1404,16 @@
         if (activeAccountId !== partnerTx.account_id) {
           await showTransactionsView(partnerTx.account_id);
         }
-
-        setTimeout(() => {
-          const partnerRow = document.querySelector(`#tx-row-${partnerTx.id}`);
-          if (partnerRow) {
-            partnerRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            partnerRow.classList.add('ring-2', 'ring-purple-300', 'ring-offset-1');
-            setTimeout(() => partnerRow.classList.remove('ring-2', 'ring-purple-300', 'ring-offset-1'), 1800);
-          }
-        }, 150);
+        await focusTransactionRow(partnerTx.id);
         return;
       }
 
-      const allRows = Array.from(document.querySelectorAll('[id^="tx-row-"]'));
-      const partnerRow = allRows.find(row => {
-        const rowId = row.id.replace('tx-row-', '');
-        const tx = currentAccountTransactions.find(candidate => candidate.id === rowId);
-        return tx && tx.transfer_id === transferId && rowId !== currentId;
+      const partnerTxInCurrentAccount = currentAccountTransactions.find(tx => {
+        return tx && tx.transfer_id === transferId && tx.id !== currentId;
       });
 
-      if (partnerRow) {
-        partnerRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        partnerRow.classList.add('ring-2', 'ring-purple-300', 'ring-offset-1');
-        setTimeout(() => partnerRow.classList.remove('ring-2', 'ring-purple-300', 'ring-offset-1'), 1800);
+      if (partnerTxInCurrentAccount) {
+        await focusTransactionRow(partnerTxInCurrentAccount.id);
       }
     }
 
@@ -1409,21 +1440,162 @@
       const type = document.getElementById('txType').value;
       const wrapper = document.getElementById('transferTargetWrapper');
       const paymentSelect = document.getElementById('txPaymentMethod');
+      const splitToggle = document.getElementById('txSplitEnabled');
 
       if (type === 'transfer') {
         wrapper.classList.remove('hidden');
+        document.getElementById('tx-account-label').textContent = 'Transfer From Account';
         populateTargetAccountDropdown();
+        if (splitToggle) {
+          splitToggle.checked = false;
+          splitToggle.disabled = true;
+        }
 
         if (paymentSelect) {
           paymentSelect.value = 'bank_transfer';
         }
       } else {
         wrapper.classList.add('hidden');
+        document.getElementById('tx-account-label').textContent = 'Account';
+        if (splitToggle) splitToggle.disabled = false;
       }
+
+      toggleSplitEditor();
 
       if (typeof updatePayeeLabel === 'function') {
         updatePayeeLabel();
       }
+    }
+
+    function parseTagInput(value) {
+      return String(value || '').split(',').map(tag => tag.trim()).filter(Boolean);
+    }
+
+    function getTransactionTags(tx) {
+      const standardTags = Array.isArray(tx?.tags) ? tx.tags : [];
+      const splitTags = Array.isArray(tx?.split_details)
+        ? tx.split_details.flatMap(split => Array.isArray(split?.tags)
+          ? split.tags
+          : parseTagInput(split?.category || ''))
+        : [];
+      return [...new Set([...standardTags, ...splitTags].map(tag => String(tag).trim()).filter(Boolean))];
+    }
+
+    function getSplitRowsFromEditor() {
+      return [...document.querySelectorAll('#txSplitRows > div')].map(row => ({
+        tags: parseTagInput(row.querySelector('[data-split-tags]')?.value),
+        description: row.querySelector('[data-split-description]')?.value.trim() || '',
+        amount: parseFloat(row.querySelector('[data-split-amount]')?.value) || 0
+      }));
+    }
+
+    function renderSplitEditor(rows = [{tags: [], description: '', amount: ''}, {tags: [], description: '', amount: ''}]) {
+      const container = document.getElementById('txSplitRows');
+      if (!container) return;
+
+      container.innerHTML = rows.map((row, index) => `
+        <div class="grid grid-cols-1 gap-2 rounded-lg border border-emerald-100 bg-white p-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)_5rem_auto] sm:items-center">
+          <input type="text" data-split-tags placeholder="Tags, comma-separated" value="${escapeHtml((row.tags || (row.category ? [row.category] : [])).join(', '))}"
+            class="w-full border border-slate-200 bg-white px-2 py-1.5 rounded-lg text-xs" />
+          <input type="text" data-split-description placeholder="Description" value="${escapeHtml(row.description || '')}"
+            class="w-full border border-slate-200 bg-white px-2 py-1.5 rounded-lg text-xs" />
+          <input type="number" step="0.01" min="0" data-split-amount placeholder="$0.00" value="${row.amount ?? ''}"
+            class="w-full border border-slate-200 bg-white px-2 py-1.5 rounded-lg text-xs" />
+          <button type="button" onclick="removeSplitRow(${index})" aria-label="Remove split"
+            class="text-lg leading-none text-red-400 hover:text-red-600">&times;</button>
+        </div>
+      `).join('');
+      container.querySelectorAll('[data-split-amount]').forEach(input => {
+        input.addEventListener('input', () => updateSplitRemainder(input));
+      });
+      updateSplitRemainder();
+    }
+
+    function updateSplitRemainder(changedInput = null) {
+      const splitToggle = document.getElementById('txSplitEnabled');
+      const rows = [...document.querySelectorAll('#txSplitRows > div')];
+      if (!splitToggle?.checked || rows.length < 2) return;
+
+      const amount = Math.abs(parseFloat(document.getElementById('txAmount')?.value) || 0);
+      const amountInputs = rows.map(row => row.querySelector('[data-split-amount]'));
+      const lastInput = amountInputs[amountInputs.length - 1];
+      const previousTotal = amountInputs.slice(0, -1).reduce((sum, input) => sum + (parseFloat(input.value) || 0), 0);
+      const remainder = Math.max(0, amount - previousTotal);
+
+      if (changedInput === lastInput) {
+        lastInput.dataset.autoRemainder = 'false';
+      } else {
+        lastInput.value = remainder.toFixed(2);
+        lastInput.dataset.autoRemainder = 'true';
+      }
+    }
+
+    function addSplitRow() {
+      const rows = getSplitRowsFromEditor();
+      rows.push({tags: [], description: '', amount: ''});
+      renderSplitEditor(rows);
+    }
+
+    function removeSplitRow(index) {
+      const rows = getSplitRowsFromEditor();
+      if (rows.length <= 2) return;
+      rows.splice(index, 1);
+      renderSplitEditor(rows);
+    }
+
+    function toggleSplitEditor() {
+      const toggle = document.getElementById('txSplitEnabled');
+      const editor = document.getElementById('txSplitEditor');
+      const standardFields = ['tx-description-field', 'tx-payee-field', 'tx-tags-field'];
+      if (!toggle || !editor) return;
+      editor.classList.toggle('hidden', !toggle.checked);
+      standardFields.forEach(id => document.getElementById(id)?.classList.toggle('hidden', toggle.checked));
+      if (toggle.checked && !document.querySelector('#txSplitRows > div')) {
+        renderSplitEditor();
+      }
+    }
+
+    function getSplitDetails(tx) {
+      return Array.isArray(tx?.split_details) ? tx.split_details.filter(split => split && Number(split.amount) > 0) : [];
+    }
+
+    function toggleSplitDetails(transactionId) {
+      if (splitDetailsExpanded.has(transactionId)) {
+        splitDetailsExpanded.delete(transactionId);
+      } else {
+        splitDetailsExpanded.add(transactionId);
+      }
+      renderAllTransactions();
+      if (activeAccountId) renderTransactions();
+    }
+
+    function renderSplitButton(tx) {
+      const splits = getSplitDetails(tx);
+      if (splits.length === 0) return '';
+      return `
+        <button type="button" onclick="event.stopPropagation(); toggleSplitDetails('${tx.id}')"
+          class="inline-flex items-center rounded-full bg-emerald-100 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-emerald-700 hover:bg-emerald-200">
+          ${splitDetailsExpanded.has(tx.id) ? 'Hide Split' : `Split (${splits.length})`}
+        </button>
+      `;
+    }
+
+    function renderSplitDetails(tx) {
+      const splits = getSplitDetails(tx);
+      if (splits.length === 0 || !splitDetailsExpanded.has(tx.id)) return '';
+      return `
+          <div class="mt-2 space-y-1 rounded-xl border border-blue-100 bg-blue-50 p-2">
+            ${splits.map(split => `
+              <div class="flex items-center justify-between gap-2 text-xs">
+                <span class="min-w-0 text-slate-700">
+                  <span class="block font-semibold">${escapeHtml((split.tags || (split.category ? [split.category] : [])).join(', ') || 'Untagged')}</span>
+                  ${split.description ? `<span class="block text-[11px] text-slate-500">${escapeHtml(split.description)}</span>` : ''}
+                </span>
+                <span class="font-bold text-slate-900">$${Number(split.amount).toFixed(2)}</span>
+              </div>
+            `).join('')}
+          </div>
+      `;
     }
 
     function populateTargetAccountDropdown() {
@@ -1685,6 +1857,9 @@
 
       activeReceiptFiles = [];
       activeReceiptUrls = [];
+      document.getElementById('txSplitEnabled').checked = false;
+      document.getElementById('txSplitEnabled').disabled = false;
+      renderSplitEditor();
 
       if (txId) {
         const tx = transactions.find(t => t.id === txId);
@@ -1704,6 +1879,12 @@
         document.getElementById('txDate').value = tx.date || getLocalDateString();
         document.getElementById('txStatus').value = tx.status || 'pending';
         document.getElementById('txTags').value = Array.isArray(tx.tags) ? tx.tags.join(', ') : '';
+
+        const existingSplits = getSplitDetails(tx);
+        if (existingSplits.length > 0) {
+          document.getElementById('txSplitEnabled').checked = true;
+          renderSplitEditor(existingSplits);
+        }
 
         if (tx.receipt_url) {
           activeReceiptUrls = tx.receipt_url.split(',').map(u => u.trim()).filter(Boolean);
@@ -1765,6 +1946,7 @@
       const destinationAccountId = document.getElementById('txTargetAccount')?.value;
       const description = document.getElementById('txDesc').value;
       const payee = document.getElementById('txPayee').value;
+      const savedPayee = payee || 'Transaction';
       const payment_method = document.getElementById('txPaymentMethod').value;
       const shouldStoreCheckNumber = payment_method === 'check' && supportsCheckNumber;
       const check_number = shouldStoreCheckNumber ? document.getElementById('txCheckNumber').value.trim() : '';
@@ -1773,7 +1955,19 @@
       const date = document.getElementById('txDate').value;
       const status = document.getElementById('txStatus').value;
       const tagsRaw = document.getElementById('txTags')?.value || '';
-      const tags = tagsRaw.split(',').map(t => t.trim()).filter(Boolean);
+      const tags = parseTagInput(tagsRaw);
+      const splitEnabled = document.getElementById('txSplitEnabled')?.checked && txType !== 'transfer';
+      const splitDetails = splitEnabled ? getSplitRowsFromEditor() : [];
+
+      if (splitEnabled) {
+        const splitTotal = splitDetails.reduce((sum, split) => sum + split.amount, 0);
+        if (splitDetails.length < 2 || splitDetails.some(split => split.tags.length === 0 || split.amount <= 0) || Math.abs(splitTotal - Math.abs(amount)) > 0.005) {
+          showAppMessage('Each split needs at least one tag, a positive amount, and all split amounts must equal the transaction total.');
+          submitBtn.disabled = false;
+          submitBtn.textContent = editId ? "Update Transaction" : "Save Transaction";
+          return;
+        }
+      }
 
       let uploadedReceiptUrls;
       try {
@@ -1798,13 +1992,14 @@
 
       const payload = {
         account_id: targetAccountId,
-        description: description || payee || 'Transaction',
-        payee,
+        description: description || '',
+        payee: savedPayee,
         payment_method,
         amount,
         date,
         status,
         tags,
+        split_details: splitDetails.length > 0 ? splitDetails : null,
         receipt_url: finalReceiptUrls.join(', ')
       };
 
@@ -1831,7 +2026,7 @@
         const sourcePayload = {
           ...payload,
           amount: -Math.abs(amount),
-          payee: payee || `Transfer to ${targetAccount ? targetAccount.name : 'Account'}`,
+          payee: payee || targetAccount?.name || 'Transaction',
           transfer_id: transferId
         };
 
@@ -1844,7 +2039,7 @@
           ...payload,
           account_id: destinationAccountId,
           amount: Math.abs(amount),
-          payee: payee || `Transfer from ${sourceAccount ? sourceAccount.name : 'Account'}`,
+          payee: payee || sourceAccount?.name || 'Transaction',
           transfer_id: transferId
         };
 
@@ -1938,9 +2133,12 @@
 
           toggleTxModal(false);
           await fetchData();
-          renderAccounts();
           if (window.currentAccountId) {
-            showTransactionsView(window.currentAccountId);
+            await showTransactionsView(window.currentAccountId);
+          } else if (currentViewState === 'home-transactions') {
+            showAllTransactions(selectedSummaryTransactionType);
+          } else {
+            renderAccounts();
           }
         }
       });
@@ -1958,9 +2156,12 @@
           }
 
           await fetchData();
-          renderAccounts();
           if (window.currentAccountId) {
-            showTransactionsView(window.currentAccountId);
+            await showTransactionsView(window.currentAccountId);
+          } else if (currentViewState === 'home-transactions') {
+            showAllTransactions(selectedSummaryTransactionType);
+          } else {
+            renderAccounts();
           }
         }
       });
@@ -2089,9 +2290,12 @@
           }
 
           await fetchData();
-          renderAccounts();
           if (window.currentAccountId) {
-            showTransactionsView(window.currentAccountId);
+            await showTransactionsView(window.currentAccountId);
+          } else if (currentViewState === 'home-transactions') {
+            showAllTransactions(selectedSummaryTransactionType);
+          } else {
+            renderAccounts();
           }
         }
       });
