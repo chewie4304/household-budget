@@ -158,7 +158,10 @@
             <div class="text-[10px] text-gray-500 font-semibold uppercase tracking-wider">Current Balance</div>
           </div>
           <div>
-            <div id="tx-acc-cleared" class="text-sm font-bold text-emerald-600">$0.00</div>
+            <div class="flex items-center justify-end gap-1">
+              <div id="tx-acc-cleared" class="text-sm font-bold text-emerald-600">$0.00</div>
+              <button type="button" onclick="openClearedBalanceModal()" title="Edit cleared balance" class="text-emerald-600 hover:text-emerald-800 text-xs">✎</button>
+            </div>
             <div class="text-[10px] text-emerald-700 font-semibold uppercase tracking-wider">Cleared Balance</div>
           </div>
         </div>
@@ -276,6 +279,47 @@
           class="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-semibold text-sm">Cancel</button>
         <button type="button" id="confirm-modal-confirm"
           class="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg font-semibold text-sm shadow">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Cleared Balance Modal -->
+  <div id="cleared-balance-modal"
+    class="fixed inset-0 bg-black/50 hidden flex items-end sm:items-center justify-center p-0 sm:p-4 z-[60]">
+    <div class="bg-white w-full max-w-sm rounded-t-2xl sm:rounded-2xl p-5 space-y-4">
+      <div class="flex justify-between items-center">
+        <h3 class="font-bold text-lg text-gray-800">Edit Cleared Balance</h3>
+        <button type="button" onclick="closeClearedBalanceModal()" class="text-gray-400 text-2xl">&times;</button>
+      </div>
+      <div>
+        <label class="text-xs font-semibold text-gray-600">New Cleared Balance ($)</label>
+        <input type="number" step="0.01" id="clearedBalanceInput" class="w-full border p-2 rounded-lg mt-1" />
+      </div>
+      <div class="flex gap-2 pt-2">
+        <button type="button" onclick="closeClearedBalanceModal()"
+          class="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-semibold text-sm">Cancel</button>
+        <button type="button" onclick="submitClearedBalanceEdit()"
+          class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold text-sm shadow">Continue</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Cleared Balance Adjustment Choice Modal -->
+  <div id="cleared-choice-modal"
+    class="fixed inset-0 bg-black/50 hidden flex items-end sm:items-center justify-center p-0 sm:p-4 z-[60]">
+    <div class="bg-white w-full max-w-sm rounded-t-2xl sm:rounded-2xl p-5 space-y-4">
+      <div class="flex justify-between items-center">
+        <h3 class="font-bold text-lg text-gray-800">Adjust Balance</h3>
+        <button type="button" onclick="closeClearedChoiceModal()" class="text-gray-400 text-2xl">&times;</button>
+      </div>
+      <p id="cleared-choice-message" class="text-gray-700 text-sm"></p>
+      <div class="space-y-2 pt-2">
+        <button type="button" onclick="applyClearedBalanceChoice('transaction')"
+          class="w-full px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold text-sm shadow">Create Adjustment Transaction</button>
+        <button type="button" onclick="applyClearedBalanceChoice('initial_balance')"
+          class="w-full px-4 py-2 bg-slate-600 text-white rounded-lg font-semibold text-sm shadow">Adjust Initial Balance</button>
+        <button type="button" onclick="closeClearedChoiceModal()"
+          class="w-full px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-semibold text-sm">Cancel</button>
       </div>
     </div>
   </div>
@@ -491,6 +535,10 @@
     let cropper = null;
     let appMessageTimer = null;
 
+    function roundCurrency(value) {
+      return Math.round((Number(value || 0) + Number.EPSILON) * 100) / 100;
+    }
+
     function showAppMessage(message) {
       const messageBox = document.getElementById('app-message');
       const messageText = document.getElementById('app-message-text');
@@ -637,7 +685,7 @@
       }
 
       const totalTxSum = txList.reduce((sum, tx) => sum + parseFloat(tx.amount || 0), 0);
-      return initialBal + totalTxSum;
+      return roundCurrency(initialBal + totalTxSum);
     }
 
     function checkAccountBalanceAlerts() {
@@ -917,15 +965,15 @@
       }
 
       const monthTx = getSelectedMonthTransactions();
-      const totalIncome = monthTx
+      const totalIncome = roundCurrency(monthTx
         .filter(tx => parseFloat(tx.amount || 0) > 0)
-        .reduce((sum, tx) => sum + parseFloat(tx.amount || 0), 0);
-
-      const totalExpenses = Math.abs(monthTx
-        .filter(tx => parseFloat(tx.amount || 0) < 0)
         .reduce((sum, tx) => sum + parseFloat(tx.amount || 0), 0));
 
-      const remaining = totalIncome - totalExpenses;
+      const totalExpenses = roundCurrency(Math.abs(monthTx
+        .filter(tx => parseFloat(tx.amount || 0) < 0)
+        .reduce((sum, tx) => sum + parseFloat(tx.amount || 0), 0)));
+
+      const remaining = roundCurrency(totalIncome - totalExpenses);
       const [year, month] = selectedSummaryMonth.split('-').map(Number);
       const monthName = new Date(year, month - 1, 1).toLocaleString('en-US', { month: 'long', year: 'numeric' });
 
@@ -1117,12 +1165,12 @@
           : (Array.isArray(acc.transactions) ? acc.transactions : []);
 
         const totalTxSum = txList.reduce((sum, tx) => sum + parseFloat(tx.amount || 0), 0);
-        const currentBal = initialBal + totalTxSum;
+        const currentBal = roundCurrency(initialBal + totalTxSum);
 
         const clearedTxSum = txList.reduce((sum, tx) => {
           return tx.status === 'reconciled' ? sum + parseFloat(tx.amount || 0) : sum;
         }, 0);
-        const clearedBal = initialBal + clearedTxSum;
+        const clearedBal = roundCurrency(initialBal + clearedTxSum);
 
         const {minBalance, maxBalance, minEnabled, maxEnabled, signedBalance, debtBalance, isCreditAccount} = getAccountAlertConfig(acc, currentBal);
         let alertBadge = '';
@@ -1223,14 +1271,14 @@
         const initialBal = parseFloat(acc ? acc.initial_balance : 0);
 
         const totalTxSum = currentAccountTransactions.reduce((sum, tx) => sum + parseFloat(tx.amount || 0), 0);
-        document.getElementById('tx-acc-balance').textContent = `$${(initialBal + totalTxSum).toFixed(2)}`;
+        document.getElementById('tx-acc-balance').textContent = `$${roundCurrency(initialBal + totalTxSum).toFixed(2)}`;
 
         checkAccountBalanceAlerts();
 
         const clearedTxSum = currentAccountTransactions.reduce((sum, tx) => {
           return tx.status === 'reconciled' ? sum + parseFloat(tx.amount || 0) : sum;
         }, 0);
-        document.getElementById('tx-acc-cleared').textContent = `$${(initialBal + clearedTxSum).toFixed(2)}`;
+        document.getElementById('tx-acc-cleared').textContent = `$${roundCurrency(initialBal + clearedTxSum).toFixed(2)}`;
 
         renderTagFilters();
         renderTransactions();
@@ -1242,6 +1290,96 @@
             <p class="text-xs text-red-500">${err.message || 'Check database connection'}</p>
           </div>
         `;
+      }
+    }
+
+    let pendingClearedBalanceEdit = null;
+
+    function calculateAccountClearedBalance(account) {
+      const initialBal = parseFloat(account?.initial_balance || 0);
+      const txList = (activeAccountId === account.id && Array.isArray(currentAccountTransactions))
+        ? currentAccountTransactions
+        : (Array.isArray(transactions) ? transactions.filter(tx => tx.account_id === account.id) : []);
+      const clearedSum = txList.reduce((sum, tx) => tx.status === 'reconciled' ? sum + parseFloat(tx.amount || 0) : sum, 0);
+      return roundCurrency(initialBal + clearedSum);
+    }
+
+    function openClearedBalanceModal() {
+      if (!activeAccountId) return;
+      const acc = accounts.find(a => a.id === activeAccountId);
+      if (!acc) return;
+
+      document.getElementById('clearedBalanceInput').value = calculateAccountClearedBalance(acc).toFixed(2);
+      document.getElementById('cleared-balance-modal').classList.remove('hidden');
+    }
+
+    function closeClearedBalanceModal() {
+      document.getElementById('cleared-balance-modal').classList.add('hidden');
+    }
+
+    function closeClearedChoiceModal() {
+      document.getElementById('cleared-choice-modal').classList.add('hidden');
+      pendingClearedBalanceEdit = null;
+    }
+
+    function submitClearedBalanceEdit() {
+      if (!activeAccountId) return;
+      const acc = accounts.find(a => a.id === activeAccountId);
+      if (!acc) return;
+
+      const newBalance = roundCurrency(parseFloat(document.getElementById('clearedBalanceInput').value));
+      if (!Number.isFinite(newBalance)) {
+        showAppMessage('Please enter a valid balance.');
+        return;
+      }
+
+      const diff = roundCurrency(newBalance - calculateAccountClearedBalance(acc));
+      if (Math.abs(diff) < 0.005) {
+        closeClearedBalanceModal();
+        return;
+      }
+
+      pendingClearedBalanceEdit = {accountId: acc.id, diff};
+      closeClearedBalanceModal();
+
+      document.getElementById('cleared-choice-message').textContent =
+        `The new cleared balance differs by $${diff.toFixed(2)}. How would you like to apply this adjustment?`;
+      document.getElementById('cleared-choice-modal').classList.remove('hidden');
+    }
+
+    async function applyClearedBalanceChoice(method) {
+      if (!pendingClearedBalanceEdit) return;
+      const {accountId, diff} = pendingClearedBalanceEdit;
+      closeClearedChoiceModal();
+
+      let error;
+      if (method === 'transaction') {
+        const payload = {
+          account_id: accountId,
+          description: 'Cleared balance adjustment',
+          payee: 'Balance Adjustment',
+          payment_method: 'bank_transfer',
+          amount: diff,
+          date: getLocalDateString(),
+          status: 'reconciled',
+          tags: []
+        };
+        ({error} = await sb.from('transactions').insert([payload]));
+      } else {
+        const acc = accounts.find(a => a.id === accountId);
+        const newInitialBalance = roundCurrency(parseFloat(acc?.initial_balance || 0) + diff);
+        ({error} = await sb.from('accounts').update({initial_balance: newInitialBalance}).eq('id', accountId));
+      }
+
+      if (error) {
+        showAppMessage('Error adjusting balance: ' + error.message);
+        return;
+      }
+
+      await fetchAccounts();
+      renderAccounts();
+      if (activeAccountId) {
+        await fetchTransactions(activeAccountId);
       }
     }
 
@@ -1499,7 +1637,7 @@
       return [...document.querySelectorAll('#txSplitRows > div')].map(row => ({
         tags: parseTagInput(row.querySelector('[data-split-tags]')?.value),
         description: row.querySelector('[data-split-description]')?.value.trim() || '',
-        amount: parseFloat(row.querySelector('[data-split-amount]')?.value) || 0
+        amount: roundCurrency(parseFloat(row.querySelector('[data-split-amount]')?.value) || 0)
       }));
     }
 
@@ -1530,11 +1668,11 @@
       const rows = [...document.querySelectorAll('#txSplitRows > div')];
       if (!splitToggle?.checked || rows.length < 2) return;
 
-      const amount = Math.abs(parseFloat(document.getElementById('txAmount')?.value) || 0);
+      const amount = roundCurrency(Math.abs(parseFloat(document.getElementById('txAmount')?.value) || 0));
       const amountInputs = rows.map(row => row.querySelector('[data-split-amount]'));
       const lastInput = amountInputs[amountInputs.length - 1];
-      const previousTotal = amountInputs.slice(0, -1).reduce((sum, input) => sum + (parseFloat(input.value) || 0), 0);
-      const remainder = Math.max(0, amount - previousTotal);
+      const previousTotal = roundCurrency(amountInputs.slice(0, -1).reduce((sum, input) => sum + (parseFloat(input.value) || 0), 0));
+      const remainder = roundCurrency(Math.max(0, amount - previousTotal));
 
       if (changedInput === lastInput) {
         lastInput.dataset.autoRemainder = 'false';
@@ -1965,7 +2103,7 @@
       const shouldStoreCheckNumber = payment_method === 'check' && supportsCheckNumber;
       const check_number = shouldStoreCheckNumber ? document.getElementById('txCheckNumber').value.trim() : '';
       const txType = document.getElementById('txType').value;
-      let amount = parseFloat(document.getElementById('txAmount').value) || 0;
+      let amount = roundCurrency(parseFloat(document.getElementById('txAmount').value) || 0);
       const date = document.getElementById('txDate').value;
       const status = document.getElementById('txStatus').value;
       const tagsRaw = document.getElementById('txTags')?.value || '';
@@ -2026,7 +2164,7 @@
       if (editId) {
         const adjustedPayload = {
           ...payload,
-          amount: txType === 'expense' ? -Math.abs(amount) : Math.abs(amount)
+          amount: roundCurrency(txType === 'expense' ? -Math.abs(amount) : Math.abs(amount))
         };
         ({error} = await sb.from('transactions').update(adjustedPayload).eq('id', editId));
       } else if (txType === 'transfer') {
@@ -2039,7 +2177,7 @@
         // 1. Debit from source account
         const sourcePayload = {
           ...payload,
-          amount: -Math.abs(amount),
+          amount: roundCurrency(-Math.abs(amount)),
           payee: payee || targetAccount?.name || 'Transaction',
           transfer_id: transferId
         };
@@ -2052,7 +2190,7 @@
         const targetPayload = {
           ...payload,
           account_id: destinationAccountId,
-          amount: Math.abs(amount),
+          amount: roundCurrency(Math.abs(amount)),
           payee: payee || sourceAccount?.name || 'Transaction',
           transfer_id: transferId
         };
@@ -2065,7 +2203,7 @@
       } else {
         const adjustedPayload = {
           ...payload,
-          amount: txType === 'expense' ? -Math.abs(amount) : Math.abs(amount)
+          amount: roundCurrency(txType === 'expense' ? -Math.abs(amount) : Math.abs(amount))
         };
         ({error} = await sb.from('transactions').insert([adjustedPayload]));
       }
@@ -2079,7 +2217,7 @@
         toggleTxModal(false);
 
         await fetchData();
-        renderAccounts();
+        await fetchAccounts();
         renderAllTransactions();
 
         if (currentViewState === 'home-transactions') {
@@ -2147,12 +2285,11 @@
 
           toggleTxModal(false);
           await fetchData();
+          await fetchAccounts();
           if (window.currentAccountId) {
             await showTransactionsView(window.currentAccountId);
           } else if (currentViewState === 'home-transactions') {
             showAllTransactions(selectedSummaryTransactionType);
-          } else {
-            renderAccounts();
           }
         }
       });
@@ -2170,12 +2307,11 @@
           }
 
           await fetchData();
+          await fetchAccounts();
           if (window.currentAccountId) {
             await showTransactionsView(window.currentAccountId);
           } else if (currentViewState === 'home-transactions') {
             showAllTransactions(selectedSummaryTransactionType);
-          } else {
-            renderAccounts();
           }
         }
       });
@@ -2205,7 +2341,7 @@
         document.getElementById('editingAccId').value = acc.id;
         document.getElementById('accName').value = acc.name || '';
         document.getElementById('accType').value = acc.type || 'checking';
-        document.getElementById('accBalance').value = acc ? acc.initial_balance : '';
+        document.getElementById('accBalance').value = acc ? roundCurrency(acc.initial_balance).toFixed(2) : '';
         document.getElementById('accMinAlertEnabled').checked = Number.isFinite(minBalance);
         document.getElementById('accMinBalance').value = Number.isFinite(minBalance) ? minBalance : '';
         document.getElementById('accMaxAlertEnabled').checked = Number.isFinite(maxBalance);
@@ -2257,13 +2393,13 @@
       const minAlertEnabled = document.getElementById('accMinAlertEnabled').checked;
       const maxAlertEnabled = document.getElementById('accMaxAlertEnabled').checked;
 
-      const minBalance = minAlertEnabled ? parseFloat(document.getElementById('accMinBalance').value) : null;
-      const maxBalance = maxAlertEnabled ? parseFloat(document.getElementById('accMaxBalance').value) : null;
+      const minBalance = minAlertEnabled ? roundCurrency(parseFloat(document.getElementById('accMinBalance').value)) : null;
+      const maxBalance = maxAlertEnabled ? roundCurrency(parseFloat(document.getElementById('accMaxBalance').value)) : null;
 
       const payload = {
         name: document.getElementById('accName').value,
         type: document.getElementById('accType').value,
-        initial_balance: parseFloat(document.getElementById('accBalance').value) || 0,
+        initial_balance: roundCurrency(parseFloat(document.getElementById('accBalance').value) || 0),
         institution: document.getElementById('accInstitution').value,
         account_number: document.getElementById('accNumber').value,
         min_balance_alert: minAlertEnabled && Number.isFinite(minBalance) ? minBalance : null,
@@ -2304,12 +2440,11 @@
           }
 
           await fetchData();
+          await fetchAccounts();
           if (window.currentAccountId) {
             await showTransactionsView(window.currentAccountId);
           } else if (currentViewState === 'home-transactions') {
             showAllTransactions(selectedSummaryTransactionType);
-          } else {
-            renderAccounts();
           }
         }
       });

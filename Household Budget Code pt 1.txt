@@ -1,0 +1,891 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Household Budget</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- Cropper.js CSS -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+  <link rel="icon" href="data:;base64,iVBORw0KGgo=" />
+</head>
+
+<body class="bg-gray-100 text-gray-900 antialiased min-h-screen pb-10">
+
+  <div id="app-message" role="alert" class="fixed left-4 right-4 top-4 z-[100] hidden mx-auto max-w-md rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700 shadow-lg">
+    <div class="flex items-start justify-between gap-3">
+      <span id="app-message-text"></span>
+      <button type="button" onclick="hideAppMessage()" aria-label="Dismiss message" class="shrink-0 text-lg leading-none text-red-400 hover:text-red-600">&times;</button>
+    </div>
+  </div>
+
+  <!-- Main View -->
+  <div id="accounts-view">
+    <!-- Header -->
+    <header class="border-b border-slate-200 bg-white shadow-sm">
+      <div class="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
+        <div class="flex min-w-0 items-center gap-3">
+          <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-blue-600 text-white shadow-sm" aria-hidden="true">
+            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 10.5 12 3l9 7.5"></path>
+              <path d="M5 9.5V21h14V9.5"></path>
+              <path d="M9 21v-6h6v6"></path>
+            </svg>
+          </div>
+          <div class="min-w-0">
+            <p class="truncate text-base font-extrabold tracking-tight text-slate-900 sm:text-lg">Household Budget</p>
+            <p class="hidden text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 sm:block">Your money, in one place</p>
+          </div>
+        </div>
+        <div class="flex shrink-0 items-center gap-2">
+          <button onclick="openTxModal()" aria-label="Add transaction"
+            class="inline-flex items-center gap-1.5 rounded-xl bg-blue-600 px-3 py-2 text-xs font-bold text-white shadow-sm transition hover:bg-blue-700 sm:px-4 sm:text-sm">
+            <span class="text-base leading-none" aria-hidden="true">+</span>
+            <span class="hidden sm:inline">Add transaction</span>
+            <span class="sm:hidden">Add Tx</span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Content Container -->
+    <div class="max-w-6xl mx-auto p-4 space-y-4">
+      <div class="space-y-3">
+        <div class="flex min-h-[38px] items-center justify-between gap-3">
+          <h2 id="home-view-title" class="text-2xl font-extrabold tracking-tight text-slate-800">Your Accounts</h2>
+          <button id="new-account-button" onclick="openAccountModal()"
+            class="inline-flex shrink-0 items-center gap-1 rounded-xl border border-slate-200 bg-white px-2.5 py-2 text-xs font-bold text-slate-600 shadow-sm transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700 sm:px-3 sm:text-sm">
+            <span class="text-base leading-none text-blue-600" aria-hidden="true">+</span>
+            <span>New account</span>
+          </button>
+        </div>
+
+        <div class="lg:grid lg:grid-cols-3 lg:items-stretch lg:gap-3">
+        <div id="monthly-summary" class="hidden rounded-3xl border border-slate-200 bg-gradient-to-br from-slate-50 via-white to-blue-50 shadow-sm p-4 space-y-3 lg:col-span-2">
+          <div class="flex items-center justify-between gap-2">
+            <div>
+              <p class="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">Monthly Summary</p>
+              <p id="monthly-summary-month" class="mt-1 text-base font-bold text-slate-800">This Month</p>
+            </div>
+            <div class="flex items-center gap-2">
+              <span id="summary-live-badge" class="hidden inline-flex items-center rounded-full border border-blue-200 bg-blue-100 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-blue-700">Live</span>
+              <select id="summary-month-select" onchange="setSelectedSummaryMonth(this.value)" class="rounded-xl border border-slate-200 bg-white px-2 py-1.5 pr-8 text-xs font-semibold text-slate-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-300">
+              </select>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-3 gap-2 text-center">
+            <button type="button" onclick="showAllTransactions('income')" class="group rounded-2xl border border-emerald-200 bg-emerald-50 p-3 text-left transition-all duration-150 hover:-translate-y-0.5 hover:bg-emerald-100 hover:shadow-sm">
+              <p class="text-[10px] font-bold uppercase tracking-[0.18em] text-emerald-700">Income</p>
+              <p id="monthly-income" class="mt-2 pr-1 text-right text-base font-extrabold text-emerald-700 sm:text-lg">$0.00</p>
+            </button>
+            <button type="button" onclick="showAllTransactions('expense')" class="group rounded-2xl border border-red-200 bg-red-50 p-3 text-left transition-all duration-150 hover:-translate-y-0.5 hover:bg-red-100 hover:shadow-sm">
+              <p class="text-[10px] font-bold uppercase tracking-[0.18em] text-red-700">Expenses</p>
+              <p id="monthly-expenses" class="mt-2 pr-1 text-right text-base font-extrabold text-red-700 sm:text-lg">$0.00</p>
+            </button>
+            <div class="rounded-2xl border border-blue-200 bg-blue-50 p-3">
+              <p class="text-[10px] font-bold uppercase tracking-[0.18em] text-blue-700">Remaining</p>
+              <p id="monthly-remaining" class="mt-2 pr-1 text-right text-base font-extrabold text-blue-700 sm:text-lg">$0.00</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex gap-2 rounded-2xl bg-slate-200 p-1 shadow-inner lg:col-span-1 lg:flex-col">
+          <button id="home-accounts-tab" onclick="showHomeAccounts()" class="flex-1 bg-blue-600 text-white px-3 py-2 rounded-xl text-sm font-semibold shadow-sm lg:flex-1">
+            Accounts
+          </button>
+          <button id="home-transactions-tab" onclick="showAllTransactions()" class="flex-1 bg-transparent text-slate-700 px-3 py-2 rounded-xl text-sm font-semibold lg:flex-1">
+            Transactions
+          </button>
+        </div>
+        </div>
+
+        <div id="account-search-wrap" class="space-y-2">
+          <input id="account-search" type="text" oninput="renderAccounts()" placeholder="Search accounts..."
+            class="w-full border border-slate-200 bg-white px-3 py-2.5 rounded-xl text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-200 shadow-sm" />
+        </div>
+
+        <div id="transaction-search-wrap" class="hidden space-y-2 lg:ml-auto lg:w-[calc((100%-24px)/3)]">
+          <input id="transaction-search" type="text" oninput="renderAllTransactions()" placeholder="Search transactions..."
+            class="w-full border border-slate-200 bg-white px-3 py-2.5 rounded-xl text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-200 shadow-sm" />
+        </div>
+
+        <div id="accounts-list" class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+          <p class="text-sm text-gray-500 md:col-span-2 xl:col-span-3">Loading accounts...</p>
+        </div>
+
+        <div id="all-transactions-list" class="hidden space-y-3 lg:ml-auto lg:w-[calc((100%-24px)/3)]">
+          <p class="text-sm text-gray-500">Loading transactions...</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Transactions View -->
+  <div id="transactions-view" class="hidden">
+    <!-- Header -->
+    <div class="bg-blue-600 text-white p-4 flex items-center justify-between shadow-md">
+      <button onclick="showAccountsView()" class="text-white font-semibold text-sm flex items-center gap-1">
+        &larr; Accounts
+      </button>
+      <span id="tx-header-title" class="font-bold text-lg">Account Details</span>
+      <button onclick="openTxModal()"
+        class="bg-white text-blue-600 px-3 py-1 rounded-full text-sm font-semibold shadow">
+        + Add Tx
+      </button>
+    </div>
+
+    <div class="max-w-md mx-auto p-4 space-y-4">
+      <!-- Account Overview Card -->
+      <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex justify-between items-center">
+        <div>
+          <h2 id="tx-acc-name" class="text-lg font-bold text-gray-900"></h2>
+          <p id="tx-acc-sub" class="text-xs text-gray-500 uppercase tracking-wider"></p>
+          <button type="button" onclick="openAccountModal(activeAccountId)"
+            class="mt-2 inline-flex items-center gap-1 rounded-lg border border-blue-200 bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-700 transition hover:bg-blue-100">
+            <span aria-hidden="true">✎</span>
+            Edit Account
+          </button>
+        </div>
+        <div class="text-right space-y-1">
+          <div>
+            <div id="tx-acc-balance" class="text-lg font-extrabold text-gray-900">$0.00</div>
+            <div class="text-[10px] text-gray-500 font-semibold uppercase tracking-wider">Current Balance</div>
+          </div>
+          <div>
+            <div id="tx-acc-cleared" class="text-sm font-bold text-emerald-600">$0.00</div>
+            <div class="text-[10px] text-emerald-700 font-semibold uppercase tracking-wider">Cleared Balance</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tag Filter Bar -->
+      <div id="tag-filter-container"
+        class="hidden flex flex-wrap items-center gap-1.5 bg-white p-3 rounded-xl border border-gray-100 shadow-sm">
+        <span class="text-xs font-semibold text-gray-500 mr-1">Filter by Tag:</span>
+        <div id="tag-filter-chips" class="flex flex-wrap gap-1"></div>
+      </div>
+
+      <!-- Transactions List -->
+      <div class="space-y-3">
+        <h3 class="text-md font-bold text-gray-800">Transaction History</h3>
+        <div id="transactions-list" class="space-y-2">
+          <p class="text-sm text-gray-500">Loading transactions...</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add/Edit Account Modal -->
+  <div id="account-modal"
+    class="fixed inset-0 bg-black/50 hidden flex items-end sm:items-center justify-center p-0 sm:p-4 z-50">
+    <div class="bg-white w-full max-w-md rounded-t-2xl sm:rounded-2xl p-6 space-y-4">
+      <div class="flex justify-between items-center">
+        <h3 id="modal-title" class="font-bold text-lg">Add New Account</h3>
+        <button onclick="toggleAccountModal(false)" class="text-gray-400 text-2xl">&times;</button>
+      </div>
+      <form id="account-form" onsubmit="handleAccountSubmit(event)" class="space-y-3">
+        <input type="hidden" id="editingAccId" value="" />
+        <div>
+          <label class="text-xs font-semibold text-gray-600">Account Name</label>
+          <input type="text" id="accName" placeholder="e.g., Main Checking, Freedom Card" required
+            class="w-full border p-2 rounded-lg mt-1" />
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="text-xs font-semibold text-gray-600">Account Type</label>
+            <select id="accType" class="w-full border p-2 rounded-lg mt-1 bg-white">
+              <option value="cash">Cash</option>
+              <option value="checking">Checking</option>
+              <option value="credit">Credit Card</option>
+              <option value="investment">Investment</option>
+              <option value="loan">Loan</option>
+              <option value="savings">Savings</option>
+            </select>
+          </div>
+          <div>
+            <label class="text-xs font-semibold text-gray-600">Initial Balance ($)</label>
+            <input type="number" step="0.01" id="accBalance" placeholder="0.00"
+              class="w-full border p-2 rounded-lg mt-1" />
+          </div>
+        </div>
+
+        <div class="space-y-2 pt-1">
+          <div class="flex items-center justify-between gap-2">
+            <label class="text-xs font-semibold text-gray-600">Alert when below minimum</label>
+            <input type="checkbox" id="accMinAlertEnabled" onchange="toggleAccountAlertControls()"
+              class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
+          </div>
+          <div id="accMinAlertField" class="hidden">
+            <input type="number" step="0.01" id="accMinBalance" placeholder="Minimum balance"
+              class="w-full border p-2 rounded-lg mt-1" />
+          </div>
+        </div>
+
+        <div class="space-y-2 pt-1">
+          <div class="flex items-center justify-between gap-2">
+            <label class="text-xs font-semibold text-gray-600">Alert when above maximum</label>
+            <input type="checkbox" id="accMaxAlertEnabled" onchange="toggleAccountAlertControls()"
+              class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
+          </div>
+          <div id="accMaxAlertField" class="hidden">
+            <input type="number" step="0.01" id="accMaxBalance" placeholder="Maximum balance"
+              class="w-full border p-2 rounded-lg mt-1" />
+          </div>
+        </div>
+
+        <div>
+          <label class="text-xs font-semibold text-gray-600">Institution / Bank</label>
+          <input type="text" id="accInstitution" placeholder="e.g., Chase, Wells Fargo, Local CU"
+            class="w-full border p-2 rounded-lg mt-1" />
+        </div>
+        <div>
+          <label class="text-xs font-semibold text-gray-600">Account Number (or Last 4 Digits)</label>
+          <input type="text" id="accNumber" placeholder="e.g., ****1234" class="w-full border p-2 rounded-lg mt-1" />
+        </div>
+        <div class="pt-2 space-y-2">
+          <button type="submit" id="submitBtn"
+            class="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold shadow">
+            Create Account
+          </button>
+          <button type="button" id="deleteBtn" onclick="handleDeleteFromModal()"
+            class="w-full bg-red-50 text-red-600 border border-red-200 py-2 rounded-lg font-semibold shadow-sm hidden">
+            Delete Account
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Custom Confirmation Modal -->
+  <div id="confirm-modal"
+    class="fixed inset-0 bg-black/50 hidden flex items-end sm:items-center justify-center p-0 sm:p-4 z-[60]">
+    <div class="bg-white w-full max-w-sm rounded-t-2xl sm:rounded-2xl p-5 space-y-4">
+      <div class="flex justify-between items-center">
+        <h3 id="confirm-modal-title" class="font-bold text-lg text-gray-800">Confirm</h3>
+        <button type="button" onclick="closeCustomConfirm()" class="text-gray-400 text-2xl">&times;</button>
+      </div>
+      <p id="confirm-modal-message" class="text-gray-700 text-sm">Are you sure?</p>
+      <div class="flex gap-2 pt-2">
+        <button type="button" onclick="closeCustomConfirm()"
+          class="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-semibold text-sm">Cancel</button>
+        <button type="button" id="confirm-modal-confirm"
+          class="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg font-semibold text-sm shadow">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add/Edit Transaction Modal -->
+  <div id="tx-modal"
+    class="fixed inset-0 bg-black/50 hidden flex items-end sm:items-center justify-center p-0 sm:p-4 z-50">
+    <div class="bg-white w-full max-w-md rounded-t-2xl sm:rounded-2xl p-6 space-y-4 max-h-[90vh] overflow-y-auto">
+      <div class="flex justify-between items-center">
+        <h3 id="tx-modal-title" class="font-bold text-lg">Add Transaction</h3>
+        <button onclick="toggleTxModal(false)" class="text-gray-400 text-2xl">&times;</button>
+      </div>
+      <form id="tx-form" onsubmit="handleTxSubmit(event)" class="space-y-3">
+        <input type="hidden" id="editingTxId" value="" />
+
+        <!-- Account Selection (Required) -->
+        <div>
+          <label id="tx-account-label" class="text-xs font-semibold text-gray-600">Account</label>
+          <select id="txAccount" required onchange="autoSelectPaymentMethod(); populateTargetAccountDropdown();"
+            class="w-full border p-2 rounded-lg mt-1 bg-white font-medium text-gray-800">
+            <!-- Dynamically populated -->
+          </select>
+        </div>
+
+        <!-- Destination Account (Hidden by default) -->
+        <div id="transferTargetWrapper" class="hidden mt-3">
+          <label class="text-xs font-semibold text-gray-600">Transfer To Account</label>
+          <select id="txTargetAccount"
+            class="w-full border p-2 rounded-lg mt-1 bg-white font-medium text-gray-800"></select>
+        </div>
+
+        <!-- Description (Optional) -->
+        <div id="tx-description-field">
+          <label class="text-xs font-semibold text-gray-600">Description</label>
+          <input type="text" id="txDesc" list="desc-suggestions"
+            class="w-full border p-2 rounded-lg mt-1 font-medium text-gray-800"
+            placeholder="e.g., Groceries or reimbursement" />
+          <datalist id="desc-suggestions"></datalist>
+        </div>
+
+        <!-- Dynamic Payer / Payee Field (Optional) -->
+        <div id="tx-payee-field">
+          <label class="text-xs font-semibold text-gray-600">Payer / Payee</label>
+          <input type="text" id="txPayee" list="payee-suggestions"
+            class="w-full border p-2 rounded-lg mt-1 font-medium text-gray-800" placeholder="e.g., Walmart" />
+          <datalist id="payee-suggestions"></datalist>
+        </div>
+
+        <!-- Type & Amount -->
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="text-xs font-semibold text-gray-600">Amount ($)</label>
+            <input type="number" step="0.01" id="txAmount" placeholder="0.00" required
+              oninput="updateSplitRemainder()" class="w-full border p-2 rounded-lg mt-1" />
+            <label class="mt-1.5 inline-flex items-center gap-1.5 text-[11px] font-semibold text-gray-600">
+              Split
+              <input type="checkbox" id="txSplitEnabled" onchange="toggleSplitEditor()"
+                class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
+            </label>
+          </div>
+          <div>
+            <label class="text-xs font-semibold text-gray-600">Type</label>
+            <select id="txType" onchange="handleTypeChange()" class="h-[42px] w-full border p-2 rounded-lg mt-1 bg-white">
+              <option value="expense">Expense (-)</option>
+              <option value="income">Income (+)</option>
+              <option value="transfer">Transfer</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Payment Type Dropdown -->
+        <div>
+          <label class="text-xs font-semibold text-gray-600">Payment Type</label>
+          <select id="txPaymentMethod" onchange="toggleCheckNumberField()" class="w-full border p-2 rounded-lg mt-1 bg-white">
+            <option value="bank_transfer">Bank Transfer</option>
+            <option value="cash">Cash</option>
+            <option value="check">Check</option>
+            <option value="credit">Credit Card</option>
+            <option value="debit">Debit Card</option>
+            <option value="p2p">P2P</option>
+            <option value="web_payment">Web Payment</option>
+          </select>
+        </div>
+
+        <div id="checkNumberWrapper" class="hidden">
+          <label class="text-xs font-semibold text-gray-600">Check #</label>
+          <input type="text" id="txCheckNumber" placeholder="e.g., 1042"
+            class="w-full border p-2 rounded-lg mt-1 font-medium text-gray-800" />
+        </div>
+
+        <!-- Date & Status -->
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="text-xs font-semibold text-gray-600">Date</label>
+            <input type="date" id="txDate" required class="w-full border p-2 rounded-lg mt-1" />
+          </div>
+          <div>
+            <label class="text-xs font-semibold text-gray-600">Status</label>
+            <select id="txStatus" class="w-full border p-2 rounded-lg mt-1 bg-white">
+              <option value="pending">Pending</option>
+              <option value="reconciled">Reconciled</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Tags -->
+        <div id="tx-tags-field">
+          <label class="text-xs font-semibold text-gray-600">Tags (comma-separated)</label>
+          <input type="text" id="txTags" placeholder="e.g., groceries, vacation, tax"
+            class="w-full border p-2 rounded-lg mt-1" />
+        </div>
+
+        <!-- Split transaction editor -->
+        <div id="txSplitEditor" class="hidden space-y-3 rounded-xl border border-emerald-200 bg-emerald-50 p-3">
+          <div>
+            <p class="text-sm font-bold text-emerald-800">Split details</p>
+            <p class="mt-0.5 text-[11px] text-emerald-700">Add tags, a description, and an amount for each part.</p>
+          </div>
+          <div class="space-y-2">
+            <div id="txSplitRows" class="space-y-2"></div>
+            <button type="button" onclick="addSplitRow()"
+              class="text-xs font-semibold text-emerald-700 hover:text-emerald-800">+ Add split</button>
+            <p class="text-[11px] text-emerald-700">Split amounts must equal the transaction total.</p>
+          </div>
+        </div>
+
+        <!-- Receipt Attachments Section -->
+        <div>
+          <label class="text-xs font-semibold text-gray-600 block mb-1">Attach Receipts / Screenshots</label>
+
+          <div class="grid grid-cols-2 gap-2 mt-1">
+            <!-- Choose an existing image without forcing the camera picker. -->
+            <label
+              class="flex items-center justify-center gap-1.5 bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-700 text-xs font-semibold py-2 px-3 rounded-lg cursor-pointer text-center">
+              <span>📁 Choose File</span>
+              <input type="file" id="txReceiptFile" accept="*/*" class="hidden" onchange="handleImageInput(this)" />
+            </label>
+
+            <!-- Explicit camera action for mobile devices. -->
+            <label
+              class="flex items-center justify-center gap-1.5 bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-700 text-xs font-semibold py-2 px-3 rounded-lg cursor-pointer text-center">
+              <span>📷 Take Photo</span>
+              <input type="file" id="txReceiptCamera" accept="image/*" capture="environment" class="hidden" onchange="handleImageInput(this)" />
+            </label>
+
+            <!-- Selection Status Text -->
+            <p id="fileSelectionStatus" class="text-[11px] text-gray-500 mt-1.5 font-medium hidden"></p>
+
+            <!-- Container for Existing Individual Receipts -->
+            <div id="receiptPreview" class="mt-3 hidden space-y-1.5">
+              <span class="text-xs font-semibold text-gray-500 block">Existing Attachments:</span>
+              <div id="receiptLinksList" class="space-y-1"></div>
+            </div>
+          </div>
+
+          <!-- Submit Buttons -->
+          <div class="pt-2 space-y-2">
+            <button type="submit" id="txSubmitBtn"
+              class="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold shadow">
+              Save Transaction
+            </button>
+            <button type="button" id="txDeleteBtn" onclick="handleDeleteTxFromModal()"
+              class="w-full bg-red-50 text-red-600 border border-red-200 py-2 rounded-lg font-semibold shadow-sm hidden">
+              Delete Transaction
+            </button>
+          </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Image Cropper Modal -->
+  <div id="cropModal" class="fixed inset-0 bg-black/75 hidden flex items-center justify-center p-4 z-50">
+    <div class="bg-white w-full max-w-lg rounded-2xl p-4 space-y-3 flex flex-col">
+      <div class="flex justify-between items-center">
+        <h3 class="font-bold text-lg text-gray-800">Crop Image / Receipt</h3>
+        <button type="button" onclick="cancelCrop()" class="text-gray-400 text-2xl">&times;</button>
+      </div>
+      <div class="max-h-[60vh] overflow-hidden flex justify-center bg-gray-100 rounded-lg">
+        <img id="imageToCrop" src="" alt="Source" class="max-w-full block">
+      </div>
+      <div class="flex justify-end gap-2 pt-2">
+        <button type="button" onclick="cancelCrop()"
+          class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-semibold text-sm">Cancel</button>
+        <button type="button" onclick="confirmCrop()"
+          class="px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold text-sm shadow">Crop & Add</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Cropper.js Script -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+
+  <script>
+    const SUPABASE_URL = "https://raujjskhrprnyigfmkwq.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJhdWpqc2tocnBybnlpZ2Zta3dxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY3Njk0NzEsImV4cCI6MjEwMjM0NTQ3MX0.jEjU9BOmzpQpm-A4UlD8xrP2dpeQSiIEjj7-IuMbiVE";
+      const RECEIPTS_BUCKET = 'receipts';
+
+    // Standard initialization without custom global headers override
+    const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    let accounts = [];
+    let transactions = [];
+    let currentAccountTransactions = [];
+    let activeAccountId = null;
+    let selectedTagFilter = null;
+    let activeReceiptFiles = [];
+    let activeReceiptUrls = [];
+    let accountAlertState = {};
+    let supportsCheckNumber = false;
+    let currentViewState = 'home-accounts';
+    let splitDetailsExpanded = new Set();
+
+    let cropper = null;
+    let appMessageTimer = null;
+
+    function showAppMessage(message) {
+      const messageBox = document.getElementById('app-message');
+      const messageText = document.getElementById('app-message-text');
+      if (!messageBox || !messageText) return;
+
+      messageText.textContent = message;
+      messageBox.classList.remove('hidden');
+      clearTimeout(appMessageTimer);
+      appMessageTimer = setTimeout(hideAppMessage, 6000);
+    }
+
+    function hideAppMessage() {
+      const messageBox = document.getElementById('app-message');
+      if (messageBox) messageBox.classList.add('hidden');
+      clearTimeout(appMessageTimer);
+      appMessageTimer = null;
+    }
+
+    function getSavedViewState() {
+      try {
+        const raw = JSON.parse(localStorage.getItem('household-budget-view-state') || '{}');
+        return raw;
+      } catch (err) {
+        return {};
+      }
+    }
+
+    function clearSearchForView(viewName) {
+      const accountSearch = document.getElementById('account-search');
+      const transactionSearch = document.getElementById('transaction-search');
+
+      if (viewName === 'home-accounts' && transactionSearch) {
+        transactionSearch.value = '';
+      }
+
+      if (viewName === 'home-transactions' && accountSearch) {
+        accountSearch.value = '';
+      }
+    }
+
+    function saveViewState() {
+      const accountSearch = document.getElementById('account-search');
+      const transactionSearch = document.getElementById('transaction-search');
+      const state = {
+        view: currentViewState,
+        accountSearch: accountSearch ? accountSearch.value : '',
+        transactionSearch: transactionSearch ? transactionSearch.value : '',
+        currentAccountId: window.currentAccountId || null
+      };
+      localStorage.setItem('household-budget-view-state', JSON.stringify(state));
+    }
+
+    function restoreViewState() {
+      const saved = getSavedViewState();
+      if (!saved.view) return;
+
+      const accountSearch = document.getElementById('account-search');
+      const transactionSearch = document.getElementById('transaction-search');
+      if (accountSearch) accountSearch.value = saved.accountSearch || '';
+      if (transactionSearch) transactionSearch.value = saved.transactionSearch || '';
+
+      currentViewState = saved.view;
+      if (saved.currentAccountId) {
+        window.currentAccountId = saved.currentAccountId;
+        activeAccountId = saved.currentAccountId;
+      }
+    }
+
+    function applySavedViewState() {
+      const saved = getSavedViewState();
+      const isTransactionsView = saved.view === 'home-transactions';
+      const accountSearch = document.getElementById('account-search');
+      const transactionSearch = document.getElementById('transaction-search');
+
+      if (accountSearch) accountSearch.value = saved.accountSearch || '';
+      if (transactionSearch) transactionSearch.value = saved.transactionSearch || '';
+
+      if (isTransactionsView) {
+        showAllTransactions();
+      } else if (saved.view === 'transactions-detail' && saved.currentAccountId) {
+        showTransactionsView(saved.currentAccountId);
+      } else if (saved.view === 'accounts-detail' && saved.currentAccountId) {
+        showAccountsView();
+      } else {
+        showHomeAccounts();
+      }
+    }
+
+    async function detectCheckNumberColumn() {
+      try {
+        const {error} = await sb.from('transactions').select('check_number').limit(1);
+        supportsCheckNumber = !error;
+      } catch (err) {
+        supportsCheckNumber = false;
+        console.warn('Unable to verify check_number support:', err);
+      }
+    }
+
+    function getStoredAccountAlerts() {
+      try {
+        return JSON.parse(localStorage.getItem('account-balance-alerts') || '{}');
+      } catch (err) {
+        return {};
+      }
+    }
+
+    function setStoredAccountAlerts(alerts) {
+      try {
+        localStorage.setItem('account-balance-alerts', JSON.stringify(alerts));
+      } catch (err) {
+        console.warn('Unable to persist account thresholds:', err);
+      }
+    }
+
+    function getAccountAlertConfig(account, currentBalanceOverride = null) {
+      const stored = getStoredAccountAlerts()[account.id] || {};
+      const minBalance = parseFloat(account.min_balance_alert ?? stored.min_balance_alert ?? account.min_balance ?? NaN);
+      const maxBalance = parseFloat(account.max_balance_alert ?? stored.max_balance_alert ?? account.max_balance ?? NaN);
+      const signedBalance = Number.isFinite(currentBalanceOverride) ? currentBalanceOverride : calculateAccountBalance(account);
+      const isCreditAccount = String(account.type || '').toLowerCase() === 'credit';
+      const debtBalance = isCreditAccount ? Math.abs(signedBalance) : signedBalance;
+
+      return {
+        minBalance: Number.isFinite(minBalance) ? minBalance : null,
+        maxBalance: Number.isFinite(maxBalance) ? maxBalance : null,
+        minEnabled: Number.isFinite(minBalance),
+        maxEnabled: Number.isFinite(maxBalance),
+        signedBalance,
+        debtBalance,
+        isCreditAccount
+      };
+    }
+
+    function calculateAccountBalance(account, txListOverride = null) {
+      const initialBal = parseFloat(account?.initial_balance || 0);
+      let txList = txListOverride;
+
+      if (!txList) {
+        const globalTxs = (typeof transactions !== 'undefined' && transactions.length > 0)
+          ? transactions.filter(tx => (tx.account_id === account.id || tx.accountId === account.id))
+          : [];
+
+        txList = globalTxs.length > 0 ? globalTxs : (Array.isArray(account.transactions) ? account.transactions : []);
+      }
+
+      const totalTxSum = txList.reduce((sum, tx) => sum + parseFloat(tx.amount || 0), 0);
+      return initialBal + totalTxSum;
+    }
+
+    function checkAccountBalanceAlerts() {
+      if (!Array.isArray(accounts)) return;
+
+      accounts.forEach(acc => {
+        const currentBalance = calculateAccountBalance(acc);
+        const {minBalance, maxBalance, minEnabled, maxEnabled, signedBalance, debtBalance, isCreditAccount} = getAccountAlertConfig(acc, currentBalance);
+
+        const previousState = accountAlertState[acc.id] || {triggered: false};
+        let breachType = null;
+        let breachValue = null;
+
+        const isDebtAccount = !!isCreditAccount;
+
+        if (minEnabled) {
+          const minTriggered = isDebtAccount
+            ? signedBalance < minBalance
+            : signedBalance < minBalance;
+
+          if (minTriggered) {
+            breachType = isDebtAccount ? 'high' : 'low';
+            breachValue = isDebtAccount ? Math.abs(minBalance) : minBalance;
+          }
+        }
+
+        if (!breachType && maxEnabled) {
+          const maxTriggered = isDebtAccount
+            ? signedBalance > maxBalance
+            : signedBalance > maxBalance;
+
+          if (maxTriggered) {
+            breachType = isDebtAccount ? 'low' : 'high';
+            breachValue = isDebtAccount ? Math.abs(maxBalance) : maxBalance;
+          }
+        }
+
+        if (breachType && !previousState.triggered) {
+          const isHigh = breachType === 'high';
+          const label = isDebtAccount ? 'debt' : 'balance';
+          const displayAmount = isDebtAccount ? debtBalance : signedBalance;
+          const directionText = isHigh ? 'above' : 'below';
+          openCustomConfirm({
+            title: 'Balance Alert',
+            message: `${acc.name} ${label} is $${displayAmount.toFixed(2)} — ${directionText} your alert threshold of $${breachValue.toFixed(2)}.`,
+            confirmLabel: 'OK',
+            onConfirm: () => {}
+          });
+          accountAlertState[acc.id] = {triggered: true, type: breachType};
+        } else if (!breachType) {
+          accountAlertState[acc.id] = {triggered: false, type: null};
+        }
+      });
+    }
+
+    async function init() {
+      buildMonthOptions();
+      restoreViewState();
+      await detectCheckNumberColumn();
+      await fetchData();
+      applySavedViewState();
+      try {
+        sb.channel('db-changes')
+          .on('postgres_changes', {event: '*', schema: 'public', table: 'accounts'}, () => fetchAccounts())
+          .on('postgres_changes', {event: '*', schema: 'public', table: 'transactions'}, () => {
+            if (activeAccountId) fetchTransactions(activeAccountId);
+            fetchAccounts();
+            fetchData();
+          })
+          .subscribe();
+      } catch (err) {
+        console.warn("Realtime subscription warning:", err);
+      }
+    }
+
+    async function fetchAccounts() {
+      const list = document.getElementById('accounts-list');
+      try {
+        let {data, error} = await sb.from('accounts').select('*, transactions(amount, status)').order('created_at', {ascending: true});
+        if (error) {
+          const simple = await sb.from('accounts').select('*').order('created_at', {ascending: true});
+          if (simple.error) throw simple.error;
+          data = simple.data;
+        }
+
+        const storedAlerts = getStoredAccountAlerts();
+        accounts = (data || []).map(acc => {
+          const stored = storedAlerts[acc.id] || {};
+          return {
+            ...acc,
+            min_balance_alert: acc.min_balance_alert ?? stored.min_balance_alert ?? null,
+            max_balance_alert: acc.max_balance_alert ?? stored.max_balance_alert ?? null
+          };
+        });
+
+        checkAccountBalanceAlerts();
+        renderAccounts();
+      } catch (err) {
+        console.error("Error fetching accounts:", err);
+        list.innerHTML = `
+          <div class="bg-red-50 p-4 rounded-xl border border-red-200 text-center space-y-2">
+            <p class="text-red-700 font-semibold text-sm">Error loading accounts</p>
+            <p class="text-xs text-red-500">${err.message || 'Check database connection'}</p>
+            <button onclick="fetchAccounts()" class="text-xs bg-red-600 text-white px-3 py-1 rounded-md font-semibold mt-1">Try Again</button>
+          </div>
+        `;
+      }
+    }
+
+    function getSearchableText(value) {
+      if (value === null || value === undefined) return '';
+      if (Array.isArray(value)) return value.map(item => getSearchableText(item)).join(' ');
+      if (typeof value === 'object') return Object.values(value).map(item => getSearchableText(item)).join(' ');
+      return String(value);
+    }
+
+    function matchesSearch(item, query) {
+      if (!query) return true;
+      const searchable = getSearchableText(item).toLowerCase();
+      return searchable.includes(query.toLowerCase());
+    }
+
+    function showHomeAccounts() {
+      const accountsList = document.getElementById('accounts-list');
+      const allTransactionsList = document.getElementById('all-transactions-list');
+      const accountsTab = document.getElementById('home-accounts-tab');
+      const transactionsTab = document.getElementById('home-transactions-tab');
+      const title = document.getElementById('home-view-title');
+      const accountSearchWrap = document.getElementById('account-search-wrap');
+      const transactionSearchWrap = document.getElementById('transaction-search-wrap');
+      const newAccountButton = document.getElementById('new-account-button');
+
+      clearSearchForView('home-accounts');
+      currentViewState = 'home-accounts';
+      accountsList.classList.remove('hidden');
+      allTransactionsList.classList.add('hidden');
+      accountSearchWrap.classList.remove('hidden');
+      transactionSearchWrap.classList.add('hidden');
+      newAccountButton.classList.remove('hidden');
+      title.textContent = 'Your Accounts';
+      accountsTab.classList.add('bg-blue-600', 'text-white');
+      accountsTab.classList.remove('bg-transparent', 'bg-white', 'text-gray-700', 'border', 'border-gray-200');
+      transactionsTab.classList.add('bg-white', 'text-gray-700', 'border', 'border-gray-200');
+      transactionsTab.classList.remove('bg-transparent', 'bg-blue-600', 'text-white');
+      saveViewState();
+    }
+
+    let selectedSummaryTransactionType = null;
+    let filteredTransactionsLookup = {};
+
+    function showAllTransactions(type = null) {
+      selectedSummaryTransactionType = type ?? null;
+      renderAllTransactions();
+
+      const accountsList = document.getElementById('accounts-list');
+      const allTransactionsList = document.getElementById('all-transactions-list');
+      const accountsTab = document.getElementById('home-accounts-tab');
+      const transactionsTab = document.getElementById('home-transactions-tab');
+      const title = document.getElementById('home-view-title');
+      const accountSearchWrap = document.getElementById('account-search-wrap');
+      const transactionSearchWrap = document.getElementById('transaction-search-wrap');
+      const newAccountButton = document.getElementById('new-account-button');
+
+      clearSearchForView('home-transactions');
+      currentViewState = 'home-transactions';
+      accountsList.classList.add('hidden');
+      allTransactionsList.classList.remove('hidden');
+      accountSearchWrap.classList.add('hidden');
+      transactionSearchWrap.classList.remove('hidden');
+      newAccountButton.classList.add('hidden');
+      const monthLabel = selectedSummaryMonth
+        ? new Date(`${selectedSummaryMonth}-01T00:00:00`).toLocaleString('en-US', { month: 'long', year: 'numeric' })
+        : 'Selected Month';
+
+      title.textContent = selectedSummaryTransactionType === 'income'
+        ? `Income - ${monthLabel}`
+        : selectedSummaryTransactionType === 'expense'
+          ? `Expenses - ${monthLabel}`
+          : `Transactions - ${monthLabel}`;
+      transactionsTab.classList.add('bg-blue-600', 'text-white');
+      transactionsTab.classList.remove('bg-transparent', 'bg-white', 'text-gray-700', 'border', 'border-gray-200');
+      accountsTab.classList.add('bg-white', 'text-gray-700', 'border', 'border-gray-200');
+      accountsTab.classList.remove('bg-transparent', 'bg-blue-600', 'text-white');
+      saveViewState();
+    }
+
+    let selectedSummaryMonth = (() => {
+      const now = new Date();
+      return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    })();
+
+    function buildMonthOptions() {
+      const selector = document.getElementById('summary-month-select');
+      if (!selector) return;
+
+      const now = new Date();
+      const options = [];
+
+      for (let i = 11; i >= 0; i--) {
+        const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+        const label = d.toLocaleString('en-US', { month: 'long', year: 'numeric' });
+        options.push(`<option value="${key}">${label}</option>`);
+      }
+
+      selector.innerHTML = options.join('');
+      selector.value = selectedSummaryMonth;
+    }
+
+    function setSelectedSummaryMonth(monthKey) {
+      selectedSummaryMonth = monthKey || selectedSummaryMonth;
+      const selector = document.getElementById('summary-month-select');
+      if (selector) selector.value = selectedSummaryMonth;
+      renderMonthlySummary();
+    }
+
+    function isTransferPartnerTransaction(tx) {
+      return !!(tx && tx.transfer_id);
+    }
+
+    function getSelectedMonthTransactions() {
+      const [year, month] = selectedSummaryMonth.split('-').map(Number);
+      if (!year || !month) return [];
+
+      const monthStart = new Date(year, month - 1, 1);
+      const monthEnd = new Date(year, month, 0, 23, 59, 59, 999);
+
+      return (Array.isArray(transactions) ? transactions : []).filter(tx => {
+        const txDate = tx && tx.date ? new Date(tx.date + 'T00:00:00') : null;
+        if (!txDate || Number.isNaN(txDate.getTime())) return false;
+        if (isTransferPartnerTransaction(tx)) return false;
+        return txDate >= monthStart && txDate <= monthEnd;
+      });
+    }
+
+    function compareTransactions(a, b) {
+      const statusA = a?.status === 'pending' ? 0 : 1;
+      const statusB = b?.status === 'pending' ? 0 : 1;
+      if (statusA !== statusB) return statusA - statusB;
+
+      const dateA = a?.date ? new Date(`${a.date}T00:00:00`).getTime() : 0;
+      const dateB = b?.date ? new Date(`${b.date}T00:00:00`).getTime() : 0;
+      if (dateA !== dateB) return dateB - dateA;
+
+      const createdA = a?.created_at ? new Date(a.created_at).getTime() : 0;
+      const createdB = b?.created_at ? new Date(b.created_at).getTime() : 0;
+      if (createdA !== createdB) return createdB - createdA;
+
+      if (a?.transfer_id && b?.transfer_id && a.transfer_id === b.transfer_id) return 0;
+      return (a?.transfer_id && !b?.transfer_id) ? -1 : (!a?.transfer_id && b?.transfer_id) ? 1 : 0;
+    }
