@@ -3,7 +3,7 @@
 All notable changes to this project will be documented in this file.
 
 ## Unreleased
-- Added deterministic transaction ordering by date, pending/reconciled status, and creation timestamp
+- Added deterministic transaction ordering by pending/reconciled status, date, and creation timestamp
 
 ## [1.1.1] - 2026-08-18
 - Added split transactions with multiple tagged allocations, descriptions, remainder amounts, validation, and expandable card details
