@@ -873,6 +873,23 @@
       });
     }
 
+    function compareTransactions(a, b) {
+      const dateA = a?.date ? new Date(`${a.date}T00:00:00`).getTime() : 0;
+      const dateB = b?.date ? new Date(`${b.date}T00:00:00`).getTime() : 0;
+      if (dateA !== dateB) return dateB - dateA;
+
+      const statusA = a?.status === 'pending' ? 0 : 1;
+      const statusB = b?.status === 'pending' ? 0 : 1;
+      if (statusA !== statusB) return statusA - statusB;
+
+      const createdA = a?.created_at ? new Date(a.created_at).getTime() : 0;
+      const createdB = b?.created_at ? new Date(b.created_at).getTime() : 0;
+      if (createdA !== createdB) return createdB - createdA;
+
+      if (a?.transfer_id && b?.transfer_id && a.transfer_id === b.transfer_id) return 0;
+      return (a?.transfer_id && !b?.transfer_id) ? -1 : (!a?.transfer_id && b?.transfer_id) ? 1 : 0;
+    }
+
     function renderMonthlySummary() {
       const card = document.getElementById('monthly-summary');
       const monthLabel = document.getElementById('monthly-summary-month');
@@ -948,13 +965,7 @@
 
       const filteredTransactions = baseTransactions
         .filter(tx => matchesSearch(tx, query))
-        .sort((a, b) => {
-          const dateA = a && a.date ? new Date(a.date + 'T00:00:00').getTime() : 0;
-          const dateB = b && b.date ? new Date(b.date + 'T00:00:00').getTime() : 0;
-          if (dateA !== dateB) return dateB - dateA;
-          if (a.transfer_id && b.transfer_id && a.transfer_id === b.transfer_id) return 0;
-          return (a.transfer_id && !b.transfer_id) ? -1 : (!a.transfer_id && b.transfer_id) ? 1 : 0;
-        });
+        .sort(compareTransactions);
 
       const groupedTransactions = [];
       const seen = new Set();
@@ -1200,7 +1211,10 @@
       if (!accId) return;
       const list = document.getElementById('transactions-list');
       try {
-        const {data, error} = await sb.from('transactions').select('*').eq('account_id', accId).order('date', {ascending: false});
+        const {data, error} = await sb.from('transactions').select('*').eq('account_id', accId)
+          .order('date', {ascending: false})
+          .order('status', {ascending: true})
+          .order('created_at', {ascending: false});
         if (error) throw error;
 
         currentAccountTransactions = data || [];
