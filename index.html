@@ -377,8 +377,8 @@
             <!-- Choose an existing image without forcing the camera picker. -->
             <label
               class="flex items-center justify-center gap-1.5 bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-700 text-xs font-semibold py-2 px-3 rounded-lg cursor-pointer text-center">
-              <span>📁 Upload File</span>
-              <input type="file" id="txReceiptFile" accept="image/*" class="hidden" onchange="handleImageInput(this)" />
+              <span>📁 Choose File</span>
+              <input type="file" id="txReceiptFile" accept="*/*" class="hidden" onchange="handleImageInput(this)" />
             </label>
 
             <!-- Explicit camera action for mobile devices. -->
@@ -1426,6 +1426,12 @@
     function handleImageInput(input) {
       const file = input.files && input.files[0];
       if (!file) return;
+
+      if (!file.type || !file.type.startsWith('image/')) {
+        alert('Please choose an image file for the receipt.');
+        input.value = '';
+        return;
+      }
 
       const reader = new FileReader();
       reader.onload = (e) => {
