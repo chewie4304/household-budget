@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
-## [1.1.0] - 2026-08-18
+## [1.1.1] - 2026-08-18
 - Added split transactions with multiple tagged allocations, descriptions, remainder amounts, validation, and expandable card details
 - Included split tags in the account Filter by Tag list alongside standard transaction tags
 - Added persistent image and PDF receipt uploads through Supabase Storage
