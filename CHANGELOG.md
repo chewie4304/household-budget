@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+## [1.2.0] - 2026-08-19
+
+### Added
+- **Account Archiving Feature**: Introduced a safety check during account deletion that checks for active transaction history, safely archiving accounts (`is_archived: true`) instead of hard-deleting them when history exists.
+- **Active Account Filtering**: Filtered active account lists to exclude archived accounts while preserving all underlying data integrity.
+
+### Fixed
+- **Historical Transaction Rendering**: Updated transaction card lookups to gracefully reference closed accounts and append an `[Archived]` tag to their display names, preventing generic fallbacks.
+
 ## [v1.1.2] - 2026-08-19
 
 ### Added
