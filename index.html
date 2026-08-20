@@ -17,10 +17,12 @@
 
 <body class="bg-gray-100 text-gray-900 antialiased min-h-screen pb-10">
 
-  <div id="app-message" role="alert" class="fixed left-4 right-4 top-4 z-[100] hidden mx-auto max-w-md rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700 shadow-lg">
+  <div id="app-message" role="alert"
+    class="fixed left-4 right-4 top-4 z-[100] hidden mx-auto max-w-md rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700 shadow-lg">
     <div class="flex items-start justify-between gap-3">
       <span id="app-message-text"></span>
-      <button type="button" onclick="hideAppMessage()" aria-label="Dismiss message" class="shrink-0 text-lg leading-none text-red-400 hover:text-red-600">&times;</button>
+      <button type="button" onclick="hideAppMessage()" aria-label="Dismiss message"
+        class="shrink-0 text-lg leading-none text-red-400 hover:text-red-600">&times;</button>
     </div>
   </div>
 
@@ -30,8 +32,10 @@
     <header class="border-b border-slate-200 bg-white shadow-sm">
       <div class="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
         <div class="flex min-w-0 items-center gap-3">
-          <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-blue-600 text-white shadow-sm" aria-hidden="true">
-            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-blue-600 text-white shadow-sm"
+            aria-hidden="true">
+            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
               <path d="M3 10.5 12 3l9 7.5"></path>
               <path d="M5 9.5V21h14V9.5"></path>
               <path d="M9 21v-6h6v6"></path>
@@ -39,7 +43,8 @@
           </div>
           <div class="min-w-0">
             <p class="truncate text-base font-extrabold tracking-tight text-slate-900 sm:text-lg">Household Budget</p>
-            <p class="hidden text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 sm:block">Your money, in one place</p>
+            <p class="hidden text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 sm:block">Your money, in
+              one place</p>
           </div>
         </div>
         <div class="flex shrink-0 items-center gap-2">
@@ -66,43 +71,53 @@
         </div>
 
         <div class="lg:grid lg:grid-cols-3 lg:items-stretch lg:gap-3">
-        <div id="monthly-summary" class="hidden rounded-3xl border border-slate-200 bg-gradient-to-br from-slate-50 via-white to-blue-50 shadow-sm p-4 space-y-3 lg:col-span-2">
-          <div class="flex items-center justify-between gap-2">
-            <div>
-              <p class="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">Monthly Summary</p>
-              <p id="monthly-summary-month" class="mt-1 text-base font-bold text-slate-800">This Month</p>
+          <div id="monthly-summary"
+            class="hidden rounded-3xl border border-slate-200 bg-gradient-to-br from-slate-50 via-white to-blue-50 shadow-sm p-4 space-y-3 lg:col-span-2">
+            <div class="flex items-center justify-between gap-2">
+              <div>
+                <p class="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">Monthly Summary</p>
+                <p id="monthly-summary-month" class="mt-1 text-base font-bold text-slate-800">This Month</p>
+              </div>
+              <div class="flex items-center gap-2">
+                <span id="summary-live-badge"
+                  class="hidden inline-flex items-center rounded-full border border-blue-200 bg-blue-100 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-blue-700">Live</span>
+                <select id="summary-month-select" onchange="setSelectedSummaryMonth(this.value)"
+                  class="rounded-xl border border-slate-200 bg-white px-2 py-1.5 pr-8 text-xs font-semibold text-slate-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-300">
+                </select>
+              </div>
             </div>
-            <div class="flex items-center gap-2">
-              <span id="summary-live-badge" class="hidden inline-flex items-center rounded-full border border-blue-200 bg-blue-100 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-blue-700">Live</span>
-              <select id="summary-month-select" onchange="setSelectedSummaryMonth(this.value)" class="rounded-xl border border-slate-200 bg-white px-2 py-1.5 pr-8 text-xs font-semibold text-slate-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-300">
-              </select>
+
+            <div class="grid grid-cols-3 gap-2 text-center">
+              <button type="button" onclick="showAllTransactions('income')"
+                class="group rounded-2xl border border-emerald-200 bg-emerald-50 p-3 text-left transition-all duration-150 hover:-translate-y-0.5 hover:bg-emerald-100 hover:shadow-sm">
+                <p class="text-[10px] font-bold uppercase tracking-[0.18em] text-emerald-700">Income</p>
+                <p id="monthly-income"
+                  class="mt-2 pr-1 text-right text-base font-extrabold text-emerald-700 sm:text-lg">$0.00</p>
+              </button>
+              <button type="button" onclick="showAllTransactions('expense')"
+                class="group rounded-2xl border border-red-200 bg-red-50 p-3 text-left transition-all duration-150 hover:-translate-y-0.5 hover:bg-red-100 hover:shadow-sm">
+                <p class="text-[10px] font-bold uppercase tracking-[0.18em] text-red-700">Expenses</p>
+                <p id="monthly-expenses" class="mt-2 pr-1 text-right text-base font-extrabold text-red-700 sm:text-lg">
+                  $0.00</p>
+              </button>
+              <div class="rounded-2xl border border-blue-200 bg-blue-50 p-3">
+                <p class="text-[10px] font-bold uppercase tracking-[0.18em] text-blue-700">Remaining</p>
+                <p id="monthly-remaining"
+                  class="mt-2 pr-1 text-right text-base font-extrabold text-blue-700 sm:text-lg">$0.00</p>
+              </div>
             </div>
           </div>
 
-          <div class="grid grid-cols-3 gap-2 text-center">
-            <button type="button" onclick="showAllTransactions('income')" class="group rounded-2xl border border-emerald-200 bg-emerald-50 p-3 text-left transition-all duration-150 hover:-translate-y-0.5 hover:bg-emerald-100 hover:shadow-sm">
-              <p class="text-[10px] font-bold uppercase tracking-[0.18em] text-emerald-700">Income</p>
-              <p id="monthly-income" class="mt-2 pr-1 text-right text-base font-extrabold text-emerald-700 sm:text-lg">$0.00</p>
+          <div class="flex gap-2 rounded-2xl bg-slate-200 p-1 shadow-inner lg:col-span-1 lg:flex-col">
+            <button id="home-accounts-tab" onclick="showHomeAccounts()"
+              class="flex-1 bg-blue-600 text-white px-3 py-2 rounded-xl text-sm font-semibold shadow-sm lg:flex-1">
+              Accounts
             </button>
-            <button type="button" onclick="showAllTransactions('expense')" class="group rounded-2xl border border-red-200 bg-red-50 p-3 text-left transition-all duration-150 hover:-translate-y-0.5 hover:bg-red-100 hover:shadow-sm">
-              <p class="text-[10px] font-bold uppercase tracking-[0.18em] text-red-700">Expenses</p>
-              <p id="monthly-expenses" class="mt-2 pr-1 text-right text-base font-extrabold text-red-700 sm:text-lg">$0.00</p>
+            <button id="home-transactions-tab" onclick="showAllTransactions()"
+              class="flex-1 bg-transparent text-slate-700 px-3 py-2 rounded-xl text-sm font-semibold lg:flex-1">
+              Transactions
             </button>
-            <div class="rounded-2xl border border-blue-200 bg-blue-50 p-3">
-              <p class="text-[10px] font-bold uppercase tracking-[0.18em] text-blue-700">Remaining</p>
-              <p id="monthly-remaining" class="mt-2 pr-1 text-right text-base font-extrabold text-blue-700 sm:text-lg">$0.00</p>
-            </div>
           </div>
-        </div>
-
-        <div class="flex gap-2 rounded-2xl bg-slate-200 p-1 shadow-inner lg:col-span-1 lg:flex-col">
-          <button id="home-accounts-tab" onclick="showHomeAccounts()" class="flex-1 bg-blue-600 text-white px-3 py-2 rounded-xl text-sm font-semibold shadow-sm lg:flex-1">
-            Accounts
-          </button>
-          <button id="home-transactions-tab" onclick="showAllTransactions()" class="flex-1 bg-transparent text-slate-700 px-3 py-2 rounded-xl text-sm font-semibold lg:flex-1">
-            Transactions
-          </button>
-        </div>
         </div>
 
         <div id="account-search-wrap" class="space-y-2">
@@ -113,7 +128,8 @@
         <div id="account-type-filter-bar" class="mt-2 flex flex-wrap gap-2"></div>
 
         <div id="transaction-search-wrap" class="hidden space-y-2 lg:ml-auto lg:w-[calc((100%-24px)/3)]">
-          <input id="transaction-search" type="text" oninput="renderAllTransactions()" placeholder="Search transactions..."
+          <input id="transaction-search" type="text" oninput="renderAllTransactions()"
+            placeholder="Search transactions..."
             class="w-full border border-slate-200 bg-white px-3 py-2.5 rounded-xl text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-200 shadow-sm" />
         </div>
 
@@ -162,7 +178,8 @@
           <div>
             <div class="flex items-center justify-end gap-1">
               <div id="tx-acc-cleared" class="text-sm font-bold text-emerald-600">$0.00</div>
-              <button type="button" onclick="openClearedBalanceModal()" title="Edit cleared balance" class="text-emerald-600 hover:text-emerald-800 text-xs">✎</button>
+              <button type="button" onclick="openClearedBalanceModal()" title="Edit cleared balance"
+                class="text-emerald-600 hover:text-emerald-800 text-xs">✎</button>
             </div>
             <div class="text-[10px] text-emerald-700 font-semibold uppercase tracking-wider">Cleared Balance</div>
           </div>
@@ -299,10 +316,17 @@
       </div>
       <p id="account-delete-options-message" class="text-gray-700 text-sm"></p>
       <div class="space-y-2 pt-2">
-        <button type="button" onclick="openBulkTransferModal()" class="w-full px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold text-sm shadow">Transfer all transactions</button>
-        <button type="button" onclick="openIndividualTransferModal()" class="w-full px-4 py-2 bg-indigo-600 text-white rounded-lg font-semibold text-sm shadow">Choose an account for each transaction</button>
-        <button type="button" onclick="archiveAccountFromDeleteFlow()" class="w-full px-4 py-2 bg-slate-600 text-white rounded-lg font-semibold text-sm shadow">Archive account</button>
-        <button type="button" onclick="closeAccountDeleteOptions()" class="w-full px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-semibold text-sm">Cancel</button>
+        <button type="button" onclick="openBulkTransferModal()"
+          class="w-full px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold text-sm shadow">Transfer all
+          transactions</button>
+        <button type="button" onclick="openIndividualTransferModal()"
+          class="w-full px-4 py-2 bg-indigo-600 text-white rounded-lg font-semibold text-sm shadow">Choose an account
+          for each transaction</button>
+        <button type="button" onclick="archiveAccountFromDeleteFlow()"
+          class="w-full px-4 py-2 bg-slate-600 text-white rounded-lg font-semibold text-sm shadow">Archive
+          account</button>
+        <button type="button" onclick="closeAccountDeleteOptions()"
+          class="w-full px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-semibold text-sm">Cancel</button>
       </div>
     </div>
   </div>
@@ -318,8 +342,11 @@
       <p id="bulk-transfer-message" class="text-gray-700 text-sm"></p>
       <select id="bulk-transfer-account" class="w-full border p-2 rounded-lg bg-white"></select>
       <div class="flex gap-2 pt-2">
-        <button type="button" onclick="closeBulkTransferModal()" class="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-semibold text-sm">Cancel</button>
-        <button type="button" onclick="submitBulkTransfer()" class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold text-sm shadow">Transfer and delete</button>
+        <button type="button" onclick="closeBulkTransferModal()"
+          class="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-semibold text-sm">Cancel</button>
+        <button type="button" onclick="submitBulkTransfer()"
+          class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold text-sm shadow">Transfer and
+          delete</button>
       </div>
     </div>
   </div>
@@ -335,8 +362,11 @@
       <p id="individual-transfer-message" class="text-gray-700 text-sm"></p>
       <div id="individual-transfer-rows" class="space-y-2"></div>
       <div class="flex gap-2 pt-2">
-        <button type="button" onclick="closeIndividualTransferModal()" class="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-semibold text-sm">Cancel</button>
-        <button type="button" onclick="submitIndividualTransfer()" class="flex-1 px-4 py-2 bg-indigo-600 text-white rounded-lg font-semibold text-sm shadow">Transfer and delete</button>
+        <button type="button" onclick="closeIndividualTransferModal()"
+          class="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-semibold text-sm">Cancel</button>
+        <button type="button" onclick="submitIndividualTransfer()"
+          class="flex-1 px-4 py-2 bg-indigo-600 text-white rounded-lg font-semibold text-sm shadow">Transfer and
+          delete</button>
       </div>
     </div>
   </div>
@@ -373,9 +403,11 @@
       <p id="cleared-choice-message" class="text-gray-700 text-sm"></p>
       <div class="space-y-2 pt-2">
         <button type="button" onclick="applyClearedBalanceChoice('transaction')"
-          class="w-full px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold text-sm shadow">Create Adjustment Transaction</button>
+          class="w-full px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold text-sm shadow">Create Adjustment
+          Transaction</button>
         <button type="button" onclick="applyClearedBalanceChoice('initial_balance')"
-          class="w-full px-4 py-2 bg-slate-600 text-white rounded-lg font-semibold text-sm shadow">Adjust Initial Balance</button>
+          class="w-full px-4 py-2 bg-slate-600 text-white rounded-lg font-semibold text-sm shadow">Adjust Initial
+          Balance</button>
         <button type="button" onclick="closeClearedChoiceModal()"
           class="w-full px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-semibold text-sm">Cancel</button>
       </div>
@@ -430,8 +462,8 @@
         <div class="grid grid-cols-2 gap-2">
           <div>
             <label class="text-xs font-semibold text-gray-600">Amount ($)</label>
-            <input type="number" step="0.01" id="txAmount" placeholder="0.00" required
-              oninput="updateSplitRemainder()" class="w-full border p-2 rounded-lg mt-1" />
+            <input type="number" step="0.01" id="txAmount" placeholder="0.00" required oninput="updateSplitRemainder()"
+              class="w-full border p-2 rounded-lg mt-1" />
             <label class="mt-1.5 inline-flex items-center gap-1.5 text-[11px] font-semibold text-gray-600">
               Split
               <input type="checkbox" id="txSplitEnabled" onchange="toggleSplitEditor()"
@@ -440,7 +472,8 @@
           </div>
           <div>
             <label class="text-xs font-semibold text-gray-600">Type</label>
-            <select id="txType" onchange="handleTypeChange()" class="h-[42px] w-full border p-2 rounded-lg mt-1 bg-white">
+            <select id="txType" onchange="handleTypeChange()"
+              class="h-[42px] w-full border p-2 rounded-lg mt-1 bg-white">
               <option value="expense">Expense (-)</option>
               <option value="income">Income (+)</option>
               <option value="transfer">Transfer</option>
@@ -451,7 +484,8 @@
         <!-- Payment Type Dropdown -->
         <div>
           <label class="text-xs font-semibold text-gray-600">Payment Type</label>
-          <select id="txPaymentMethod" onchange="toggleCheckNumberField()" class="w-full border p-2 rounded-lg mt-1 bg-white">
+          <select id="txPaymentMethod" onchange="toggleCheckNumberField()"
+            class="w-full border p-2 rounded-lg mt-1 bg-white">
             <option value="bank_transfer">Bank Transfer</option>
             <option value="cash">Cash</option>
             <option value="check">Check</option>
@@ -520,7 +554,8 @@
             <label
               class="flex items-center justify-center gap-1.5 bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-700 text-xs font-semibold py-2 px-3 rounded-lg cursor-pointer text-center">
               <span>📷 Take Photo</span>
-              <input type="file" id="txReceiptCamera" accept="image/*" capture="environment" class="hidden" onchange="handleImageInput(this)" />
+              <input type="file" id="txReceiptCamera" accept="image/*" capture="environment" class="hidden"
+                onchange="handleImageInput(this)" />
             </label>
 
             <!-- Selection Status Text -->
@@ -573,7 +608,7 @@
   <script>
     const SUPABASE_URL = "https://raujjskhrprnyigfmkwq.supabase.co";
     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJhdWpqc2tocnBybnlpZ2Zta3dxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY3Njk0NzEsImV4cCI6MjEwMjM0NTQ3MX0.jEjU9BOmzpQpm-A4UlD8xrP2dpeQSiIEjj7-IuMbiVE";
-      const RECEIPTS_BUCKET = 'receipts';
+    const RECEIPTS_BUCKET = 'receipts';
 
     // Standard initialization without custom global headers override
     const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -589,10 +624,13 @@
     let supportsCheckNumber = false;
     let currentViewState = 'home-accounts';
     let splitDetailsExpanded = new Set();
-
     let cropper = null;
     let appMessageTimer = null;
+    let pendingClearedBalanceEdit = null;
+    let pendingConfirmAction = null;
+    let pendingAccountDeletion = null;
 
+    // Core Utilities & State Management Functions
     function roundCurrency(value) {
       return Math.round((Number(value || 0) + Number.EPSILON) * 100) / 100;
     }
@@ -685,9 +723,40 @@
       }
     }
 
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    function getSearchableText(value) {
+      if (value === null || value === undefined) return '';
+      if (Array.isArray(value)) return value.map(item => getSearchableText(item)).join(' ');
+      if (typeof value === 'object') return Object.values(value).map(item => getSearchableText(item)).join(' ');
+      return String(value);
+    }
+
+    function matchesSearch(item, query) {
+      if (!query) return true;
+      const searchable = getSearchableText(item).toLowerCase();
+      return searchable.includes(query.toLowerCase());
+    }
+
+    function getLocalDateString(date = new Date()) {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    }
+
+    // Data & API Layer (Supabase & Alerts)
     async function detectCheckNumberColumn() {
       try {
-        const {error} = await sb.from('transactions').select('check_number').limit(1);
+        const { error } = await sb.from('transactions').select('check_number').limit(1);
         supportsCheckNumber = !error;
       } catch (err) {
         supportsCheckNumber = false;
@@ -751,9 +820,9 @@
 
       accounts.forEach(acc => {
         const currentBalance = calculateAccountBalance(acc);
-        const {minBalance, maxBalance, minEnabled, maxEnabled, signedBalance, debtBalance, isCreditAccount} = getAccountAlertConfig(acc, currentBalance);
+        const { minBalance, maxBalance, minEnabled, maxEnabled, signedBalance, debtBalance, isCreditAccount } = getAccountAlertConfig(acc, currentBalance);
 
-        const previousState = accountAlertState[acc.id] || {triggered: false};
+        const previousState = accountAlertState[acc.id] || { triggered: false };
         let breachType = null;
         let breachValue = null;
 
@@ -790,11 +859,11 @@
             title: 'Balance Alert',
             message: `${acc.name} ${label} is $${displayAmount.toFixed(2)} — ${directionText} your alert threshold of $${breachValue.toFixed(2)}.`,
             confirmLabel: 'OK',
-            onConfirm: () => {}
+            onConfirm: () => { }
           });
-          accountAlertState[acc.id] = {triggered: true, type: breachType};
+          accountAlertState[acc.id] = { triggered: true, type: breachType };
         } else if (!breachType) {
-          accountAlertState[acc.id] = {triggered: false, type: null};
+          accountAlertState[acc.id] = { triggered: false, type: null };
         }
       });
     }
@@ -807,8 +876,8 @@
       applySavedViewState();
       try {
         sb.channel('db-changes')
-          .on('postgres_changes', {event: '*', schema: 'public', table: 'accounts'}, () => fetchAccounts())
-          .on('postgres_changes', {event: '*', schema: 'public', table: 'transactions'}, () => {
+          .on('postgres_changes', { event: '*', schema: 'public', table: 'accounts' }, () => fetchAccounts())
+          .on('postgres_changes', { event: '*', schema: 'public', table: 'transactions' }, () => {
             if (activeAccountId) fetchTransactions(activeAccountId);
             fetchAccounts();
             fetchData();
@@ -822,9 +891,9 @@
     async function fetchAccounts() {
       const list = document.getElementById('accounts-list');
       try {
-        let {data, error} = await sb.from('accounts').select('*, transactions(amount, status)').order('created_at', {ascending: true});
+        let { data, error } = await sb.from('accounts').select('*, transactions(amount, status)').order('created_at', { ascending: true });
         if (error) {
-          const simple = await sb.from('accounts').select('*').order('created_at', {ascending: true});
+          const simple = await sb.from('accounts').select('*').order('created_at', { ascending: true });
           if (simple.error) throw simple.error;
           data = simple.data;
         }
@@ -853,19 +922,50 @@
       }
     }
 
-    function getSearchableText(value) {
-      if (value === null || value === undefined) return '';
-      if (Array.isArray(value)) return value.map(item => getSearchableText(item)).join(' ');
-      if (typeof value === 'object') return Object.values(value).map(item => getSearchableText(item)).join(' ');
-      return String(value);
+    async function fetchData() {
+      // Try ordering by created_at or name if 'id' isn't sequential
+      const { data: accData, error: accError } = await sb.from('accounts').select('*').order('created_at', { ascending: true });
+      const { data: txData, error: txError } = await sb.from('transactions').select('*').order('date', { ascending: false });
+
+      if (accError) console.error("Error fetching accounts:", accError);
+      if (txError) console.error("Error fetching transactions:", txError);
+
+      if (accData) accounts = accData;
+      if (txData) transactions = txData;
+
+      // Re-render active view
+      if (window.currentAccountId) {
+        showTransactionsView(window.currentAccountId);
+      } else {
+        renderAccounts();
+      }
     }
 
-    function matchesSearch(item, query) {
-      if (!query) return true;
-      const searchable = getSearchableText(item).toLowerCase();
-      return searchable.includes(query.toLowerCase());
+    async function saveAccountData(payload, editId) {
+      const supportedColumns = ['name', 'type', 'initial_balance', 'institution', 'account_number'];
+      const safePayload = Object.fromEntries(
+        Object.entries(payload).filter(([key]) => supportedColumns.includes(key))
+      );
+
+      let result;
+      if (editId) {
+        result = await sb.from('accounts').update(safePayload).eq('id', editId);
+      } else {
+        result = await sb.from('accounts').insert([safePayload]);
+      }
+
+      const alerts = getStoredAccountAlerts();
+      const accountId = editId || result?.data?.[0]?.id || payload.id || 'draft';
+      alerts[accountId] = {
+        min_balance_alert: payload.min_balance_alert ?? null,
+        max_balance_alert: payload.max_balance_alert ?? null
+      };
+      setStoredAccountAlerts(alerts);
+
+      return result || { error: null };
     }
 
+    // UI Rendering & Component Builders
     function showHomeAccounts() {
       const accountsList = document.getElementById('accounts-list');
       const allTransactionsList = document.getElementById('all-transactions-list');
@@ -892,9 +992,6 @@
       transactionsTab.classList.remove('bg-transparent', 'bg-blue-600', 'text-white');
       saveViewState();
     }
-
-    let selectedSummaryTransactionType = null;
-    let filteredTransactionsLookup = {};
 
     function showAllTransactions(type = null) {
       selectedSummaryTransactionType = type ?? null;
@@ -933,11 +1030,6 @@
       accountsTab.classList.remove('bg-transparent', 'bg-blue-600', 'text-white');
       saveViewState();
     }
-
-    let selectedSummaryMonth = (() => {
-      const now = new Date();
-      return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-    })();
 
     function buildMonthOptions() {
       const selector = document.getElementById('summary-month-select');
@@ -1182,93 +1274,76 @@
       list.innerHTML = txCardsHtml.join('');
     }
 
-    function jumpToTransferPartner(transferId, currentId) {
-      const allRows = Array.from(document.querySelectorAll('[id^="tx-row-"]'));
-      const partnerRow = allRows.find(row => {
-        const rowId = row.id.replace('tx-row-', '');
-        const tx = filteredTransactionsLookup?.[rowId];
-        return tx && tx.transfer_id === transferId && rowId !== currentId;
-      });
+    function normalizeAccountType(rawType) {
+      const t = String(rawType || '').toLowerCase();
 
-      if (partnerRow) {
-        partnerRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        partnerRow.classList.add('ring-2', 'ring-purple-300', 'ring-offset-1');
-        setTimeout(() => partnerRow.classList.remove('ring-2', 'ring-purple-300', 'ring-offset-1'), 1800);
-      }
+      if (t.includes('checking')) return 'checking';
+      if (t.includes('savings')) return 'savings';
+      if (
+        t.includes('credit') ||
+        t.includes('card') ||
+        t.includes('visa') ||
+        t.includes('mastercard') ||
+        t.includes('amex') ||
+        t.includes('discover')
+      ) return 'credit';
+
+      return t;
     }
 
-let selectedAccountTypeFilter = 'all';
+    function accountMatchesTypeFilter(account) {
+      if (selectedAccountTypeFilter === 'archived') return !!account?.is_archived;
+      if (account?.is_archived) return false;
+      if (selectedAccountTypeFilter === 'all') return true;
+      return normalizeAccountType(account && account.type) === selectedAccountTypeFilter;
+    }
 
-function normalizeAccountType(rawType) {
-  const t = String(rawType || '').toLowerCase();
+    function setAccountTypeFilter(filterValue) {
+      selectedAccountTypeFilter = filterValue;
+      renderAccounts();
+    }
 
-  if (t.includes('checking')) return 'checking';
-  if (t.includes('savings')) return 'savings';
-  if (
-    t.includes('credit') ||
-    t.includes('card') ||
-    t.includes('visa') ||
-    t.includes('mastercard') ||
-    t.includes('amex') ||
-    t.includes('discover')
-  ) return 'credit';
+    function renderAccountTypeFilters() {
+      const bar = document.getElementById('account-type-filter-bar');
+      if (!bar) return;
 
-  return t;
-}
+      // 1. Gather all unique normalized account types from active accounts
+      const rawTypes = accounts.filter(a => !a.is_archived).map(a => normalizeAccountType(a.type || ''));
+      const uniqueTypes = [...new Set(rawTypes)].filter(t => t && t !== 'other');
 
-function accountMatchesTypeFilter(account) {
-  if (selectedAccountTypeFilter === 'archived') return !!account?.is_archived;
-  if (account?.is_archived) return false;
-  if (selectedAccountTypeFilter === 'all') return true;
-  return normalizeAccountType(account && account.type) === selectedAccountTypeFilter;
-}
+      // 2. Alphabetize the categories nicely (A to Z)
+      uniqueTypes.sort((a, b) => a.localeCompare(b));
 
-function setAccountTypeFilter(filterValue) {
-  selectedAccountTypeFilter = filterValue;
-  renderAccounts();
-}
+      // 3. Build the dynamic list, starting with 'All'
+      const dynamicFilters = [
+        { value: 'all', label: 'All' },
+        ...uniqueTypes.map(type => ({
+          value: type,
+          // Capitalize the label for clean display
+          label: type.charAt(0).toUpperCase() + type.slice(1)
+        })),
+        ...(accounts.some(a => a.is_archived) ? [{ value: 'archived', label: 'Archived' }] : [])
+      ];
 
-function renderAccountTypeFilters() {
-  const bar = document.getElementById('account-type-filter-bar');
-  if (!bar) return;
+      if (!dynamicFilters.some(filter => filter.value === selectedAccountTypeFilter)) {
+        selectedAccountTypeFilter = 'all';
+      }
 
-  // 1. Gather all unique normalized account types from active accounts
-  const rawTypes = accounts.filter(a => !a.is_archived).map(a => normalizeAccountType(a.type || ''));
-  const uniqueTypes = [...new Set(rawTypes)].filter(t => t && t !== 'other');
-
-  // 2. Alphabetize the categories nicely (A to Z)
-  uniqueTypes.sort((a, b) => a.localeCompare(b));
-
-  // 3. Build the dynamic list, starting with 'All'
-  const dynamicFilters = [
-    { value: 'all', label: 'All' },
-    ...uniqueTypes.map(type => ({
-      value: type,
-      // Capitalize the label for clean display
-      label: type.charAt(0).toUpperCase() + type.slice(1)
-    })),
-    ...(accounts.some(a => a.is_archived) ? [{value: 'archived', label: 'Archived'}] : [])
-  ];
-
-  if (!dynamicFilters.some(filter => filter.value === selectedAccountTypeFilter)) {
-    selectedAccountTypeFilter = 'all';
-  }
-
-  // 4. Render the buttons
-  bar.innerHTML = dynamicFilters.map(function (f) {
-    const isActive = f.value === selectedAccountTypeFilter;
-    return (
-      '<button type="button" onclick="setAccountTypeFilter(\'' + f.value + '\')" ' +
-      'class="rounded-full px-3 py-1 text-sm font-medium transition ' +
-      (isActive
-        ? 'bg-blue-600 text-white shadow-sm'
-        : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50') +
-      '">' +
-      f.label +
-      '</button>'
-    );
-  }).join('');
-}
+      // 4. Render the buttons
+      bar.innerHTML = dynamicFilters.map(function (f) {
+        const isActive = f.value === selectedAccountTypeFilter;
+        return (
+          '<button type="button" onclick="setAccountTypeFilter(\'' + f.value + '\')" ' +
+          'class="rounded-full px-3 py-1 text-sm font-medium transition ' +
+          (isActive
+            ? 'bg-blue-600 text-white shadow-sm'
+            : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50') +
+          '">' +
+          f.label +
+          '</button>'
+        );
+      }).join('');
+    }
 
     function renderAccounts() {
       renderAccountTypeFilters();
@@ -1310,7 +1385,7 @@ function renderAccountTypeFilters() {
         }, 0);
         const clearedBal = roundCurrency(initialBal + clearedTxSum);
 
-        const {minBalance, maxBalance, minEnabled, maxEnabled, signedBalance, debtBalance, isCreditAccount} = getAccountAlertConfig(acc, currentBal);
+        const { minBalance, maxBalance, minEnabled, maxEnabled, signedBalance, debtBalance, isCreditAccount } = getAccountAlertConfig(acc, currentBal);
         let alertBadge = '';
 
         if (minEnabled) {
@@ -1397,10 +1472,10 @@ function renderAccountTypeFilters() {
       if (!accId) return;
       const list = document.getElementById('transactions-list');
       try {
-        const {data, error} = await sb.from('transactions').select('*').eq('account_id', accId)
-          .order('status', {ascending: true})
-          .order('date', {ascending: false})
-          .order('created_at', {ascending: false});
+        const { data, error } = await sb.from('transactions').select('*').eq('account_id', accId)
+          .order('status', { ascending: true })
+          .order('date', { ascending: false })
+          .order('created_at', { ascending: false });
         if (error) throw error;
 
         currentAccountTransactions = data || [];
@@ -1431,8 +1506,6 @@ function renderAccountTypeFilters() {
       }
     }
 
-    let pendingClearedBalanceEdit = null;
-
     function calculateAccountClearedBalance(account) {
       const initialBal = parseFloat(account?.initial_balance || 0);
       const txList = (activeAccountId === account.id && Array.isArray(currentAccountTransactions))
@@ -1440,85 +1513,6 @@ function renderAccountTypeFilters() {
         : (Array.isArray(transactions) ? transactions.filter(tx => tx.account_id === account.id) : []);
       const clearedSum = txList.reduce((sum, tx) => tx.status === 'reconciled' ? sum + parseFloat(tx.amount || 0) : sum, 0);
       return roundCurrency(initialBal + clearedSum);
-    }
-
-    function openClearedBalanceModal() {
-      if (!activeAccountId) return;
-      const acc = accounts.find(a => a.id === activeAccountId);
-      if (!acc) return;
-
-      document.getElementById('clearedBalanceInput').value = calculateAccountClearedBalance(acc).toFixed(2);
-      document.getElementById('cleared-balance-modal').classList.remove('hidden');
-    }
-
-    function closeClearedBalanceModal() {
-      document.getElementById('cleared-balance-modal').classList.add('hidden');
-    }
-
-    function closeClearedChoiceModal() {
-      document.getElementById('cleared-choice-modal').classList.add('hidden');
-      pendingClearedBalanceEdit = null;
-    }
-
-    function submitClearedBalanceEdit() {
-      if (!activeAccountId) return;
-      const acc = accounts.find(a => a.id === activeAccountId);
-      if (!acc) return;
-
-      const newBalance = roundCurrency(parseFloat(document.getElementById('clearedBalanceInput').value));
-      if (!Number.isFinite(newBalance)) {
-        showAppMessage('Please enter a valid balance.');
-        return;
-      }
-
-      const diff = roundCurrency(newBalance - calculateAccountClearedBalance(acc));
-      if (Math.abs(diff) < 0.005) {
-        closeClearedBalanceModal();
-        return;
-      }
-
-      pendingClearedBalanceEdit = {accountId: acc.id, diff};
-      closeClearedBalanceModal();
-
-      document.getElementById('cleared-choice-message').textContent =
-        `The new cleared balance differs by $${diff.toFixed(2)}. How would you like to apply this adjustment?`;
-      document.getElementById('cleared-choice-modal').classList.remove('hidden');
-    }
-
-    async function applyClearedBalanceChoice(method) {
-      if (!pendingClearedBalanceEdit) return;
-      const {accountId, diff} = pendingClearedBalanceEdit;
-      closeClearedChoiceModal();
-
-      let error;
-      if (method === 'transaction') {
-        const payload = {
-          account_id: accountId,
-          description: 'Cleared balance adjustment',
-          payee: 'Balance Adjustment',
-          payment_method: 'bank_transfer',
-          amount: diff,
-          date: getLocalDateString(),
-          status: 'reconciled',
-          tags: []
-        };
-        ({error} = await sb.from('transactions').insert([payload]));
-      } else {
-        const acc = accounts.find(a => a.id === accountId);
-        const newInitialBalance = roundCurrency(parseFloat(acc?.initial_balance || 0) + diff);
-        ({error} = await sb.from('accounts').update({initial_balance: newInitialBalance}).eq('id', accountId));
-      }
-
-      if (error) {
-        showAppMessage('Error adjusting balance: ' + error.message);
-        return;
-      }
-
-      await fetchAccounts();
-      renderAccounts();
-      if (activeAccountId) {
-        await fetchTransactions(activeAccountId);
-      }
     }
 
     function renderTagFilters() {
@@ -1553,16 +1547,6 @@ function renderAccountTypeFilters() {
       selectedTagFilter = tag;
       renderTagFilters();
       renderTransactions();
-    }
-
-    function escapeHtml(str) {
-      if (!str) return '';
-      return String(str)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#039;');
     }
 
     function renderTransactions() {
@@ -1656,9 +1640,9 @@ function renderAccountTypeFilters() {
                     onclick="event.stopPropagation(); toggleTxStatus('${tx.id}', '${status}')" 
                     title="Status: ${status}. Click to toggle"
                     class="px-2 py-0.5 text-xs font-bold rounded-full transition-colors ${isPending
-              ? 'bg-amber-100 text-amber-700 hover:bg-amber-200'
-              : 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200'
-            }">
+            ? 'bg-amber-100 text-amber-700 hover:bg-amber-200'
+            : 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200'
+          }">
                     ${isPending ? 'P' : 'R'}
                   </button>
                   <button onclick="event.stopPropagation(); deleteTx('${tx.id}', '${displayTitle}')" class="text-red-400 hover:text-red-600 text-base font-bold px-1">&times;</button>
@@ -1707,23 +1691,245 @@ function renderAccountTypeFilters() {
       }
     }
 
-    async function toggleTxStatus(id, currentStatus) {
-      const newStatus = currentStatus === 'pending' ? 'reconciled' : 'pending';
-      const {error} = await sb.from('transactions').update({status: newStatus}).eq('id', id);
-      if (error) {
-        showAppMessage("Error updating status: " + error.message);
-        return;
-      }
-      fetchTransactions(activeAccountId);
-      fetchAccounts();
-    }
-
     function updatePayeeLabel() {
       const type = document.getElementById('txType').value;
       const label = document.getElementById('txPayeeLabel');
       if (label) {
         label.textContent = type === 'income' ? 'Payer' : 'Payee';
       }
+    }
+
+    function parseTagInput(value) {
+      return String(value || '').split(',').map(tag => tag.trim()).filter(Boolean);
+    }
+
+    function getTransactionTags(tx) {
+      const standardTags = Array.isArray(tx?.tags) ? tx.tags : [];
+      const splitTags = Array.isArray(tx?.split_details)
+        ? tx.split_details.flatMap(split => Array.isArray(split?.tags)
+          ? split.tags
+          : parseTagInput(split?.category || ''))
+        : [];
+      return [...new Set([...standardTags, ...splitTags].map(tag => String(tag).trim()).filter(Boolean))];
+    }
+
+    function getSplitRowsFromEditor() {
+      return [...document.querySelectorAll('#txSplitRows > div')].map(row => ({
+        tags: parseTagInput(row.querySelector('[data-split-tags]')?.value),
+        description: row.querySelector('[data-split-description]')?.value.trim() || '',
+        amount: roundCurrency(parseFloat(row.querySelector('[data-split-amount]')?.value) || 0)
+      }));
+    }
+
+    function renderSplitEditor(rows = [{ tags: [], description: '', amount: '' }, { tags: [], description: '', amount: '' }]) {
+      const container = document.getElementById('txSplitRows');
+      if (!container) return;
+
+      container.innerHTML = rows.map((row, index) => `
+        <div class="grid grid-cols-1 gap-2 rounded-lg border border-emerald-100 bg-white p-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)_5rem_auto] sm:items-center">
+          <input type="text" data-split-tags placeholder="Tags, comma-separated" value="${escapeHtml((row.tags || (row.category ? [row.category] : [])).join(', '))}"
+            class="w-full border border-slate-200 bg-white px-2 py-1.5 rounded-lg text-xs" />
+          <input type="text" data-split-description placeholder="Description" value="${escapeHtml(row.description || '')}"
+            class="w-full border border-slate-200 bg-white px-2 py-1.5 rounded-lg text-xs" />
+          <input type="number" step="0.01" min="0" data-split-amount placeholder="$0.00" value="${row.amount ?? ''}"
+            class="w-full border border-slate-200 bg-white px-2 py-1.5 rounded-lg text-xs" />
+          <button type="button" onclick="removeSplitRow(${index})" aria-label="Remove split"
+            class="text-lg leading-none text-red-400 hover:text-red-600">&times;</button>
+        </div>
+      `).join('');
+      container.querySelectorAll('[data-split-amount]').forEach(input => {
+        input.addEventListener('input', () => updateSplitRemainder(input));
+      });
+      updateSplitRemainder();
+    }
+
+    function addSplitRow() {
+      const rows = getSplitRowsFromEditor();
+      rows.push({ tags: [], description: '', amount: '' });
+      renderSplitEditor(rows);
+    }
+
+    function removeSplitRow(index) {
+      const rows = getSplitRowsFromEditor();
+      if (rows.length <= 2) return;
+      rows.splice(index, 1);
+      renderSplitEditor(rows);
+    }
+
+    function getSplitDetails(tx) {
+      return Array.isArray(tx?.split_details) ? tx.split_details.filter(split => split && Number(split.amount) > 0) : [];
+    }
+
+    function renderSplitButton(tx) {
+      const splits = getSplitDetails(tx);
+      if (splits.length === 0) return '';
+      return `
+        <button type="button" onclick="event.stopPropagation(); toggleSplitDetails('${tx.id}')"
+          class="inline-flex items-center rounded-full bg-emerald-100 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-emerald-700 hover:bg-emerald-200">
+          ${splitDetailsExpanded.has(tx.id) ? 'Hide Split' : `Split (${splits.length})`}
+        </button>
+      `;
+    }
+
+    function renderSplitDetails(tx) {
+      const splits = getSplitDetails(tx);
+      if (splits.length === 0 || !splitDetailsExpanded.has(tx.id)) return '';
+      return `
+          <div class="mt-2 space-y-1 rounded-xl border border-blue-100 bg-blue-50 p-2">
+            ${splits.map(split => `
+              <div class="flex items-center justify-between gap-2 text-xs">
+                <span class="min-w-0 text-slate-700">
+                  <span class="block font-semibold">${escapeHtml((split.tags || (split.category ? [split.category] : [])).join(', ') || 'Untagged')}</span>
+                  ${split.description ? `<span class="block text-[11px] text-slate-500">${escapeHtml(split.description)}</span>` : ''}
+                </span>
+                <span class="font-bold text-slate-900">$${Number(split.amount).toFixed(2)}</span>
+              </div>
+            `).join('')}
+          </div>
+      `;
+    }
+
+    function renderModalReceiptList() {
+      const preview = document.getElementById('receiptPreview');
+      const container = document.getElementById('receiptLinksList');
+      const statusText = document.getElementById('fileSelectionStatus');
+
+      const totalCount = activeReceiptUrls.length + activeReceiptFiles.length;
+
+      if (totalCount === 0) {
+        preview.classList.add('hidden');
+        container.innerHTML = '';
+        statusText.classList.add('hidden');
+        return;
+      }
+
+      preview.classList.remove('hidden');
+      statusText.textContent = `✓ ${totalCount} attachment${totalCount > 1 ? 's' : ''} ready`;
+      statusText.classList.remove('hidden');
+
+      let html = '';
+
+      activeReceiptUrls.forEach((url, idx) => {
+        html += `
+          <div class="flex items-center justify-between bg-gray-50 border border-gray-200 p-2 rounded-lg text-xs">
+            <a href="${url}" target="_blank" class="text-blue-600 font-semibold underline truncate max-w-[200px]">
+              Receipt URL ${activeReceiptUrls.length > 1 ? idx + 1 : ''}
+            </a>
+            <button type="button" onclick="removeExistingReceipt(${idx})" class="bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 text-[11px] font-semibold px-2 py-0.5 rounded transition-colors">
+              Remove
+            </button>
+          </div>
+        `;
+      });
+
+      activeReceiptFiles.forEach((file, idx) => {
+        const fileLabel = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')
+          ? `📄 PDF: ${file.name}`
+          : `📷 Cropped: ${file.name}`;
+        html += `
+          <div class="flex items-center justify-between bg-blue-50 border border-blue-200 p-2 rounded-lg text-xs">
+            <span class="text-blue-700 font-semibold truncate max-w-[200px]">
+              ${fileLabel}
+            </span>
+            <button type="button" onclick="removeNewReceipt(${idx})" class="bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 text-[11px] font-semibold px-2 py-0.5 rounded transition-colors">
+              Remove
+            </button>
+          </div>
+        `;
+      });
+
+      container.innerHTML = html;
+    }
+
+    // Modals & Dynamic Form Controls
+    function openClearedBalanceModal() {
+      if (!activeAccountId) return;
+      const acc = accounts.find(a => a.id === activeAccountId);
+      if (!acc) return;
+
+      document.getElementById('clearedBalanceInput').value = calculateAccountClearedBalance(acc).toFixed(2);
+      document.getElementById('cleared-balance-modal').classList.remove('hidden');
+    }
+
+    function closeClearedBalanceModal() {
+      document.getElementById('cleared-balance-modal').classList.add('hidden');
+    }
+
+    function closeClearedChoiceModal() {
+      document.getElementById('cleared-choice-modal').classList.add('hidden');
+      pendingClearedBalanceEdit = null;
+    }
+
+    function submitClearedBalanceEdit() {
+      if (!activeAccountId) return;
+      const acc = accounts.find(a => a.id === activeAccountId);
+      if (!acc) return;
+
+      const newBalance = roundCurrency(parseFloat(document.getElementById('clearedBalanceInput').value));
+      if (!Number.isFinite(newBalance)) {
+        showAppMessage('Please enter a valid balance.');
+        return;
+      }
+
+      const diff = roundCurrency(newBalance - calculateAccountClearedBalance(acc));
+      if (Math.abs(diff) < 0.005) {
+        closeClearedBalanceModal();
+        return;
+      }
+
+      pendingClearedBalanceEdit = { accountId: acc.id, diff };
+      closeClearedBalanceModal();
+
+      document.getElementById('cleared-choice-message').textContent =
+        `The new cleared balance differs by $${diff.toFixed(2)}. How would you like to apply this adjustment?`;
+      document.getElementById('cleared-choice-modal').classList.remove('hidden');
+    }
+
+    async function applyClearedBalanceChoice(method) {
+      if (!pendingClearedBalanceEdit) return;
+      const { accountId, diff } = pendingClearedBalanceEdit;
+      closeClearedChoiceModal();
+
+      let error;
+      if (method === 'transaction') {
+        const payload = {
+          account_id: accountId,
+          description: 'Cleared balance adjustment',
+          payee: 'Balance Adjustment',
+          payment_method: 'bank_transfer',
+          amount: diff,
+          date: getLocalDateString(),
+          status: 'reconciled',
+          tags: []
+        };
+        ({ error } = await sb.from('transactions').insert([payload]));
+      } else {
+        const acc = accounts.find(a => a.id === accountId);
+        const newInitialBalance = roundCurrency(parseFloat(acc?.initial_balance || 0) + diff);
+        ({ error } = await sb.from('accounts').update({ initial_balance: newInitialBalance }).eq('id', accountId));
+      }
+
+      if (error) {
+        showAppMessage('Error adjusting balance: ' + error.message);
+        return;
+      }
+
+      await fetchAccounts();
+      renderAccounts();
+      if (activeAccountId) {
+        await fetchTransactions(activeAccountId);
+      }
+    }
+
+    async function toggleTxStatus(id, currentStatus) {
+      const newStatus = currentStatus === 'pending' ? 'reconciled' : 'pending';
+      const { error } = await sb.from('transactions').update({ status: newStatus }).eq('id', id);
+      if (error) {
+        showAppMessage("Error updating status: " + error.message);
+        return;
+      }
+      fetchTransactions(activeAccountId);
+      fetchAccounts();
     }
 
     function handleTypeChange() {
@@ -1757,50 +1963,6 @@ function renderAccountTypeFilters() {
       }
     }
 
-    function parseTagInput(value) {
-      return String(value || '').split(',').map(tag => tag.trim()).filter(Boolean);
-    }
-
-    function getTransactionTags(tx) {
-      const standardTags = Array.isArray(tx?.tags) ? tx.tags : [];
-      const splitTags = Array.isArray(tx?.split_details)
-        ? tx.split_details.flatMap(split => Array.isArray(split?.tags)
-          ? split.tags
-          : parseTagInput(split?.category || ''))
-        : [];
-      return [...new Set([...standardTags, ...splitTags].map(tag => String(tag).trim()).filter(Boolean))];
-    }
-
-    function getSplitRowsFromEditor() {
-      return [...document.querySelectorAll('#txSplitRows > div')].map(row => ({
-        tags: parseTagInput(row.querySelector('[data-split-tags]')?.value),
-        description: row.querySelector('[data-split-description]')?.value.trim() || '',
-        amount: roundCurrency(parseFloat(row.querySelector('[data-split-amount]')?.value) || 0)
-      }));
-    }
-
-    function renderSplitEditor(rows = [{tags: [], description: '', amount: ''}, {tags: [], description: '', amount: ''}]) {
-      const container = document.getElementById('txSplitRows');
-      if (!container) return;
-
-      container.innerHTML = rows.map((row, index) => `
-        <div class="grid grid-cols-1 gap-2 rounded-lg border border-emerald-100 bg-white p-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)_5rem_auto] sm:items-center">
-          <input type="text" data-split-tags placeholder="Tags, comma-separated" value="${escapeHtml((row.tags || (row.category ? [row.category] : [])).join(', '))}"
-            class="w-full border border-slate-200 bg-white px-2 py-1.5 rounded-lg text-xs" />
-          <input type="text" data-split-description placeholder="Description" value="${escapeHtml(row.description || '')}"
-            class="w-full border border-slate-200 bg-white px-2 py-1.5 rounded-lg text-xs" />
-          <input type="number" step="0.01" min="0" data-split-amount placeholder="$0.00" value="${row.amount ?? ''}"
-            class="w-full border border-slate-200 bg-white px-2 py-1.5 rounded-lg text-xs" />
-          <button type="button" onclick="removeSplitRow(${index})" aria-label="Remove split"
-            class="text-lg leading-none text-red-400 hover:text-red-600">&times;</button>
-        </div>
-      `).join('');
-      container.querySelectorAll('[data-split-amount]').forEach(input => {
-        input.addEventListener('input', () => updateSplitRemainder(input));
-      });
-      updateSplitRemainder();
-    }
-
     function updateSplitRemainder(changedInput = null) {
       const splitToggle = document.getElementById('txSplitEnabled');
       const rows = [...document.querySelectorAll('#txSplitRows > div')];
@@ -1820,19 +1982,6 @@ function renderAccountTypeFilters() {
       }
     }
 
-    function addSplitRow() {
-      const rows = getSplitRowsFromEditor();
-      rows.push({tags: [], description: '', amount: ''});
-      renderSplitEditor(rows);
-    }
-
-    function removeSplitRow(index) {
-      const rows = getSplitRowsFromEditor();
-      if (rows.length <= 2) return;
-      rows.splice(index, 1);
-      renderSplitEditor(rows);
-    }
-
     function toggleSplitEditor() {
       const toggle = document.getElementById('txSplitEnabled');
       const editor = document.getElementById('txSplitEditor');
@@ -1845,10 +1994,6 @@ function renderAccountTypeFilters() {
       }
     }
 
-    function getSplitDetails(tx) {
-      return Array.isArray(tx?.split_details) ? tx.split_details.filter(split => split && Number(split.amount) > 0) : [];
-    }
-
     function toggleSplitDetails(transactionId) {
       if (splitDetailsExpanded.has(transactionId)) {
         splitDetailsExpanded.delete(transactionId);
@@ -1857,35 +2002,6 @@ function renderAccountTypeFilters() {
       }
       renderAllTransactions();
       if (activeAccountId) renderTransactions();
-    }
-
-    function renderSplitButton(tx) {
-      const splits = getSplitDetails(tx);
-      if (splits.length === 0) return '';
-      return `
-        <button type="button" onclick="event.stopPropagation(); toggleSplitDetails('${tx.id}')"
-          class="inline-flex items-center rounded-full bg-emerald-100 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-emerald-700 hover:bg-emerald-200">
-          ${splitDetailsExpanded.has(tx.id) ? 'Hide Split' : `Split (${splits.length})`}
-        </button>
-      `;
-    }
-
-    function renderSplitDetails(tx) {
-      const splits = getSplitDetails(tx);
-      if (splits.length === 0 || !splitDetailsExpanded.has(tx.id)) return '';
-      return `
-          <div class="mt-2 space-y-1 rounded-xl border border-blue-100 bg-blue-50 p-2">
-            ${splits.map(split => `
-              <div class="flex items-center justify-between gap-2 text-xs">
-                <span class="min-w-0 text-slate-700">
-                  <span class="block font-semibold">${escapeHtml((split.tags || (split.category ? [split.category] : [])).join(', ') || 'Untagged')}</span>
-                  ${split.description ? `<span class="block text-[11px] text-slate-500">${escapeHtml(split.description)}</span>` : ''}
-                </span>
-                <span class="font-bold text-slate-900">$${Number(split.amount).toFixed(2)}</span>
-              </div>
-            `).join('')}
-          </div>
-      `;
     }
 
     function populateTargetAccountDropdown() {
@@ -1971,64 +2087,12 @@ function renderAccountTypeFilters() {
       });
 
       canvas.toBlob((blob) => {
-        const croppedFile = new File([blob], `receipt_${Date.now()}.jpg`, {type: 'image/jpeg'});
+        const croppedFile = new File([blob], `receipt_${Date.now()}.jpg`, { type: 'image/jpeg' });
         activeReceiptFiles.push(croppedFile);
 
         cancelCrop();
         renderModalReceiptList();
       }, 'image/jpeg', 0.85);
-    }
-
-    function renderModalReceiptList() {
-      const preview = document.getElementById('receiptPreview');
-      const container = document.getElementById('receiptLinksList');
-      const statusText = document.getElementById('fileSelectionStatus');
-
-      const totalCount = activeReceiptUrls.length + activeReceiptFiles.length;
-
-      if (totalCount === 0) {
-        preview.classList.add('hidden');
-        container.innerHTML = '';
-        statusText.classList.add('hidden');
-        return;
-      }
-
-      preview.classList.remove('hidden');
-      statusText.textContent = `✓ ${totalCount} attachment${totalCount > 1 ? 's' : ''} ready`;
-      statusText.classList.remove('hidden');
-
-      let html = '';
-
-      activeReceiptUrls.forEach((url, idx) => {
-        html += `
-          <div class="flex items-center justify-between bg-gray-50 border border-gray-200 p-2 rounded-lg text-xs">
-            <a href="${url}" target="_blank" class="text-blue-600 font-semibold underline truncate max-w-[200px]">
-              Receipt URL ${activeReceiptUrls.length > 1 ? idx + 1 : ''}
-            </a>
-            <button type="button" onclick="removeExistingReceipt(${idx})" class="bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 text-[11px] font-semibold px-2 py-0.5 rounded transition-colors">
-              Remove
-            </button>
-          </div>
-        `;
-      });
-
-      activeReceiptFiles.forEach((file, idx) => {
-        const fileLabel = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')
-          ? `📄 PDF: ${file.name}`
-          : `📷 Cropped: ${file.name}`;
-        html += `
-          <div class="flex items-center justify-between bg-blue-50 border border-blue-200 p-2 rounded-lg text-xs">
-            <span class="text-blue-700 font-semibold truncate max-w-[200px]">
-              ${fileLabel}
-            </span>
-            <button type="button" onclick="removeNewReceipt(${idx})" class="bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 text-[11px] font-semibold px-2 py-0.5 rounded transition-colors">
-              Remove
-            </button>
-          </div>
-        `;
-      });
-
-      container.innerHTML = html;
     }
 
     function removeExistingReceipt(index) {
@@ -2047,15 +2111,15 @@ function renderAccountTypeFilters() {
       for (const file of activeReceiptFiles) {
         const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
         const path = `${crypto.randomUUID()}-${safeName}`;
-        const {error: uploadError} = await sb.storage
+        const { error: uploadError } = await sb.storage
           .from(RECEIPTS_BUCKET)
-          .upload(path, file, {contentType: file.type, upsert: false});
+          .upload(path, file, { contentType: file.type, upsert: false });
 
         if (uploadError) {
           throw new Error(`Could not upload ${file.name}: ${uploadError.message}`);
         }
 
-        const {data} = sb.storage.from(RECEIPTS_BUCKET).getPublicUrl(path);
+        const { data } = sb.storage.from(RECEIPTS_BUCKET).getPublicUrl(path);
         if (!data?.publicUrl) {
           throw new Error(`Could not create a URL for ${file.name}.`);
         }
@@ -2103,13 +2167,6 @@ function renderAccountTypeFilters() {
       toggleCheckNumberField();
     }
 
-    function getLocalDateString(date = new Date()) {
-      const year = date.getFullYear();
-      const month = String(date.getMonth() + 1).padStart(2, '0');
-      const day = String(date.getDate()).padStart(2, '0');
-      return `${year}-${month}-${day}`;
-    }
-
     function updateAutocompleteSuggestions() {
       const payeeList = document.getElementById('payee-suggestions');
       const descList = document.getElementById('desc-suggestions');
@@ -2121,14 +2178,14 @@ function renderAccountTypeFilters() {
         transactions
           .map(tx => (tx.payee || '').trim())
           .filter(p => p.length > 0)
-      )].sort((a, b) => a.localeCompare(b, undefined, {sensitivity: 'base'}));
+      )].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
 
       // Extract unique descriptions (ignoring empty ones)
       const uniqueDescs = [...new Set(
         transactions
           .map(tx => (tx.description || '').trim())
           .filter(d => d.length > 0)
-      )].sort((a, b) => a.localeCompare(b, undefined, {sensitivity: 'base'}));
+      )].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
 
       // Build options HTML
       payeeList.innerHTML = uniquePayees.map(p => `<option value="${p}">`).join('');
@@ -2206,25 +2263,155 @@ function renderAccountTypeFilters() {
       toggleTxModal(true);
     }
 
-    async function fetchData() {
-      // Try ordering by created_at or name if 'id' isn't sequential
-      const {data: accData, error: accError} = await sb.from('accounts').select('*').order('created_at', {ascending: true});
-      const {data: txData, error: txError} = await sb.from('transactions').select('*').order('date', {ascending: false});
+    function openCustomConfirm({ title, message, confirmLabel = 'Delete', onConfirm }) {
+      const modal = document.getElementById('confirm-modal');
+      const titleEl = document.getElementById('confirm-modal-title');
+      const messageEl = document.getElementById('confirm-modal-message');
+      const confirmBtn = document.getElementById('confirm-modal-confirm');
 
-      if (accError) console.error("Error fetching accounts:", accError);
-      if (txError) console.error("Error fetching transactions:", txError);
-
-      if (accData) accounts = accData;
-      if (txData) transactions = txData;
-
-      // Re-render active view
-      if (window.currentAccountId) {
-        showTransactionsView(window.currentAccountId);
-      } else {
-        renderAccounts();
-      }
+      titleEl.textContent = title;
+      messageEl.textContent = message;
+      confirmBtn.textContent = confirmLabel;
+      pendingConfirmAction = onConfirm || null;
+      modal.classList.remove('hidden');
     }
 
+    function closeCustomConfirm() {
+      const modal = document.getElementById('confirm-modal');
+      pendingConfirmAction = null;
+      modal.classList.add('hidden');
+    }
+
+    function closeAccountDeleteOptions() {
+      document.getElementById('account-delete-options-modal').classList.add('hidden');
+      pendingAccountDeletion = null;
+    }
+
+    function openAccountDeleteOptions() {
+      const pending = pendingAccountDeletion;
+      if (!pending) return;
+      document.getElementById('account-delete-options-message').textContent =
+        `'${pending.accountName}' has ${pending.transactionCount} transaction${pending.transactionCount === 1 ? '' : 's'}. Choose how to handle them before deleting the account.`;
+      document.getElementById('account-delete-options-modal').classList.remove('hidden');
+    }
+
+    function closeBulkTransferModal() {
+      document.getElementById('bulk-transfer-modal').classList.add('hidden');
+    }
+
+    function openBulkTransferModal() {
+      const pending = pendingAccountDeletion;
+      const select = document.getElementById('bulk-transfer-account');
+      const available = pending ? getAvailableTransferAccounts(pending.accountId) : [];
+      if (!pending || available.length === 0) {
+        showAppMessage('Create another active account before transferring these transactions.');
+        return;
+      }
+
+      document.getElementById('account-delete-options-modal').classList.add('hidden');
+      select.innerHTML = available.map(account => `<option value="${account.id}">${escapeHtml(account.name)} (${escapeHtml(account.type)})</option>`).join('');
+      document.getElementById('bulk-transfer-message').textContent = `Move all ${pending.transactionCount} transaction${pending.transactionCount === 1 ? '' : 's'} to:`;
+      document.getElementById('bulk-transfer-modal').classList.remove('hidden');
+    }
+
+    function closeIndividualTransferModal() {
+      document.getElementById('individual-transfer-modal').classList.add('hidden');
+    }
+
+    async function openIndividualTransferModal() {
+      const pending = pendingAccountDeletion;
+      if (!pending) return;
+      const available = getAvailableTransferAccounts(pending.accountId);
+      if (available.length === 0) {
+        showAppMessage('Create another active account before transferring these transactions.');
+        return;
+      }
+
+      const { data, error } = await sb.from('transactions').select('id, description, payee, amount, date').eq('account_id', pending.accountId).order('date', { ascending: false });
+      if (error) {
+        showAppMessage('Error loading account transactions: ' + error.message);
+        return;
+      }
+
+      document.getElementById('account-delete-options-modal').classList.add('hidden');
+      const accountOptions = available.map(account => `<option value="${account.id}">${escapeHtml(account.name)}</option>`).join('');
+      document.getElementById('individual-transfer-message').textContent = `Choose a destination account for each of the ${data.length} transactions.`;
+      document.getElementById('individual-transfer-rows').innerHTML = (data || []).map(tx => `
+        <label class="block rounded-lg border border-gray-200 bg-gray-50 p-2">
+          <span class="block text-xs font-semibold text-gray-700">${escapeHtml(tx.payee || tx.description || 'Transaction')} · $${Number(tx.amount || 0).toFixed(2)} · ${escapeHtml(tx.date || '')}</span>
+          <select data-transfer-transaction="${tx.id}" class="mt-1 w-full border p-2 rounded-lg bg-white text-sm">${accountOptions}</select>
+        </label>
+      `).join('');
+      document.getElementById('individual-transfer-modal').classList.remove('hidden');
+    }
+
+    function toggleAccountAlertControls() {
+      const minEnabled = document.getElementById('accMinAlertEnabled')?.checked;
+      const maxEnabled = document.getElementById('accMaxAlertEnabled')?.checked;
+      document.getElementById('accMinAlertField')?.classList.toggle('hidden', !minEnabled);
+      document.getElementById('accMaxAlertField')?.classList.toggle('hidden', !maxEnabled);
+    }
+
+    function openAccountModal(accountId = null) {
+      const form = document.getElementById('account-form');
+      form.reset();
+      const deleteBtn = document.getElementById('deleteBtn');
+      const unarchiveBtn = document.getElementById('unarchiveBtn');
+
+      if (accountId) {
+        const acc = accounts.find(a => a.id === accountId);
+        if (!acc) return;
+        const storedAlerts = getStoredAccountAlerts()[acc.id] || {};
+        const minBalance = parseFloat(acc.min_balance_alert ?? storedAlerts.min_balance_alert ?? acc.min_balance ?? NaN);
+        const maxBalance = parseFloat(acc.max_balance_alert ?? storedAlerts.max_balance_alert ?? acc.max_balance ?? NaN);
+
+        document.getElementById('modal-title').textContent = "Edit Account";
+        document.getElementById('submitBtn').textContent = "Update Account";
+        document.getElementById('editingAccId').value = acc.id;
+        document.getElementById('accName').value = acc.name || '';
+        document.getElementById('accType').value = acc.type || 'checking';
+        document.getElementById('accBalance').value = acc ? roundCurrency(acc.initial_balance).toFixed(2) : '';
+        document.getElementById('accMinAlertEnabled').checked = Number.isFinite(minBalance);
+        document.getElementById('accMinBalance').value = Number.isFinite(minBalance) ? minBalance : '';
+        document.getElementById('accMaxAlertEnabled').checked = Number.isFinite(maxBalance);
+        document.getElementById('accMaxBalance').value = Number.isFinite(maxBalance) ? maxBalance : '';
+        document.getElementById('accInstitution').value = acc.institution || '';
+        document.getElementById('accNumber').value = acc.account_number || '';
+        deleteBtn.classList.remove('hidden');
+        unarchiveBtn.classList.toggle('hidden', !acc.is_archived);
+      } else {
+        document.getElementById('modal-title').textContent = "Add New Account";
+        document.getElementById('submitBtn').textContent = "Create Account";
+        document.getElementById('editingAccId').value = "";
+        deleteBtn.classList.add('hidden');
+        unarchiveBtn.classList.add('hidden');
+      }
+
+      toggleAccountAlertControls();
+      toggleAccountModal(true);
+    }
+
+    function toggleAccountModal(show) {
+      const modal = document.getElementById('account-modal');
+      if (show) modal.classList.remove('hidden');
+      else modal.classList.add('hidden');
+    }
+
+    function toggleTxModal(show) {
+      const modal = document.getElementById('tx-modal');
+      if (show) modal.classList.remove('hidden');
+      else modal.classList.add('hidden');
+    }
+
+    document.getElementById('confirm-modal-confirm')?.addEventListener('click', async () => {
+      if (typeof pendingConfirmAction === 'function') {
+        const action = pendingConfirmAction;
+        closeCustomConfirm();
+        await action();
+      }
+    });
+
+    // Event Handlers & Core Submission Flows
     async function handleTxSubmit(e) {
       e.preventDefault();
       const submitBtn = document.getElementById('txSubmitBtn');
@@ -2304,7 +2491,7 @@ function renderAccountTypeFilters() {
           ...payload,
           amount: roundCurrency(txType === 'expense' ? -Math.abs(amount) : Math.abs(amount))
         };
-        ({error} = await sb.from('transactions').update(adjustedPayload).eq('id', editId));
+        ({ error } = await sb.from('transactions').update(adjustedPayload).eq('id', editId));
       } else if (txType === 'transfer') {
         // Generate a unique link key for both ends of the transfer
         const transferId = crypto.randomUUID();
@@ -2337,13 +2524,13 @@ function renderAccountTypeFilters() {
           targetPayload.check_number = check_number;
         }
 
-        ({error} = await sb.from('transactions').insert([sourcePayload, targetPayload]));
+        ({ error } = await sb.from('transactions').insert([sourcePayload, targetPayload]));
       } else {
         const adjustedPayload = {
           ...payload,
           amount: roundCurrency(txType === 'expense' ? -Math.abs(amount) : Math.abs(amount))
         };
-        ({error} = await sb.from('transactions').insert([adjustedPayload]));
+        ({ error } = await sb.from('transactions').insert([adjustedPayload]));
       }
 
       submitBtn.disabled = false;
@@ -2368,35 +2555,6 @@ function renderAccountTypeFilters() {
       }
     }
 
-    let pendingConfirmAction = null;
-
-    function openCustomConfirm({title, message, confirmLabel = 'Delete', onConfirm}) {
-      const modal = document.getElementById('confirm-modal');
-      const titleEl = document.getElementById('confirm-modal-title');
-      const messageEl = document.getElementById('confirm-modal-message');
-      const confirmBtn = document.getElementById('confirm-modal-confirm');
-
-      titleEl.textContent = title;
-      messageEl.textContent = message;
-      confirmBtn.textContent = confirmLabel;
-      pendingConfirmAction = onConfirm || null;
-      modal.classList.remove('hidden');
-    }
-
-    function closeCustomConfirm() {
-      const modal = document.getElementById('confirm-modal');
-      pendingConfirmAction = null;
-      modal.classList.add('hidden');
-    }
-
-    document.getElementById('confirm-modal-confirm')?.addEventListener('click', async () => {
-      if (typeof pendingConfirmAction === 'function') {
-        const action = pendingConfirmAction;
-        closeCustomConfirm();
-        await action();
-      }
-    });
-
     async function handleDeleteTxFromModal() {
       const id = document.getElementById('editingTxId').value;
       const desc = document.getElementById('txDesc').value || 'this transaction';
@@ -2415,7 +2573,7 @@ function renderAccountTypeFilters() {
             query = query.eq('id', id);
           }
 
-          const {error} = await query;
+          const { error } = await query;
           if (error) {
             showAppMessage("Error deleting transaction: " + error.message);
             return;
@@ -2442,9 +2600,9 @@ function renderAccountTypeFilters() {
         title: 'Delete Account',
         message: `Delete '${acc?.name || 'this account'}'? This cannot be undone.`,
         onConfirm: async () => {
-          const {count, error: countError} = await sb
+          const { count, error: countError } = await sb
             .from('transactions')
-            .select('id', {count: 'exact', head: true})
+            .select('id', { count: 'exact', head: true })
             .eq('account_id', editId);
 
           if (countError) {
@@ -2463,7 +2621,7 @@ function renderAccountTypeFilters() {
             return;
           }
 
-          const {error} = await sb.from('accounts').delete().eq('id', editId);
+          const { error } = await sb.from('accounts').delete().eq('id', editId);
           if (error) {
             showAppMessage("Error deleting account: " + error.message);
             return;
@@ -2476,42 +2634,8 @@ function renderAccountTypeFilters() {
       });
     }
 
-    let pendingAccountDeletion = null;
-
     function getAvailableTransferAccounts(accountId) {
       return accounts.filter(account => !account.is_archived && account.id !== accountId);
-    }
-
-    function closeAccountDeleteOptions() {
-      document.getElementById('account-delete-options-modal').classList.add('hidden');
-      pendingAccountDeletion = null;
-    }
-
-    function openAccountDeleteOptions() {
-      const pending = pendingAccountDeletion;
-      if (!pending) return;
-      document.getElementById('account-delete-options-message').textContent =
-        `'${pending.accountName}' has ${pending.transactionCount} transaction${pending.transactionCount === 1 ? '' : 's'}. Choose how to handle them before deleting the account.`;
-      document.getElementById('account-delete-options-modal').classList.remove('hidden');
-    }
-
-    function closeBulkTransferModal() {
-      document.getElementById('bulk-transfer-modal').classList.add('hidden');
-    }
-
-    function openBulkTransferModal() {
-      const pending = pendingAccountDeletion;
-      const select = document.getElementById('bulk-transfer-account');
-      const available = pending ? getAvailableTransferAccounts(pending.accountId) : [];
-      if (!pending || available.length === 0) {
-        showAppMessage('Create another active account before transferring these transactions.');
-        return;
-      }
-
-      document.getElementById('account-delete-options-modal').classList.add('hidden');
-      select.innerHTML = available.map(account => `<option value="${account.id}">${escapeHtml(account.name)} (${escapeHtml(account.type)})</option>`).join('');
-      document.getElementById('bulk-transfer-message').textContent = `Move all ${pending.transactionCount} transaction${pending.transactionCount === 1 ? '' : 's'} to:`;
-      document.getElementById('bulk-transfer-modal').classList.remove('hidden');
     }
 
     async function submitBulkTransfer() {
@@ -2519,43 +2643,12 @@ function renderAccountTypeFilters() {
       const targetAccountId = document.getElementById('bulk-transfer-account').value;
       if (!pending || !targetAccountId) return;
 
-      const {error: transferError} = await sb.from('transactions').update({account_id: targetAccountId}).eq('account_id', pending.accountId);
+      const { error: transferError } = await sb.from('transactions').update({ account_id: targetAccountId }).eq('account_id', pending.accountId);
       if (transferError) {
         showAppMessage('Error transferring transactions: ' + transferError.message);
         return;
       }
       await finishAccountDeletion();
-    }
-
-    function closeIndividualTransferModal() {
-      document.getElementById('individual-transfer-modal').classList.add('hidden');
-    }
-
-    async function openIndividualTransferModal() {
-      const pending = pendingAccountDeletion;
-      if (!pending) return;
-      const available = getAvailableTransferAccounts(pending.accountId);
-      if (available.length === 0) {
-        showAppMessage('Create another active account before transferring these transactions.');
-        return;
-      }
-
-      const {data, error} = await sb.from('transactions').select('id, description, payee, amount, date').eq('account_id', pending.accountId).order('date', {ascending: false});
-      if (error) {
-        showAppMessage('Error loading account transactions: ' + error.message);
-        return;
-      }
-
-      document.getElementById('account-delete-options-modal').classList.add('hidden');
-      const accountOptions = available.map(account => `<option value="${account.id}">${escapeHtml(account.name)}</option>`).join('');
-      document.getElementById('individual-transfer-message').textContent = `Choose a destination account for each of the ${data.length} transactions.`;
-      document.getElementById('individual-transfer-rows').innerHTML = (data || []).map(tx => `
-        <label class="block rounded-lg border border-gray-200 bg-gray-50 p-2">
-          <span class="block text-xs font-semibold text-gray-700">${escapeHtml(tx.payee || tx.description || 'Transaction')} · $${Number(tx.amount || 0).toFixed(2)} · ${escapeHtml(tx.date || '')}</span>
-          <select data-transfer-transaction="${tx.id}" class="mt-1 w-full border p-2 rounded-lg bg-white text-sm">${accountOptions}</select>
-        </label>
-      `).join('');
-      document.getElementById('individual-transfer-modal').classList.remove('hidden');
     }
 
     async function submitIndividualTransfer() {
@@ -2564,7 +2657,7 @@ function renderAccountTypeFilters() {
 
       const rows = [...document.querySelectorAll('[data-transfer-transaction]')];
       for (const row of rows) {
-        const {error} = await sb.from('transactions').update({account_id: row.value}).eq('id', row.dataset.transferTransaction);
+        const { error } = await sb.from('transactions').update({ account_id: row.value }).eq('id', row.dataset.transferTransaction);
         if (error) {
           showAppMessage('Error transferring transactions: ' + error.message);
           return;
@@ -2578,7 +2671,7 @@ function renderAccountTypeFilters() {
       if (!pending) return;
       const accountName = pending.accountName;
       const archivedName = accountName.endsWith(' [Archived]') ? accountName : `${accountName} [Archived]`;
-      const {error} = await sb.from('accounts').update({is_archived: true, name: archivedName}).eq('id', pending.accountId);
+      const { error } = await sb.from('accounts').update({ is_archived: true, name: archivedName }).eq('id', pending.accountId);
       if (error) {
         showAppMessage('Error archiving account: ' + error.message);
         return;
@@ -2591,7 +2684,7 @@ function renderAccountTypeFilters() {
     async function finishAccountDeletion() {
       const pending = pendingAccountDeletion;
       if (!pending) return;
-      const {error} = await sb.from('accounts').delete().eq('id', pending.accountId);
+      const { error } = await sb.from('accounts').delete().eq('id', pending.accountId);
       if (error) {
         showAppMessage('Transactions were transferred, but the account could not be deleted: ' + error.message);
         return;
@@ -2614,8 +2707,8 @@ function renderAccountTypeFilters() {
         confirmLabel: 'Unarchive',
         onConfirm: async () => {
           const restoredName = String(account.name || '').replace(/\s+\[Archived\]$/, '');
-          const {error} = await sb.from('accounts')
-            .update({is_archived: false, name: restoredName})
+          const { error } = await sb.from('accounts')
+            .update({ is_archived: false, name: restoredName })
             .eq('id', accountId);
 
           if (error) {
@@ -2636,7 +2729,16 @@ function renderAccountTypeFilters() {
         title: 'Delete Transaction',
         message: `Delete '${description}'?`,
         onConfirm: async () => {
-          const {error} = await sb.from('transactions').delete().eq('id', id);
+          const targetTx = transactions.find(t => t.id == id);
+          let query = sb.from('transactions').delete();
+
+          if (targetTx && targetTx.transfer_id) {
+            query = query.eq('transfer_id', targetTx.transfer_id);
+          } else {
+            query = query.eq('id', id);
+          }
+
+          const { error } = await query;
           if (error) {
             showAppMessage("Error deleting transaction: " + error.message);
             return;
@@ -2651,76 +2753,6 @@ function renderAccountTypeFilters() {
           }
         }
       });
-    }
-
-    function toggleAccountAlertControls() {
-      const minEnabled = document.getElementById('accMinAlertEnabled')?.checked;
-      const maxEnabled = document.getElementById('accMaxAlertEnabled')?.checked;
-      document.getElementById('accMinAlertField')?.classList.toggle('hidden', !minEnabled);
-      document.getElementById('accMaxAlertField')?.classList.toggle('hidden', !maxEnabled);
-    }
-
-    function openAccountModal(accountId = null) {
-      const form = document.getElementById('account-form');
-      form.reset();
-      const deleteBtn = document.getElementById('deleteBtn');
-      const unarchiveBtn = document.getElementById('unarchiveBtn');
-
-      if (accountId) {
-        const acc = accounts.find(a => a.id === accountId);
-        if (!acc) return;
-        const storedAlerts = getStoredAccountAlerts()[acc.id] || {};
-        const minBalance = parseFloat(acc.min_balance_alert ?? storedAlerts.min_balance_alert ?? acc.min_balance ?? NaN);
-        const maxBalance = parseFloat(acc.max_balance_alert ?? storedAlerts.max_balance_alert ?? acc.max_balance ?? NaN);
-
-        document.getElementById('modal-title').textContent = "Edit Account";
-        document.getElementById('submitBtn').textContent = "Update Account";
-        document.getElementById('editingAccId').value = acc.id;
-        document.getElementById('accName').value = acc.name || '';
-        document.getElementById('accType').value = acc.type || 'checking';
-        document.getElementById('accBalance').value = acc ? roundCurrency(acc.initial_balance).toFixed(2) : '';
-        document.getElementById('accMinAlertEnabled').checked = Number.isFinite(minBalance);
-        document.getElementById('accMinBalance').value = Number.isFinite(minBalance) ? minBalance : '';
-        document.getElementById('accMaxAlertEnabled').checked = Number.isFinite(maxBalance);
-        document.getElementById('accMaxBalance').value = Number.isFinite(maxBalance) ? maxBalance : '';
-        document.getElementById('accInstitution').value = acc.institution || '';
-        document.getElementById('accNumber').value = acc.account_number || '';
-        deleteBtn.classList.remove('hidden');
-        unarchiveBtn.classList.toggle('hidden', !acc.is_archived);
-      } else {
-        document.getElementById('modal-title').textContent = "Add New Account";
-        document.getElementById('submitBtn').textContent = "Create Account";
-        document.getElementById('editingAccId').value = "";
-        deleteBtn.classList.add('hidden');
-        unarchiveBtn.classList.add('hidden');
-      }
-
-      toggleAccountAlertControls();
-      toggleAccountModal(true);
-    }
-
-    async function saveAccountData(payload, editId) {
-      const supportedColumns = ['name', 'type', 'initial_balance', 'institution', 'account_number'];
-      const safePayload = Object.fromEntries(
-        Object.entries(payload).filter(([key]) => supportedColumns.includes(key))
-      );
-
-      let result;
-      if (editId) {
-        result = await sb.from('accounts').update(safePayload).eq('id', editId);
-      } else {
-        result = await sb.from('accounts').insert([safePayload]);
-      }
-
-      const alerts = getStoredAccountAlerts();
-      const accountId = editId || result?.data?.[0]?.id || payload.id || 'draft';
-      alerts[accountId] = {
-        min_balance_alert: payload.min_balance_alert ?? null,
-        max_balance_alert: payload.max_balance_alert ?? null
-      };
-      setStoredAccountAlerts(alerts);
-
-      return result || {error: null};
     }
 
     async function handleAccountSubmit(e) {
@@ -2745,7 +2777,7 @@ function renderAccountTypeFilters() {
         max_balance_alert: maxAlertEnabled && Number.isFinite(maxBalance) ? maxBalance : null
       };
 
-      const {error} = await saveAccountData(payload, editId || null);
+      const { error } = await saveAccountData(payload, editId || null);
 
       submitBtn.disabled = false;
 
@@ -2756,49 +2788,6 @@ function renderAccountTypeFilters() {
 
       toggleAccountModal(false);
       fetchAccounts();
-    }
-
-    async function deleteTx(id, description = 'this transaction') {
-      openCustomConfirm({
-        title: 'Delete Transaction',
-        message: `Delete '${description}'?`,
-        onConfirm: async () => {
-          const targetTx = transactions.find(t => t.id == id);
-          let query = sb.from('transactions').delete();
-
-          if (targetTx && targetTx.transfer_id) {
-            query = query.eq('transfer_id', targetTx.transfer_id);
-          } else {
-            query = query.eq('id', id);
-          }
-
-          const {error} = await query;
-          if (error) {
-            showAppMessage("Error deleting transaction: " + error.message);
-            return;
-          }
-
-          await fetchData();
-          await fetchAccounts();
-          if (window.currentAccountId) {
-            await showTransactionsView(window.currentAccountId);
-          } else if (currentViewState === 'home-transactions') {
-            showAllTransactions(selectedSummaryTransactionType);
-          }
-        }
-      });
-    }
-
-    function toggleAccountModal(show) {
-      const modal = document.getElementById('account-modal');
-      if (show) modal.classList.remove('hidden');
-      else modal.classList.add('hidden');
-    }
-
-    function toggleTxModal(show) {
-      const modal = document.getElementById('tx-modal');
-      if (show) modal.classList.remove('hidden');
-      else modal.classList.add('hidden');
     }
 
     document.addEventListener('wheel', () => {

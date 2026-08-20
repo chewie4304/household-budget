@@ -2,7 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
-## Unreleased
+## [Unreleased] - v1.2.1-dev
+
+### Refactoring & Architecture
+- **Function Inventory & Reorganization:** Categorized and reordered all functions into five logical phases (Utilities, Data/API, UI Rendering, Modals, and Event Handlers) for improved maintainability.
+- **Duplicate Code Removal:** Eliminated redundant function declarations.
+- **State Management:** Hoisted and centralized global state variables to the top of the script block.
 
 ## [1.2.0] - 2026-08-19
 
