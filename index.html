@@ -110,6 +110,8 @@
             class="w-full border border-slate-200 bg-white px-3 py-2.5 rounded-xl text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-200 shadow-sm" />
         </div>
 
+        <div id="account-type-filter-bar" class="mt-2 flex flex-wrap gap-2"></div>
+
         <div id="transaction-search-wrap" class="hidden space-y-2 lg:ml-auto lg:w-[calc((100%-24px)/3)]">
           <input id="transaction-search" type="text" oninput="renderAllTransactions()" placeholder="Search transactions..."
             class="w-full border border-slate-200 bg-white px-3 py-2.5 rounded-xl text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-200 shadow-sm" />
@@ -260,6 +262,10 @@
             class="w-full bg-red-50 text-red-600 border border-red-200 py-2 rounded-lg font-semibold shadow-sm hidden">
             Delete Account
           </button>
+          <button type="button" id="unarchiveBtn" onclick="handleUnarchiveFromModal()"
+            class="w-full bg-emerald-50 text-emerald-700 border border-emerald-200 py-2 rounded-lg font-semibold shadow-sm hidden">
+            Unarchive Account
+          </button>
         </div>
       </form>
     </div>
@@ -279,6 +285,58 @@
           class="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-semibold text-sm">Cancel</button>
         <button type="button" id="confirm-modal-confirm"
           class="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg font-semibold text-sm shadow">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Account Deletion Options Modal -->
+  <div id="account-delete-options-modal"
+    class="fixed inset-0 bg-black/50 hidden flex items-end sm:items-center justify-center p-0 sm:p-4 z-[60]">
+    <div class="bg-white w-full max-w-md rounded-t-2xl sm:rounded-2xl p-5 space-y-4">
+      <div class="flex justify-between items-center">
+        <h3 class="font-bold text-lg text-gray-800">Account has transactions</h3>
+        <button type="button" onclick="closeAccountDeleteOptions()" class="text-gray-400 text-2xl">&times;</button>
+      </div>
+      <p id="account-delete-options-message" class="text-gray-700 text-sm"></p>
+      <div class="space-y-2 pt-2">
+        <button type="button" onclick="openBulkTransferModal()" class="w-full px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold text-sm shadow">Transfer all transactions</button>
+        <button type="button" onclick="openIndividualTransferModal()" class="w-full px-4 py-2 bg-indigo-600 text-white rounded-lg font-semibold text-sm shadow">Choose an account for each transaction</button>
+        <button type="button" onclick="archiveAccountFromDeleteFlow()" class="w-full px-4 py-2 bg-slate-600 text-white rounded-lg font-semibold text-sm shadow">Archive account</button>
+        <button type="button" onclick="closeAccountDeleteOptions()" class="w-full px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-semibold text-sm">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bulk Account Transfer Modal -->
+  <div id="bulk-transfer-modal"
+    class="fixed inset-0 bg-black/50 hidden flex items-end sm:items-center justify-center p-0 sm:p-4 z-[70]">
+    <div class="bg-white w-full max-w-md rounded-t-2xl sm:rounded-2xl p-5 space-y-4">
+      <div class="flex justify-between items-center">
+        <h3 class="font-bold text-lg text-gray-800">Transfer transactions</h3>
+        <button type="button" onclick="closeBulkTransferModal()" class="text-gray-400 text-2xl">&times;</button>
+      </div>
+      <p id="bulk-transfer-message" class="text-gray-700 text-sm"></p>
+      <select id="bulk-transfer-account" class="w-full border p-2 rounded-lg bg-white"></select>
+      <div class="flex gap-2 pt-2">
+        <button type="button" onclick="closeBulkTransferModal()" class="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-semibold text-sm">Cancel</button>
+        <button type="button" onclick="submitBulkTransfer()" class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold text-sm shadow">Transfer and delete</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Individual Account Transfer Modal -->
+  <div id="individual-transfer-modal"
+    class="fixed inset-0 bg-black/50 hidden flex items-end sm:items-center justify-center p-0 sm:p-4 z-[70]">
+    <div class="bg-white w-full max-w-lg rounded-t-2xl sm:rounded-2xl p-5 space-y-4 max-h-[90vh] overflow-y-auto">
+      <div class="flex justify-between items-center">
+        <h3 class="font-bold text-lg text-gray-800">Assign transactions</h3>
+        <button type="button" onclick="closeIndividualTransferModal()" class="text-gray-400 text-2xl">&times;</button>
+      </div>
+      <p id="individual-transfer-message" class="text-gray-700 text-sm"></p>
+      <div id="individual-transfer-rows" class="space-y-2"></div>
+      <div class="flex gap-2 pt-2">
+        <button type="button" onclick="closeIndividualTransferModal()" class="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-semibold text-sm">Cancel</button>
+        <button type="button" onclick="submitIndividualTransfer()" class="flex-1 px-4 py-2 bg-indigo-600 text-white rounded-lg font-semibold text-sm shadow">Transfer and delete</button>
       </div>
     </div>
   </div>
@@ -816,6 +874,7 @@
       const title = document.getElementById('home-view-title');
       const accountSearchWrap = document.getElementById('account-search-wrap');
       const transactionSearchWrap = document.getElementById('transaction-search-wrap');
+      const accountTypeFilterBar = document.getElementById('account-type-filter-bar');
       const newAccountButton = document.getElementById('new-account-button');
 
       clearSearchForView('home-accounts');
@@ -824,6 +883,7 @@
       allTransactionsList.classList.add('hidden');
       accountSearchWrap.classList.remove('hidden');
       transactionSearchWrap.classList.add('hidden');
+      accountTypeFilterBar.classList.remove('hidden');
       newAccountButton.classList.remove('hidden');
       title.textContent = 'Your Accounts';
       accountsTab.classList.add('bg-blue-600', 'text-white');
@@ -847,6 +907,7 @@
       const title = document.getElementById('home-view-title');
       const accountSearchWrap = document.getElementById('account-search-wrap');
       const transactionSearchWrap = document.getElementById('transaction-search-wrap');
+      const accountTypeFilterBar = document.getElementById('account-type-filter-bar');
       const newAccountButton = document.getElementById('new-account-button');
 
       clearSearchForView('home-transactions');
@@ -855,6 +916,7 @@
       allTransactionsList.classList.remove('hidden');
       accountSearchWrap.classList.add('hidden');
       transactionSearchWrap.classList.remove('hidden');
+      accountTypeFilterBar.classList.add('hidden');
       newAccountButton.classList.add('hidden');
       const monthLabel = selectedSummaryMonth
         ? new Date(`${selectedSummaryMonth}-01T00:00:00`).toLocaleString('en-US', { month: 'long', year: 'numeric' })
@@ -1135,12 +1197,88 @@
       }
     }
 
+let selectedAccountTypeFilter = 'all';
+
+function normalizeAccountType(rawType) {
+  const t = String(rawType || '').toLowerCase();
+
+  if (t.includes('checking')) return 'checking';
+  if (t.includes('savings')) return 'savings';
+  if (
+    t.includes('credit') ||
+    t.includes('card') ||
+    t.includes('visa') ||
+    t.includes('mastercard') ||
+    t.includes('amex') ||
+    t.includes('discover')
+  ) return 'credit';
+
+  return t;
+}
+
+function accountMatchesTypeFilter(account) {
+  if (selectedAccountTypeFilter === 'archived') return !!account?.is_archived;
+  if (account?.is_archived) return false;
+  if (selectedAccountTypeFilter === 'all') return true;
+  return normalizeAccountType(account && account.type) === selectedAccountTypeFilter;
+}
+
+function setAccountTypeFilter(filterValue) {
+  selectedAccountTypeFilter = filterValue;
+  renderAccounts();
+}
+
+function renderAccountTypeFilters() {
+  const bar = document.getElementById('account-type-filter-bar');
+  if (!bar) return;
+
+  // 1. Gather all unique normalized account types from active accounts
+  const rawTypes = accounts.filter(a => !a.is_archived).map(a => normalizeAccountType(a.type || ''));
+  const uniqueTypes = [...new Set(rawTypes)].filter(t => t && t !== 'other');
+
+  // 2. Alphabetize the categories nicely (A to Z)
+  uniqueTypes.sort((a, b) => a.localeCompare(b));
+
+  // 3. Build the dynamic list, starting with 'All'
+  const dynamicFilters = [
+    { value: 'all', label: 'All' },
+    ...uniqueTypes.map(type => ({
+      value: type,
+      // Capitalize the label for clean display
+      label: type.charAt(0).toUpperCase() + type.slice(1)
+    })),
+    ...(accounts.some(a => a.is_archived) ? [{value: 'archived', label: 'Archived'}] : [])
+  ];
+
+  if (!dynamicFilters.some(filter => filter.value === selectedAccountTypeFilter)) {
+    selectedAccountTypeFilter = 'all';
+  }
+
+  // 4. Render the buttons
+  bar.innerHTML = dynamicFilters.map(function (f) {
+    const isActive = f.value === selectedAccountTypeFilter;
+    return (
+      '<button type="button" onclick="setAccountTypeFilter(\'' + f.value + '\')" ' +
+      'class="rounded-full px-3 py-1 text-sm font-medium transition ' +
+      (isActive
+        ? 'bg-blue-600 text-white shadow-sm'
+        : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50') +
+      '">' +
+      f.label +
+      '</button>'
+    );
+  }).join('');
+}
+
     function renderAccounts() {
+      renderAccountTypeFilters();
       renderMonthlySummary();
       const list = document.getElementById('accounts-list');
       const searchInput = document.getElementById('account-search');
       const query = searchInput ? searchInput.value.trim() : '';
-      const filteredAccounts = accounts.filter(acc => matchesSearch(acc, query));
+      const filteredAccounts = accounts.filter(function (acc) {
+        return matchesSearch(acc, query) && accountMatchesTypeFilter(acc);
+      });
 
       if (filteredAccounts.length === 0) {
         list.innerHTML = `
@@ -1757,7 +1895,7 @@
       if (!targetSelect || !Array.isArray(accounts)) return;
 
       targetSelect.innerHTML = accounts
-        .filter(acc => acc.id !== sourceAccountId)
+        .filter(acc => !acc.is_archived && acc.id !== sourceAccountId)
         .map(acc => `<option value="${acc.id}">${acc.name}</option>`)
         .join('');
     }
@@ -1769,7 +1907,7 @@
         return;
       }
 
-      select.innerHTML = accounts.map(acc => {
+      select.innerHTML = accounts.filter(acc => !acc.is_archived).map(acc => {
         const isSelected = (selectedId && acc.id === selectedId) || (!selectedId && activeAccountId && acc.id === activeAccountId);
         return `<option value="${acc.id}" ${isSelected ? 'selected' : ''}>${acc.name} (${acc.type})</option>`;
       }).join('');
@@ -2295,6 +2433,204 @@
       });
     }
 
+    async function handleDeleteFromModal() {
+      const editId = document.getElementById('editingAccId').value;
+      if (!editId) return;
+      const acc = accounts.find(a => a.id === editId);
+
+      openCustomConfirm({
+        title: 'Delete Account',
+        message: `Delete '${acc?.name || 'this account'}'? This cannot be undone.`,
+        onConfirm: async () => {
+          const {count, error: countError} = await sb
+            .from('transactions')
+            .select('id', {count: 'exact', head: true})
+            .eq('account_id', editId);
+
+          if (countError) {
+            showAppMessage("Error checking account transactions: " + countError.message);
+            return;
+          }
+
+          if (count && count > 0) {
+            pendingAccountDeletion = {
+              accountId: editId,
+              accountName: acc?.name || 'this account',
+              transactionCount: count
+            };
+            toggleAccountModal(false);
+            openAccountDeleteOptions();
+            return;
+          }
+
+          const {error} = await sb.from('accounts').delete().eq('id', editId);
+          if (error) {
+            showAppMessage("Error deleting account: " + error.message);
+            return;
+          }
+
+          toggleAccountModal(false);
+          await fetchAccounts();
+          showAppMessage(`Account '${acc?.name || 'Account'}' was deleted successfully.`);
+        }
+      });
+    }
+
+    let pendingAccountDeletion = null;
+
+    function getAvailableTransferAccounts(accountId) {
+      return accounts.filter(account => !account.is_archived && account.id !== accountId);
+    }
+
+    function closeAccountDeleteOptions() {
+      document.getElementById('account-delete-options-modal').classList.add('hidden');
+      pendingAccountDeletion = null;
+    }
+
+    function openAccountDeleteOptions() {
+      const pending = pendingAccountDeletion;
+      if (!pending) return;
+      document.getElementById('account-delete-options-message').textContent =
+        `'${pending.accountName}' has ${pending.transactionCount} transaction${pending.transactionCount === 1 ? '' : 's'}. Choose how to handle them before deleting the account.`;
+      document.getElementById('account-delete-options-modal').classList.remove('hidden');
+    }
+
+    function closeBulkTransferModal() {
+      document.getElementById('bulk-transfer-modal').classList.add('hidden');
+    }
+
+    function openBulkTransferModal() {
+      const pending = pendingAccountDeletion;
+      const select = document.getElementById('bulk-transfer-account');
+      const available = pending ? getAvailableTransferAccounts(pending.accountId) : [];
+      if (!pending || available.length === 0) {
+        showAppMessage('Create another active account before transferring these transactions.');
+        return;
+      }
+
+      document.getElementById('account-delete-options-modal').classList.add('hidden');
+      select.innerHTML = available.map(account => `<option value="${account.id}">${escapeHtml(account.name)} (${escapeHtml(account.type)})</option>`).join('');
+      document.getElementById('bulk-transfer-message').textContent = `Move all ${pending.transactionCount} transaction${pending.transactionCount === 1 ? '' : 's'} to:`;
+      document.getElementById('bulk-transfer-modal').classList.remove('hidden');
+    }
+
+    async function submitBulkTransfer() {
+      const pending = pendingAccountDeletion;
+      const targetAccountId = document.getElementById('bulk-transfer-account').value;
+      if (!pending || !targetAccountId) return;
+
+      const {error: transferError} = await sb.from('transactions').update({account_id: targetAccountId}).eq('account_id', pending.accountId);
+      if (transferError) {
+        showAppMessage('Error transferring transactions: ' + transferError.message);
+        return;
+      }
+      await finishAccountDeletion();
+    }
+
+    function closeIndividualTransferModal() {
+      document.getElementById('individual-transfer-modal').classList.add('hidden');
+    }
+
+    async function openIndividualTransferModal() {
+      const pending = pendingAccountDeletion;
+      if (!pending) return;
+      const available = getAvailableTransferAccounts(pending.accountId);
+      if (available.length === 0) {
+        showAppMessage('Create another active account before transferring these transactions.');
+        return;
+      }
+
+      const {data, error} = await sb.from('transactions').select('id, description, payee, amount, date').eq('account_id', pending.accountId).order('date', {ascending: false});
+      if (error) {
+        showAppMessage('Error loading account transactions: ' + error.message);
+        return;
+      }
+
+      document.getElementById('account-delete-options-modal').classList.add('hidden');
+      const accountOptions = available.map(account => `<option value="${account.id}">${escapeHtml(account.name)}</option>`).join('');
+      document.getElementById('individual-transfer-message').textContent = `Choose a destination account for each of the ${data.length} transactions.`;
+      document.getElementById('individual-transfer-rows').innerHTML = (data || []).map(tx => `
+        <label class="block rounded-lg border border-gray-200 bg-gray-50 p-2">
+          <span class="block text-xs font-semibold text-gray-700">${escapeHtml(tx.payee || tx.description || 'Transaction')} · $${Number(tx.amount || 0).toFixed(2)} · ${escapeHtml(tx.date || '')}</span>
+          <select data-transfer-transaction="${tx.id}" class="mt-1 w-full border p-2 rounded-lg bg-white text-sm">${accountOptions}</select>
+        </label>
+      `).join('');
+      document.getElementById('individual-transfer-modal').classList.remove('hidden');
+    }
+
+    async function submitIndividualTransfer() {
+      const pending = pendingAccountDeletion;
+      if (!pending) return;
+
+      const rows = [...document.querySelectorAll('[data-transfer-transaction]')];
+      for (const row of rows) {
+        const {error} = await sb.from('transactions').update({account_id: row.value}).eq('id', row.dataset.transferTransaction);
+        if (error) {
+          showAppMessage('Error transferring transactions: ' + error.message);
+          return;
+        }
+      }
+      await finishAccountDeletion();
+    }
+
+    async function archiveAccountFromDeleteFlow() {
+      const pending = pendingAccountDeletion;
+      if (!pending) return;
+      const accountName = pending.accountName;
+      const archivedName = accountName.endsWith(' [Archived]') ? accountName : `${accountName} [Archived]`;
+      const {error} = await sb.from('accounts').update({is_archived: true, name: archivedName}).eq('id', pending.accountId);
+      if (error) {
+        showAppMessage('Error archiving account: ' + error.message);
+        return;
+      }
+      closeAccountDeleteOptions();
+      await fetchAccounts();
+      showAppMessage(`Account '${accountName}' was archived successfully.`);
+    }
+
+    async function finishAccountDeletion() {
+      const pending = pendingAccountDeletion;
+      if (!pending) return;
+      const {error} = await sb.from('accounts').delete().eq('id', pending.accountId);
+      if (error) {
+        showAppMessage('Transactions were transferred, but the account could not be deleted: ' + error.message);
+        return;
+      }
+      closeBulkTransferModal();
+      closeIndividualTransferModal();
+      await fetchAccounts();
+      showAppMessage(`Account '${pending.accountName}' was deleted successfully.`);
+      pendingAccountDeletion = null;
+    }
+
+    async function handleUnarchiveFromModal() {
+      const accountId = document.getElementById('editingAccId').value;
+      const account = accounts.find(acc => acc.id === accountId);
+      if (!account || !account.is_archived) return;
+
+      openCustomConfirm({
+        title: 'Unarchive Account',
+        message: `Restore '${account.name}' to your active accounts?`,
+        confirmLabel: 'Unarchive',
+        onConfirm: async () => {
+          const restoredName = String(account.name || '').replace(/\s+\[Archived\]$/, '');
+          const {error} = await sb.from('accounts')
+            .update({is_archived: false, name: restoredName})
+            .eq('id', accountId);
+
+          if (error) {
+            showAppMessage('Error unarchiving account: ' + error.message);
+            return;
+          }
+
+          toggleAccountModal(false);
+          selectedAccountTypeFilter = 'all';
+          await fetchAccounts();
+          showAppMessage(`Account '${restoredName}' was unarchived successfully.`);
+        }
+      });
+    }
+
     async function deleteTx(id, description = 'this transaction') {
       openCustomConfirm({
         title: 'Delete Transaction',
@@ -2328,6 +2664,7 @@
       const form = document.getElementById('account-form');
       form.reset();
       const deleteBtn = document.getElementById('deleteBtn');
+      const unarchiveBtn = document.getElementById('unarchiveBtn');
 
       if (accountId) {
         const acc = accounts.find(a => a.id === accountId);
@@ -2349,11 +2686,13 @@
         document.getElementById('accInstitution').value = acc.institution || '';
         document.getElementById('accNumber').value = acc.account_number || '';
         deleteBtn.classList.remove('hidden');
+        unarchiveBtn.classList.toggle('hidden', !acc.is_archived);
       } else {
         document.getElementById('modal-title').textContent = "Add New Account";
         document.getElementById('submitBtn').textContent = "Create Account";
         document.getElementById('editingAccId').value = "";
         deleteBtn.classList.add('hidden');
+        unarchiveBtn.classList.add('hidden');
       }
 
       toggleAccountAlertControls();
