@@ -160,47 +160,70 @@
 
     <div class="max-w-md mx-auto p-4 space-y-4">
       <!-- Account Overview Card -->
-      <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex justify-between items-center">
-        <div>
-          <h2 id="tx-acc-name" class="text-lg font-bold text-gray-900"></h2>
-          <p id="tx-acc-sub" class="text-xs text-gray-500 uppercase tracking-wider"></p>
+      <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 space-y-3">
+        <div class="flex justify-between items-center">
+          <div>
+            <!-- Line 1: Account Name -->
+            <h2 id="tx-acc-name" class="text-lg font-bold text-gray-900"></h2>
+            <!-- Line 2: Account Type and Number -->
+            <p id="tx-acc-type-num" class="text-xs font-semibold text-slate-400 capitalize mt-1"></p>
+            <!-- Line 3: Institution -->
+            <p id="tx-acc-institution" class="text-xs font-semibold text-slate-400 capitalize mt-1"></p>
+            <!-- Line 4: Due Date -->
+            <p id="tx-acc-due-date" class="text-xs font-semibold text-slate-400 capitalize mt-1"></p>
+          </div>
+          <div class="text-right space-y-1">
+            <div>
+              <div id="tx-acc-balance" class="text-lg font-extrabold text-gray-900">$0.00</div>
+              <div class="text-[10px] text-gray-500 font-semibold uppercase tracking-wider">Current Balance</div>
+            </div>
+            <div>
+              <div class="flex items-center justify-end gap-1">
+                <div id="tx-acc-cleared" class="text-sm font-bold text-emerald-600">$0.00</div>
+                <button type="button" onclick="openClearedBalanceModal()" title="Edit cleared balance"
+                  class="text-emerald-600 hover:text-emerald-800 text-xs">✎</button>
+              </div>
+              <div class="text-[10px] text-emerald-700 font-semibold uppercase tracking-wider">Cleared Balance</div>
+            </div>
+          </div>
+        </div>
+        <!-- Credit Remaining Label & Utilization Progress Bar -->
+        <div id="tx-acc-credit-limit-container" class="hidden border-t border-gray-100 pt-3 space-y-2">
+          <div class="flex justify-between text-xs font-semibold">
+            <span class="text-gray-500">Credit Remaining</span>
+            <span id="tx-acc-credit-remaining-label" class="text-gray-900"></span>
+          </div>
+          <div class="w-full bg-gray-100 h-2 rounded-full overflow-hidden">
+            <div id="tx-acc-credit-progress" class="h-full rounded-full transition-all duration-300" style="width: 0%;">
+            </div>
+          </div>
+        </div>
+        <div class="border-t border-gray-100 pt-3">
+          <!-- Edit Account Button -->
           <button type="button" onclick="openAccountModal(activeAccountId)"
             class="mt-2 inline-flex items-center gap-1 rounded-lg border border-blue-200 bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-700 transition hover:bg-blue-100">
             <span aria-hidden="true">✎</span>
             Edit Account
           </button>
         </div>
-        <div class="text-right space-y-1">
-          <div>
-            <div id="tx-acc-balance" class="text-lg font-extrabold text-gray-900">$0.00</div>
-            <div class="text-[10px] text-gray-500 font-semibold uppercase tracking-wider">Current Balance</div>
-          </div>
-          <div>
-            <div class="flex items-center justify-end gap-1">
-              <div id="tx-acc-cleared" class="text-sm font-bold text-emerald-600">$0.00</div>
-              <button type="button" onclick="openClearedBalanceModal()" title="Edit cleared balance"
-                class="text-emerald-600 hover:text-emerald-800 text-xs">✎</button>
-            </div>
-            <div class="text-[10px] text-emerald-700 font-semibold uppercase tracking-wider">Cleared Balance</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Tag Filter Bar -->
-      <div id="tag-filter-container"
-        class="hidden flex flex-wrap items-center gap-1.5 bg-white p-3 rounded-xl border border-gray-100 shadow-sm">
-        <span class="text-xs font-semibold text-gray-500 mr-1">Filter by Tag:</span>
-        <div id="tag-filter-chips" class="flex flex-wrap gap-1"></div>
-      </div>
-
-      <!-- Transactions List -->
-      <div class="space-y-3">
-        <h3 class="text-md font-bold text-gray-800">Transaction History</h3>
-        <div id="transactions-list" class="space-y-2">
-          <p class="text-sm text-gray-500">Loading transactions...</p>
-        </div>
       </div>
     </div>
+
+    <!-- Tag Filter Bar -->
+    <div id="tag-filter-container"
+      class="hidden flex flex-wrap items-center gap-1.5 bg-white p-3 rounded-xl border border-gray-100 shadow-sm">
+      <span class="text-xs font-semibold text-gray-500 mr-1">Filter by Tag:</span>
+      <div id="tag-filter-chips" class="flex flex-wrap gap-1"></div>
+    </div>
+
+    <!-- Transactions List -->
+    <div class="space-y-3">
+      <h3 class="text-md font-bold text-gray-800">Transaction History</h3>
+      <div id="transactions-list" class="space-y-2">
+        <p class="text-sm text-gray-500">Loading transactions...</p>
+      </div>
+    </div>
+  </div>
   </div>
 
   <!-- Add/Edit Account Modal -->
@@ -252,7 +275,12 @@
             </button>
           </div>
         </div>
-
+        <!-- Credit Limit Field (conditionally shown for credit cards) -->
+        <div id="accCreditLimitField" class="hidden">
+          <label class="text-xs font-semibold text-gray-600">Credit Limit ($)</label>
+          <input type="number" step="0.01" id="accCreditLimit" placeholder="0.00"
+            class="w-full border p-2 rounded-lg mt-1 font-medium text-gray-800" />
+        </div>
         <div class="space-y-2 pt-1">
           <div class="flex items-center justify-between gap-2">
             <label class="text-xs font-semibold text-gray-600">Alert when below minimum</label>
@@ -1027,7 +1055,7 @@
     }
 
     async function saveAccountData(payload, editId) {
-      const supportedColumns = ['name', 'type', 'initial_balance', 'institution', 'account_number', 'due_date'];
+      const supportedColumns = ['name', 'type', 'initial_balance', 'institution', 'account_number', 'due_date', 'credit_limit'];
       const safePayload = Object.fromEntries(
         Object.entries(payload).filter(([key]) => supportedColumns.includes(key))
       );
@@ -1540,12 +1568,39 @@
       document.getElementById('accounts-view').classList.add('hidden');
       document.getElementById('transactions-view').classList.remove('hidden');
 
-      const instText = acc.institution ? acc.institution : '';
-      const numText = acc.account_number ? `(${acc.account_number})` : '';
-      const dueDateText = acc.due_date ? `Due: Day ${acc.due_date}` : '';
-
+      // Line 1: Account Name
       document.getElementById('tx-acc-name').textContent = acc.name;
-      document.getElementById('tx-acc-sub').textContent = `${acc.type} ${[instText, numText, dueDateText].filter(Boolean).join(' • ')}`;
+
+      // Line 2: Account Type and Account Number (stripped of parentheses)
+      const numText = acc.account_number ? acc.account_number : '';
+      const typeNumEl = document.getElementById('tx-acc-type-num');
+      if (typeNumEl) {
+        typeNumEl.textContent = `${acc.type}${numText ? ' • ' + numText : ''}`;
+      }
+
+      // Line 3: Institution (only show if it exists)
+      const instEl = document.getElementById('tx-acc-institution');
+      if (instEl) {
+        if (acc.institution) {
+          instEl.textContent = acc.institution;
+          instEl.classList.remove('hidden');
+        } else {
+          instEl.textContent = '';
+          instEl.classList.add('hidden');
+        }
+      }
+
+      // Line 4: Payment Due Date (only show if it exists)
+      const dueEl = document.getElementById('tx-acc-due-date');
+      if (dueEl) {
+        if (acc.due_date) {
+          dueEl.textContent = `Due: Day ${acc.due_date}`;
+          dueEl.classList.remove('hidden');
+        } else {
+          dueEl.textContent = '';
+          dueEl.classList.add('hidden');
+        }
+      }
 
       await fetchTransactions(accId);
       saveViewState();
@@ -1577,7 +1632,8 @@
         const initialBal = parseFloat(acc ? acc.initial_balance : 0);
 
         const totalTxSum = currentAccountTransactions.reduce((sum, tx) => sum + parseFloat(tx.amount || 0), 0);
-        document.getElementById('tx-acc-balance').textContent = `$${roundCurrency(initialBal + totalTxSum).toFixed(2)}`;
+        const currentBal = roundCurrency(initialBal + totalTxSum);
+        document.getElementById('tx-acc-balance').textContent = `$${currentBal.toFixed(2)}`;
 
         checkAccountBalanceAlerts();
 
@@ -1586,16 +1642,49 @@
         }, 0);
         document.getElementById('tx-acc-cleared').textContent = `$${roundCurrency(initialBal + clearedTxSum).toFixed(2)}`;
 
+        // --- Dynamic Credit Limit and Progress Bar Handling ---
+        const limitContainer = document.getElementById('tx-acc-credit-limit-container');
+        if (limitContainer) {
+          if (acc && acc.type === 'credit' && acc.credit_limit) {
+            const limit = parseFloat(acc.credit_limit);
+            const debt = Math.abs(currentBal);
+            const remaining = Math.max(0, limit - debt);
+            const progressPercent = Math.min(100, Math.max(0, (remaining / limit) * 100));
+
+            // Update Remaining Credit Text Label
+            document.getElementById('tx-acc-credit-remaining-label').textContent = `$${remaining.toFixed(2)} / $${limit.toFixed(2)}`;
+
+            // Render & Color-Code Progress Bar
+            const progressBar = document.getElementById('tx-acc-credit-progress');
+            if (progressBar) {
+              progressBar.style.width = `${progressPercent}%`;
+              progressBar.className = 'h-full rounded-full transition-all duration-300';
+
+              if (progressPercent < 20) {
+                progressBar.classList.add('bg-red-500'); // Dangerously low credit
+              } else if (progressPercent < 50) {
+                progressBar.classList.add('bg-amber-500'); // Warning area
+              } else {
+                progressBar.classList.add('bg-blue-600'); // Healthy limit
+              }
+            }
+
+            limitContainer.classList.remove('hidden');
+          } else {
+            limitContainer.classList.add('hidden');
+          }
+        }
+
         renderTagFilters();
         renderTransactions();
       } catch (err) {
         console.error("Error fetching transactions:", err);
         list.innerHTML = `
-          <div class="bg-red-50 p-4 rounded-xl border border-red-200 text-center space-y-2">
-            <p class="text-red-700 font-semibold text-sm">Error loading transactions</p>
-            <p class="text-xs text-red-500">${err.message || 'Check database connection'}</p>
-          </div>
-        `;
+      <div class="bg-red-50 p-4 rounded-xl border border-red-200 text-center space-y-2">
+        <p class="text-red-700 font-semibold text-sm">Error loading transactions</p>
+        <p class="text-xs text-red-500">${err.message || 'Check database connection'}</p>
+      </div>
+    `;
       }
     }
 
@@ -2549,6 +2638,7 @@
         document.getElementById('accType').value = acc.type || 'checking';
         document.getElementById('accBalance').value = acc ? roundCurrency(acc.initial_balance).toFixed(2) : '';
         document.getElementById('accDueDate').value = acc.due_date || '';
+        document.getElementById('accCreditLimit').value = acc && acc.credit_limit ? parseFloat(acc.credit_limit).toFixed(2) : '';
         document.getElementById('accMinAlertEnabled').checked = Number.isFinite(minBalance);
         document.getElementById('accMinBalance').value = Number.isFinite(minBalance) ? minBalance : '';
         document.getElementById('accMaxAlertEnabled').checked = Number.isFinite(maxBalance);
@@ -2586,14 +2676,27 @@
 
     function toggleAccountDueDateField() {
       const accType = document.getElementById('accType').value;
-      const field = document.getElementById('accDueDateField');
-      if (!field) return;
 
-      if (['credit', 'loan'].includes(accType)) {
-        field.classList.remove('hidden');
-      } else {
-        field.classList.add('hidden');
-        document.getElementById('accDueDate').value = ''; // Reset when not applicable
+      // Toggle Payment Due Date (Credit and Loans)
+      const dueField = document.getElementById('accDueDateField');
+      if (dueField) {
+        if (['credit', 'loan'].includes(accType)) {
+          dueField.classList.remove('hidden');
+        } else {
+          dueField.classList.add('hidden');
+          document.getElementById('accDueDate').value = '';
+        }
+      }
+
+      // Toggle Credit Limit (Credit Cards only)
+      const limitField = document.getElementById('accCreditLimitField');
+      if (limitField) {
+        if (accType === 'credit') {
+          limitField.classList.remove('hidden');
+        } else {
+          limitField.classList.add('hidden');
+          document.getElementById('accCreditLimit').value = '';
+        }
       }
     }
 
@@ -2998,9 +3101,13 @@
       const minBalance = minAlertEnabled ? roundCurrency(parseFloat(document.getElementById('accMinBalance').value)) : null;
       const maxBalance = maxAlertEnabled ? roundCurrency(parseFloat(document.getElementById('accMaxBalance').value)) : null;
 
+      // Declare accType, due_date, and credit_limit correctly in this scope
       const accType = document.getElementById('accType').value;
       const dueDateVal = document.getElementById('accDueDate').value;
       const due_date = ['credit', 'loan'].includes(accType) && dueDateVal ? parseInt(dueDateVal, 10) : null;
+
+      const limitVal = document.getElementById('accCreditLimit').value;
+      const credit_limit = accType === 'credit' && limitVal ? roundCurrency(parseFloat(limitVal)) : null;
 
       const payload = {
         name: document.getElementById('accName').value,
@@ -3010,7 +3117,8 @@
         account_number: document.getElementById('accNumber').value,
         min_balance_alert: minAlertEnabled && Number.isFinite(minBalance) ? minBalance : null,
         max_balance_alert: maxAlertEnabled && Number.isFinite(maxBalance) ? maxBalance : null,
-        due_date: due_date
+        due_date: due_date,
+        credit_limit: credit_limit
       };
 
       const { error } = await saveAccountData(payload, editId || null);
