@@ -219,9 +219,11 @@
             class="w-full border p-2 rounded-lg mt-1" />
         </div>
         <div class="grid grid-cols-2 gap-2">
+          <!-- Left Column: Account Type -->
           <div>
             <label class="text-xs font-semibold text-gray-600">Account Type</label>
-            <select id="accType" class="w-full border p-2 rounded-lg mt-1 bg-white">
+            <select id="accType" onchange="toggleAccountDueDateField()"
+              class="w-full border p-2 rounded-lg mt-1 bg-white">
               <option value="cash">Cash</option>
               <option value="checking">Checking</option>
               <option value="credit">Credit Card</option>
@@ -230,10 +232,24 @@
               <option value="savings">Savings</option>
             </select>
           </div>
+          <!-- Right Column: Initial Balance -->
           <div>
             <label class="text-xs font-semibold text-gray-600">Initial Balance ($)</label>
             <input type="number" step="0.01" id="accBalance" placeholder="0.00"
               class="w-full border p-2 rounded-lg mt-1" />
+          </div>
+        </div>
+        <!-- Account Due Date Field (conditionally shown) -->
+        <div id="accDueDateField" class="hidden col-span-2">
+          <label class="text-xs font-semibold text-gray-600">Payment Due Date</label>
+          <div class="relative">
+            <input type="text" id="accDueDate" readonly placeholder="Select Day of Month (1-31)"
+              onclick="openDueDateCalendarModal()"
+              class="w-full border p-2 rounded-lg mt-1 bg-white cursor-pointer font-medium text-gray-800" />
+            <button type="button" onclick="openDueDateCalendarModal()"
+              class="absolute right-3 top-[17px] text-gray-400 hover:text-gray-600">
+              📅
+            </button>
           </div>
         </div>
 
@@ -285,6 +301,33 @@
           </button>
         </div>
       </form>
+    </div>
+  </div>
+
+  <!-- Due Date Calendar Selection Modal -->
+  <div id="due-date-calendar-modal"
+    class="fixed inset-0 bg-black/50 hidden flex items-end sm:items-center justify-center p-0 sm:p-4"
+    style="z-index: 60;">
+    <div class="bg-white w-full max-w-sm rounded-t-2xl sm:rounded-2xl p-5 space-y-4">
+      <div class="flex justify-between items-center">
+        <h3 class="font-bold text-lg text-gray-800">Select Due Date Day</h3>
+        <button type="button" onclick="closeDueDateCalendarModal()" class="text-gray-400 text-2xl">&times;</button>
+      </div>
+      <p class="text-xs text-gray-500">Choose the calendar day (1 to 31) when your monthly payments are due.</p>
+
+      <!-- Grid container where Javascript will render our 1-31 buttons -->
+      <div id="due-date-grid" class="grid grid-cols-7 gap-2 pt-2 justify-items-center"></div>
+
+      <div class="pt-2 flex gap-2">
+        <button type="button" onclick="clearDueDateSelection()"
+          class="flex-1 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-semibold text-sm transition-colors text-center">
+          Clear Date
+        </button>
+        <button type="button" onclick="closeDueDateCalendarModal()"
+          class="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold text-sm shadow text-center">
+          Cancel
+        </button>
+      </div>
     </div>
   </div>
 
@@ -425,6 +468,52 @@
       <form id="tx-form" onsubmit="handleTxSubmit(event)" class="space-y-3">
         <input type="hidden" id="editingTxId" value="" />
 
+        <!-- Type & Amount -->
+        <div class="grid grid-cols-2 gap-2">
+          <!-- Left Column: Type -->
+          <div>
+            <!-- Flex header matching the height of the right column's header -->
+            <div class="flex items-center h-5">
+              <label class="text-xs font-semibold text-gray-600">Type</label>
+            </div>
+            <select id="txType" onchange="handleTypeChange()"
+              class="h-[42px] w-full border p-2 rounded-lg mt-1 bg-white font-medium text-gray-800">
+              <option value="expense">Expense (-)</option>
+              <option value="income">Income (+)</option>
+              <option value="transfer">Transfer</option>
+            </select>
+          </div>
+          <!-- Right Column: Amount & Split -->
+          <div>
+            <!-- Flex header: pushes label to left, checkbox to right, and locks the height to h-5 -->
+            <div class="flex items-center justify-between h-5">
+              <label class="text-xs font-semibold text-gray-600">Amount ($)</label>
+              <label class="inline-flex items-center gap-1.5 text-[11px] font-semibold text-gray-600 cursor-pointer">
+                Split
+                <input type="checkbox" id="txSplitEnabled" onchange="toggleSplitEditor()"
+                  class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
+              </label>
+            </div>
+            <!-- Input box height forced to h-[42px] to match the select dropdown -->
+            <input type="number" step="0.01" id="txAmount" placeholder="0.00" required oninput="updateSplitRemainder()"
+              class="h-[42px] w-full border p-2 rounded-lg mt-1 font-medium text-gray-800" />
+          </div>
+        </div>
+
+        <!-- Split transaction editor -->
+        <div id="txSplitEditor" class="hidden space-y-3 rounded-xl border border-emerald-200 bg-emerald-50 p-3">
+          <div>
+            <p class="text-sm font-bold text-emerald-800">Split details</p>
+            <p class="mt-0.5 text-[11px] text-emerald-700">Add tags, a description, and an amount for each part.</p>
+          </div>
+          <div class="space-y-2">
+            <div id="txSplitRows" class="space-y-2"></div>
+            <button type="button" onclick="addSplitRow()"
+              class="text-xs font-semibold text-emerald-700 hover:text-emerald-800">+ Add split</button>
+            <p class="text-[11px] text-emerald-700">Split amounts must equal the transaction total.</p>
+          </div>
+        </div>
+
         <!-- Account Selection (Required) -->
         <div>
           <label id="tx-account-label" class="text-xs font-semibold text-gray-600">Account</label>
@@ -459,29 +548,6 @@
             class="w-full border p-2 rounded-lg mt-1 font-medium text-gray-800" placeholder="e.g., Walmart" />
           <div id="payee-suggestions-custom"
             class="absolute left-0 right-0 z-50 hidden max-h-40 overflow-y-auto rounded-lg border border-slate-200 bg-white shadow-lg mt-1 text-sm">
-          </div>
-        </div>
-
-        <!-- Type & Amount -->
-        <div class="grid grid-cols-2 gap-2">
-          <div>
-            <label class="text-xs font-semibold text-gray-600">Amount ($)</label>
-            <input type="number" step="0.01" id="txAmount" placeholder="0.00" required oninput="updateSplitRemainder()"
-              class="w-full border p-2 rounded-lg mt-1" />
-            <label class="mt-1.5 inline-flex items-center gap-1.5 text-[11px] font-semibold text-gray-600">
-              Split
-              <input type="checkbox" id="txSplitEnabled" onchange="toggleSplitEditor()"
-                class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
-            </label>
-          </div>
-          <div>
-            <label class="text-xs font-semibold text-gray-600">Type</label>
-            <select id="txType" onchange="handleTypeChange()"
-              class="h-[42px] w-full border p-2 rounded-lg mt-1 bg-white">
-              <option value="expense">Expense (-)</option>
-              <option value="income">Income (+)</option>
-              <option value="transfer">Transfer</option>
-            </select>
           </div>
         </div>
 
@@ -526,20 +592,6 @@
           <label class="text-xs font-semibold text-gray-600">Tags (comma-separated)</label>
           <input type="text" id="txTags" placeholder="e.g., groceries, vacation, tax"
             class="w-full border p-2 rounded-lg mt-1" />
-        </div>
-
-        <!-- Split transaction editor -->
-        <div id="txSplitEditor" class="hidden space-y-3 rounded-xl border border-emerald-200 bg-emerald-50 p-3">
-          <div>
-            <p class="text-sm font-bold text-emerald-800">Split details</p>
-            <p class="mt-0.5 text-[11px] text-emerald-700">Add tags, a description, and an amount for each part.</p>
-          </div>
-          <div class="space-y-2">
-            <div id="txSplitRows" class="space-y-2"></div>
-            <button type="button" onclick="addSplitRow()"
-              class="text-xs font-semibold text-emerald-700 hover:text-emerald-800">+ Add split</button>
-            <p class="text-[11px] text-emerald-700">Split amounts must equal the transaction total.</p>
-          </div>
         </div>
 
         <!-- Receipt Attachments Section -->
@@ -638,7 +690,7 @@
     let selectedAccountTypeFilter = 'all';
     let filteredTransactionsLookup = {};
 
-    // Core Utilities & State Management Functions
+    // Phase 1:Core Utilities & State Management Functions
     function roundCurrency(value) {
       return Math.round((Number(value || 0) + Number.EPSILON) * 100) / 100;
     }
@@ -761,7 +813,7 @@
       return `${year}-${month}-${day}`;
     }
 
-    // Data & API Layer (Supabase & Alerts)
+    // Phase 2:Data & API Layer (Supabase & Alerts)
     async function detectCheckNumberColumn() {
       try {
         const { error } = await sb.from('transactions').select('check_number').limit(1);
@@ -975,7 +1027,7 @@
     }
 
     async function saveAccountData(payload, editId) {
-      const supportedColumns = ['name', 'type', 'initial_balance', 'institution', 'account_number'];
+      const supportedColumns = ['name', 'type', 'initial_balance', 'institution', 'account_number', 'due_date'];
       const safePayload = Object.fromEntries(
         Object.entries(payload).filter(([key]) => supportedColumns.includes(key))
       );
@@ -998,7 +1050,7 @@
       return result || { error: null };
     }
 
-    // UI Rendering & Component Builders
+    // Phase 3:UI Rendering & Component Builders
     function showHomeAccounts() {
       const accountsList = document.getElementById('accounts-list');
       const allTransactionsList = document.getElementById('all-transactions-list');
@@ -1390,17 +1442,15 @@
 
       if (filteredAccounts.length === 0) {
         list.innerHTML = `
-          <div class="bg-white p-6 rounded-xl border border-gray-200 text-center space-y-2">
-            <p class="text-gray-600 font-medium">${query ? 'No matching accounts found.' : 'No accounts found.'}</p>
-            <p class="text-xs text-gray-400">${query ? 'Try a different search term.' : 'Tap "+ New Account" at the top to add your checking, savings, or credit card!'}</p>
-          </div>
-        `;
+      <div class="bg-white p-6 rounded-xl border border-gray-200 text-center space-y-2">
+        <p class="text-gray-600 font-medium">${query ? 'No matching accounts found.' : 'No accounts found.'}</p>
+        <p class="text-xs text-gray-400">${query ? 'Try a different search term.' : 'Tap "+ New Account" at the top to add your checking, savings, or credit card!'}</p>
+      </div>
+    `;
         return;
       }
       list.innerHTML = filteredAccounts.map(acc => {
         const initialBal = parseFloat(acc.initial_balance || 0);
-        // Pull from global transactions array filtered by account ID:
-
         // Grab transactions from global array, falling back to acc.transactions if empty:
         const globalTxs = (typeof transactions !== 'undefined' && transactions.length > 0)
           ? transactions.filter(tx => (tx.account_id === acc.id || tx.accountId === acc.id))
@@ -1412,7 +1462,6 @@
 
         const totalTxSum = txList.reduce((sum, tx) => sum + parseFloat(tx.amount || 0), 0);
         const currentBal = roundCurrency(initialBal + totalTxSum);
-
         const clearedTxSum = txList.reduce((sum, tx) => {
           return tx.status === 'reconciled' ? sum + parseFloat(tx.amount || 0) : sum;
         }, 0);
@@ -1441,32 +1490,42 @@
           }
         }
 
-        const instText = acc.institution ? acc.institution : '';
-        const numText = acc.account_number ? `(${acc.account_number})` : '';
-        const subDetails = [instText, numText].filter(Boolean).join(' ');
+        const numText = acc.account_number ? `${acc.account_number}` : '';
 
         return `
-          <div onclick="showTransactionsView('${acc.id}')" class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex justify-between items-center cursor-pointer transition-all duration-150 hover:-translate-y-0.5 hover:border-blue-300 hover:shadow-md">
-            <div class="min-w-0 flex-1 pr-3">
-              <p class="font-bold text-slate-900 text-base">${acc.name}</p>
-              <p class="mt-1 text-[11px] text-slate-500 uppercase tracking-[0.14em]">${acc.type} ${subDetails ? '• ' + subDetails : ''}</p>
-              ${alertBadge}
-              <div class="mt-2 text-xs">
-                <button onclick="event.stopPropagation(); openAccountModal('${acc.id}')" class="text-blue-600 font-semibold hover:text-blue-700 hover:underline">Edit Account</button>
-              </div>
-            </div>
-            <div class="text-right space-y-1 shrink-0">
-              <div>
-                <div class="text-lg font-extrabold text-slate-900">$${currentBal.toFixed(2)}</div>
-                <div class="text-[10px] text-slate-500 font-semibold uppercase tracking-[0.14em]">Current</div>
-              </div>
-              <div>
-                <div class="text-sm font-bold text-emerald-600">$${clearedBal.toFixed(2)}</div>
-                <div class="text-[10px] text-emerald-700 font-semibold uppercase tracking-[0.14em]">Cleared</div>
-              </div>
-            </div>
+      <div onclick="showTransactionsView('${acc.id}')" class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex justify-between items-center cursor-pointer transition-all duration-150 hover:-translate-y-0.5 hover:border-blue-300 hover:shadow-md">
+        <div class="min-w-0 flex-1 pr-3">
+          <!-- Line 1: Name Type • (Account Number) -->
+          <p class="font-bold text-slate-900 text-base">
+            ${acc.name}
+            <span class="text-xs font-semibold text-slate-400 capitalize ml-1.5">
+              ${acc.type}${numText ? ' • ' + numText : ''}
+            </span>
+          </p>
+          
+          <!-- Line 2: Institution (if configured) -->
+          ${acc.institution ? `<p class="mt-1 text-[11px] text-slate-500 uppercase tracking-[0.14em]">${acc.institution}</p>` : ''}
+          
+          <!-- Line 3: Due Date (if configured) -->
+          ${acc.due_date ? `<p class="mt-0.5 text-[11px] text-slate-500 uppercase tracking-[0.14em]">Due: Day ${acc.due_date}</p>` : ''}
+          
+          ${alertBadge}
+          <div class="mt-2 text-xs">
+            <button onclick="event.stopPropagation(); openAccountModal('${acc.id}')" class="text-blue-600 font-semibold hover:text-blue-700 hover:underline">Edit Account</button>
           </div>
-        `;
+        </div>
+        <div class="text-right space-y-1 shrink-0">
+          <div>
+            <div class="text-lg font-extrabold text-slate-900">$${currentBal.toFixed(2)}</div>
+            <div class="text-[10px] text-slate-500 font-semibold uppercase tracking-[0.14em]">Current</div>
+          </div>
+          <div>
+            <div class="text-sm font-bold text-emerald-600">$${clearedBal.toFixed(2)}</div>
+            <div class="text-[10px] text-emerald-700 font-semibold uppercase tracking-[0.14em]">Cleared</div>
+          </div>
+        </div>
+      </div>
+    `;
       }).join('');
     }
 
@@ -1483,9 +1542,10 @@
 
       const instText = acc.institution ? acc.institution : '';
       const numText = acc.account_number ? `(${acc.account_number})` : '';
+      const dueDateText = acc.due_date ? `Due: Day ${acc.due_date}` : '';
 
       document.getElementById('tx-acc-name').textContent = acc.name;
-      document.getElementById('tx-acc-sub').textContent = `${acc.type} ${[instText, numText].filter(Boolean).join(' • ')}`;
+      document.getElementById('tx-acc-sub').textContent = `${acc.type} ${[instText, numText, dueDateText].filter(Boolean).join(' • ')}`;
 
       await fetchTransactions(accId);
       saveViewState();
@@ -1874,7 +1934,7 @@
       container.innerHTML = html;
     }
 
-    // Modals & Dynamic Form Controls
+    // Phase 4: Modals & Dynamic Form Controls
     function openClearedBalanceModal() {
       if (!activeAccountId) return;
       const acc = accounts.find(a => a.id === activeAccountId);
@@ -1973,6 +2033,7 @@
       const wrapper = document.getElementById('transferTargetWrapper');
       const paymentSelect = document.getElementById('txPaymentMethod');
       const splitToggle = document.getElementById('txSplitEnabled');
+      const payeeField = document.getElementById('tx-payee-field'); // Get the Payer/Payee wrapper
 
       if (type === 'transfer') {
         wrapper.classList.remove('hidden');
@@ -1982,18 +2043,21 @@
           splitToggle.checked = false;
           splitToggle.disabled = true;
         }
-
         if (paymentSelect) {
           paymentSelect.value = 'bank_transfer';
+        }
+        if (payeeField) {
+          payeeField.classList.add('hidden'); // Hide Payer/Payee for transfers
         }
       } else {
         wrapper.classList.add('hidden');
         document.getElementById('tx-account-label').textContent = 'Account';
         if (splitToggle) splitToggle.disabled = false;
+        if (payeeField) {
+          payeeField.classList.remove('hidden'); // Show Payer/Payee for standard txs
+        }
       }
-
       toggleSplitEditor();
-
       if (typeof updatePayeeLabel === 'function') {
         updatePayeeLabel();
       }
@@ -2484,6 +2548,7 @@
         document.getElementById('accName').value = acc.name || '';
         document.getElementById('accType').value = acc.type || 'checking';
         document.getElementById('accBalance').value = acc ? roundCurrency(acc.initial_balance).toFixed(2) : '';
+        document.getElementById('accDueDate').value = acc.due_date || '';
         document.getElementById('accMinAlertEnabled').checked = Number.isFinite(minBalance);
         document.getElementById('accMinBalance').value = Number.isFinite(minBalance) ? minBalance : '';
         document.getElementById('accMaxAlertEnabled').checked = Number.isFinite(maxBalance);
@@ -2502,6 +2567,7 @@
 
       toggleAccountAlertControls();
       toggleAccountModal(true);
+      toggleAccountDueDateField();
     }
 
     function toggleAccountModal(show) {
@@ -2516,6 +2582,63 @@
       else modal.classList.add('hidden');
     }
 
+    // --- Payment Due Date Modal & Picker Logic ---
+
+    function toggleAccountDueDateField() {
+      const accType = document.getElementById('accType').value;
+      const field = document.getElementById('accDueDateField');
+      if (!field) return;
+
+      if (['credit', 'loan'].includes(accType)) {
+        field.classList.remove('hidden');
+      } else {
+        field.classList.add('hidden');
+        document.getElementById('accDueDate').value = ''; // Reset when not applicable
+      }
+    }
+
+    function openDueDateCalendarModal() {
+      document.getElementById('due-date-calendar-modal').classList.remove('hidden');
+      renderCalendarGrid();
+    }
+
+    function closeDueDateCalendarModal() {
+      document.getElementById('due-date-calendar-modal').classList.add('hidden');
+    }
+
+    function renderCalendarGrid() {
+      const grid = document.getElementById('due-date-grid');
+      if (!grid) return;
+
+      const currentValue = parseInt(document.getElementById('accDueDate').value, 10);
+      let html = '';
+
+      for (let day = 1; day <= 31; day++) {
+        const isSelected = currentValue === day;
+        const activeClasses = isSelected
+          ? 'bg-blue-600 text-white border-blue-600'
+          : 'bg-white text-slate-700 border-slate-200 hover:bg-blue-50 hover:border-blue-300 hover:text-blue-700';
+
+        html += `
+      <button type="button" onclick="selectDueDateDay(${day})"
+        class="h-10 w-10 flex items-center justify-center rounded-xl border font-semibold text-xs transition-all ${activeClasses}">
+        ${day}
+      </button>
+    `;
+      }
+      grid.innerHTML = html;
+    }
+
+    function selectDueDateDay(day) {
+      document.getElementById('accDueDate').value = day;
+      closeDueDateCalendarModal();
+    }
+
+    function clearDueDateSelection() {
+      document.getElementById('accDueDate').value = '';
+      closeDueDateCalendarModal();
+    }
+
     document.getElementById('confirm-modal-confirm')?.addEventListener('click', async () => {
       if (typeof pendingConfirmAction === 'function') {
         const action = pendingConfirmAction;
@@ -2524,7 +2647,7 @@
       }
     });
 
-    // Event Handlers & Core Submission Flows
+    // Phase 5: Event Handlers & Core Submission Flows
     async function handleTxSubmit(e) {
       e.preventDefault();
       const submitBtn = document.getElementById('txSubmitBtn');
@@ -2608,15 +2731,14 @@
       } else if (txType === 'transfer') {
         // Generate a unique link key for both ends of the transfer
         const transferId = crypto.randomUUID();
-
         const sourceAccount = accounts.find(a => a.id === targetAccountId);
         const targetAccount = accounts.find(a => a.id === destinationAccountId);
 
-        // 1. Debit from source account
+        // 1. Debit from source account (Transfer Out)
         const sourcePayload = {
           ...payload,
           amount: roundCurrency(-Math.abs(amount)),
-          payee: payee || targetAccount?.name || 'Transaction',
+          payee: targetAccount?.name || 'Transaction', // Force target account name
           transfer_id: transferId
         };
 
@@ -2624,12 +2746,12 @@
           sourcePayload.check_number = check_number;
         }
 
-        // 2. Deposit into destination account
+        // 2. Deposit into destination account (Transfer In)
         const targetPayload = {
           ...payload,
           account_id: destinationAccountId,
           amount: roundCurrency(Math.abs(amount)),
-          payee: payee || sourceAccount?.name || 'Transaction',
+          payee: sourceAccount?.name || 'Transaction', // Force source account name
           transfer_id: transferId
         };
 
@@ -2670,12 +2792,11 @@
 
     async function handleDeleteTxFromModal() {
       const id = document.getElementById('editingTxId').value;
-      const desc = document.getElementById('txDesc').value || 'this transaction';
       if (!id) return;
 
       openCustomConfirm({
         title: 'Delete Transaction',
-        message: `Delete '${desc}'?`,
+        message: `Delete this transaction?`,
         onConfirm: async () => {
           const targetTx = transactions.find(t => t.id == id);
           let query = sb.from('transactions').delete();
@@ -2837,26 +2958,23 @@
       });
     }
 
-    async function deleteTx(id, description = 'this transaction') {
+    async function deleteTx(id) {
       openCustomConfirm({
         title: 'Delete Transaction',
-        message: `Delete '${description}'?`,
+        message: 'Delete this transaction?',
         onConfirm: async () => {
           const targetTx = transactions.find(t => t.id == id);
           let query = sb.from('transactions').delete();
-
           if (targetTx && targetTx.transfer_id) {
             query = query.eq('transfer_id', targetTx.transfer_id);
           } else {
             query = query.eq('id', id);
           }
-
           const { error } = await query;
           if (error) {
             showAppMessage("Error deleting transaction: " + error.message);
             return;
           }
-
           await fetchData();
           await fetchAccounts();
           if (window.currentAccountId) {
@@ -2880,14 +2998,19 @@
       const minBalance = minAlertEnabled ? roundCurrency(parseFloat(document.getElementById('accMinBalance').value)) : null;
       const maxBalance = maxAlertEnabled ? roundCurrency(parseFloat(document.getElementById('accMaxBalance').value)) : null;
 
+      const accType = document.getElementById('accType').value;
+      const dueDateVal = document.getElementById('accDueDate').value;
+      const due_date = ['credit', 'loan'].includes(accType) && dueDateVal ? parseInt(dueDateVal, 10) : null;
+
       const payload = {
         name: document.getElementById('accName').value,
-        type: document.getElementById('accType').value,
+        type: accType,
         initial_balance: roundCurrency(parseFloat(document.getElementById('accBalance').value) || 0),
         institution: document.getElementById('accInstitution').value,
         account_number: document.getElementById('accNumber').value,
         min_balance_alert: minAlertEnabled && Number.isFinite(minBalance) ? minBalance : null,
-        max_balance_alert: maxAlertEnabled && Number.isFinite(maxBalance) ? maxBalance : null
+        max_balance_alert: maxAlertEnabled && Number.isFinite(maxBalance) ? maxBalance : null,
+        due_date: due_date
       };
 
       const { error } = await saveAccountData(payload, editId || null);
