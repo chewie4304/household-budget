@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 ## [unreleased]
 
+## [1.2.4-dev] - 2026-08-21
+
+### Added
+- **Credit Limit Data Collection:** Added a `credit_limit` numeric column to the Supabase `accounts` table, complete with a conditional form field inside the modal that appears strictly for "Credit Card" accounts.
+- **Credit Remaining & Utilization Tracker:** Implemented a dynamic credit remaining ratio ($x / $y) and visual progress bar inside the Account Details Overview Card for credit card accounts.
+- **Dynamic Progress Bar Color Coding:** Visual indicators color-code utilization based on remaining percentage thresholds: Blue (healthy, ≥ 50%), Amber (warning, 20% to 49%), and Red (critical debt/low credit remaining, < 20%).
+
+### Changed
+- **Overview Card Structure Polish:** Rearranged the visual layout of the Transactions View Overview Card, relocating the "Edit Account" action button into a separate border-separated footer division beneath the progress bar to resolve spacing fatigue.
+
 ## [1.2.3] - 2026-08-21
 
 ### Added
