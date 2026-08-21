@@ -2,12 +2,22 @@
 
 All notable changes to this project will be documented in this file.
 
-## [Unreleased] - v1.2.1-dev
+## [Unreleased]
+
+## [1.2.1] - 2026-08-20
 
 ### Refactoring & Architecture
-- **Function Inventory & Reorganization:** Categorized and reordered all functions into five logical phases (Utilities, Data/API, UI Rendering, Modals, and Event Handlers) for improved maintainability.
-- **Duplicate Code Removal:** Eliminated redundant function declarations.
-- **State Management:** Hoisted and centralized global state variables to the top of the script block.
+- **Function Inventory & Reorganization:** Categorized and reordered all functions into five logical groupings (Utilities, Data/API, UI Rendering, Modals, and Event Handlers) for significantly improved maintainability [1].
+- **Duplicate Code Removal:** Eliminated redundant function declarations from the script [1].
+- **State Management:** Centralized and hoisted global state variables to the top of the script block [1]. Resolved a launch crash by properly declaring missing global variables (`selectedSummaryMonth`, `filteredTransactionsLookup`, etc.) before initialization [2].
+
+### Added
+- **Dynamic Autocomplete suggestions:** Overhauled the Description and Payer/Payee auto-fill dropdowns so they remain hidden until you start typing, and only query previous entries containing that specific letter combination [3, 4].
+- **Split Transaction Autocomplete:** Expanded the new dynamic autocomplete logic to individual split row description fields using efficient parent event delegation [5-7].
+
+### Fixed
+- **In-Memory Balance Syncing:** Resolved an issue where toggling a transaction status between Pending ("P") and Reconciled ("R") inside the detailed account view failed to update cleared balances in the main Accounts view without a manual page refresh [8, 9].
+- **Split View Payee Layout:** Fixed a layout bug where enabling split allocations on a transaction modal incorrectly hid the main Payer/Payee field [10].
 
 ## [1.2.0] - 2026-08-19
 

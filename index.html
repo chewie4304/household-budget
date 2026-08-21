@@ -612,7 +612,7 @@
 
     // Standard initialization without custom global headers override
     const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
+    const now = new Date();
     let accounts = [];
     let transactions = [];
     let currentAccountTransactions = [];
@@ -629,6 +629,10 @@
     let pendingClearedBalanceEdit = null;
     let pendingConfirmAction = null;
     let pendingAccountDeletion = null;
+    let selectedSummaryMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    let selectedSummaryTransactionType = null;
+    let selectedAccountTypeFilter = 'all';
+    let filteredTransactionsLookup = {};
 
     // Core Utilities & State Management Functions
     function roundCurrency(value) {
@@ -874,6 +878,31 @@
       await detectCheckNumberColumn();
       await fetchData();
       applySavedViewState();
+
+      // Dynamic autocomplete on typing
+      const txDescInput = document.getElementById('txDesc');
+      const txPayeeInput = document.getElementById('txPayee');
+
+      if (txDescInput) {
+        txDescInput.addEventListener('input', (e) => {
+          handleAutocompleteTyping('desc', e.target.value);
+        });
+      }
+      if (txPayeeInput) {
+        txPayeeInput.addEventListener('input', (e) => {
+          handleAutocompleteTyping('payee', e.target.value);
+        });
+      }
+
+      // Monitor typing events inside the split rows
+      const txSplitRows = document.getElementById('txSplitRows');
+      if (txSplitRows) {
+        txSplitRows.addEventListener('input', (e) => {
+          if (e.target.matches('[data-split-description]')) {
+            handleAutocompleteTyping('desc', e.target.value);
+          }
+        });
+      }
       try {
         sb.channel('db-changes')
           .on('postgres_changes', { event: '*', schema: 'public', table: 'accounts' }, () => fetchAccounts())
@@ -1729,7 +1758,7 @@
         <div class="grid grid-cols-1 gap-2 rounded-lg border border-emerald-100 bg-white p-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)_5rem_auto] sm:items-center">
           <input type="text" data-split-tags placeholder="Tags, comma-separated" value="${escapeHtml((row.tags || (row.category ? [row.category] : [])).join(', '))}"
             class="w-full border border-slate-200 bg-white px-2 py-1.5 rounded-lg text-xs" />
-          <input type="text" data-split-description placeholder="Description" value="${escapeHtml(row.description || '')}"
+          <input type="text" data-split-description list="desc-suggestions" placeholder="Description" value="${escapeHtml(row.description || '')}"
             class="w-full border border-slate-200 bg-white px-2 py-1.5 rounded-lg text-xs" />
           <input type="number" step="0.01" min="0" data-split-amount placeholder="$0.00" value="${row.amount ?? ''}"
             class="w-full border border-slate-200 bg-white px-2 py-1.5 rounded-lg text-xs" />
@@ -1924,12 +1953,15 @@
     async function toggleTxStatus(id, currentStatus) {
       const newStatus = currentStatus === 'pending' ? 'reconciled' : 'pending';
       const { error } = await sb.from('transactions').update({ status: newStatus }).eq('id', id);
+
       if (error) {
         showAppMessage("Error updating status: " + error.message);
         return;
       }
-      fetchTransactions(activeAccountId);
-      fetchAccounts();
+
+      // FIX: Fetch the updated global transactions/accounts arrays to sync both views
+      await fetchData();
+      await fetchAccounts();
     }
 
     function handleTypeChange() {
@@ -1985,7 +2017,7 @@
     function toggleSplitEditor() {
       const toggle = document.getElementById('txSplitEnabled');
       const editor = document.getElementById('txSplitEditor');
-      const standardFields = ['tx-description-field', 'tx-payee-field', 'tx-tags-field'];
+      const standardFields = ['tx-description-field', 'tx-tags-field'];
       if (!toggle || !editor) return;
       editor.classList.toggle('hidden', !toggle.checked);
       standardFields.forEach(id => document.getElementById(id)?.classList.toggle('hidden', toggle.checked));
@@ -2170,26 +2202,53 @@
     function updateAutocompleteSuggestions() {
       const payeeList = document.getElementById('payee-suggestions');
       const descList = document.getElementById('desc-suggestions');
+      if (payeeList) payeeList.innerHTML = '';
+      if (descList) descList.innerHTML = '';
+    }
 
-      if (!payeeList || !descList || !Array.isArray(transactions)) return;
+    function handleAutocompleteTyping(type, value) {
+      const query = (value || '').trim().toLowerCase();
 
-      // Extract unique payees (ignoring empty ones)
-      const uniquePayees = [...new Set(
-        transactions
-          .map(tx => (tx.payee || '').trim())
-          .filter(p => p.length > 0)
-      )].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
+      if (type === 'payee') {
+        const payeeList = document.getElementById('payee-suggestions');
+        if (!payeeList || !Array.isArray(transactions)) return;
 
-      // Extract unique descriptions (ignoring empty ones)
-      const uniqueDescs = [...new Set(
-        transactions
-          .map(tx => (tx.description || '').trim())
-          .filter(d => d.length > 0)
-      )].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
+        // Clear dropdown if query is empty
+        if (query.length === 0) {
+          payeeList.innerHTML = '';
+          return;
+        }
 
-      // Build options HTML
-      payeeList.innerHTML = uniquePayees.map(p => `<option value="${p}">`).join('');
-      descList.innerHTML = uniqueDescs.map(d => `<option value="${d}">`).join('');
+        // Gather and filter unique payees containing typed combination
+        const uniquePayees = [...new Set(
+          transactions
+            .map(tx => (tx.payee || '').trim())
+            .filter(p => p.length > 0)
+        )].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
+
+        const filteredPayees = uniquePayees.filter(p => p.toLowerCase().includes(query));
+        payeeList.innerHTML = filteredPayees.map(p => `<option value="${escapeHtml(p)}">`).join('');
+
+      } else if (type === 'desc') {
+        const descList = document.getElementById('desc-suggestions');
+        if (!descList || !Array.isArray(transactions)) return;
+
+        // Clear dropdown if query is empty
+        if (query.length === 0) {
+          descList.innerHTML = '';
+          return;
+        }
+
+        // Gather and filter unique descriptions containing typed combination
+        const uniqueDescs = [...new Set(
+          transactions
+            .map(tx => (tx.description || '').trim())
+            .filter(d => d.length > 0)
+        )].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
+
+        const filteredDescs = uniqueDescs.filter(d => d.toLowerCase().includes(query));
+        descList.innerHTML = filteredDescs.map(d => `<option value="${escapeHtml(d)}">`).join('');
+      }
     }
 
     function openTxModal(txId = null) {
