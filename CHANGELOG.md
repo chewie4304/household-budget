@@ -4,7 +4,13 @@ All notable changes to this project will be documented in this file.
 
 ## [unreleased]
 
-## [1.2.4-dev] - 2026-08-21
+## [1.2.5-dev] - 2026-08-21
+
+### Added
+- **External Portal Integration:** Implemented an optional `external_link` column in the Supabase `accounts` table to allow linking direct web portals or custom app URI schemes (e.g., `https://` or `chase://`) to financial accounts.
+- **Dynamic Portal Launch Button:** Placed a conditional "Launch Portal" button next to the "Edit Account" action inside the Transactions View Overview Card footer, displaying dynamically only when a linked URL or app scheme is configured.
+
+## [1.2.4] - 2026-08-21
 
 ### Added
 - **Credit Limit Data Collection:** Added a `credit_limit` numeric column to the Supabase `accounts` table, complete with a conditional form field inside the modal that appears strictly for "Credit Card" accounts.

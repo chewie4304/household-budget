@@ -198,13 +198,20 @@
             </div>
           </div>
         </div>
-        <div class="border-t border-gray-100 pt-3">
+        <div class="border-t border-gray-100 pt-3 flex items-center gap-2 flex-wrap">
           <!-- Edit Account Button -->
           <button type="button" onclick="openAccountModal(activeAccountId)"
             class="mt-2 inline-flex items-center gap-1 rounded-lg border border-blue-200 bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-700 transition hover:bg-blue-100">
             <span aria-hidden="true">✎</span>
             Edit Account
           </button>
+
+          <!-- Connected App/Website Link Button (conditionally shown) -->
+          <a id="tx-acc-external-btn" href="#" target="_blank" rel="noopener noreferrer"
+            class="mt-2 hidden inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-semibold text-slate-700 transition hover:bg-slate-50 hover:border-slate-300 shadow-sm">
+            <span>🔗</span>
+            <span>Launch Portal</span>
+          </a>
         </div>
       </div>
     </div>
@@ -313,6 +320,11 @@
         <div>
           <label class="text-xs font-semibold text-gray-600">Account Number (or Last 4 Digits)</label>
           <input type="text" id="accNumber" placeholder="e.g., ****1234" class="w-full border p-2 rounded-lg mt-1" />
+        </div>
+        <div>
+          <label class="text-xs font-semibold text-gray-600">Connected Website or App URL</label>
+          <input type="url" id="accExternalLink" placeholder="e.g., https://www.chase.com"
+            class="w-full border p-2 rounded-lg mt-1 font-medium text-gray-800" />
         </div>
         <div class="pt-2 space-y-2">
           <button type="submit" id="submitBtn"
@@ -1055,7 +1067,7 @@
     }
 
     async function saveAccountData(payload, editId) {
-      const supportedColumns = ['name', 'type', 'initial_balance', 'institution', 'account_number', 'due_date', 'credit_limit'];
+      const supportedColumns = ['name', 'type', 'initial_balance', 'institution', 'account_number', 'due_date', 'credit_limit', 'external_link'];
       const safePayload = Object.fromEntries(
         Object.entries(payload).filter(([key]) => supportedColumns.includes(key))
       );
@@ -1599,6 +1611,18 @@
         } else {
           dueEl.textContent = '';
           dueEl.classList.add('hidden');
+        }
+      }
+
+      // Connected External Website / App Link Button
+      const externalBtn = document.getElementById('tx-acc-external-btn');
+      if (externalBtn) {
+        if (acc.external_link) {
+          externalBtn.href = acc.external_link;
+          externalBtn.classList.remove('hidden');
+        } else {
+          externalBtn.href = '#';
+          externalBtn.classList.add('hidden');
         }
       }
 
@@ -2645,6 +2669,7 @@
         document.getElementById('accMaxBalance').value = Number.isFinite(maxBalance) ? maxBalance : '';
         document.getElementById('accInstitution').value = acc.institution || '';
         document.getElementById('accNumber').value = acc.account_number || '';
+        document.getElementById('accExternalLink').value = acc.external_link || '';
         deleteBtn.classList.remove('hidden');
         unarchiveBtn.classList.toggle('hidden', !acc.is_archived);
       } else {
@@ -3108,6 +3133,7 @@
 
       const limitVal = document.getElementById('accCreditLimit').value;
       const credit_limit = accType === 'credit' && limitVal ? roundCurrency(parseFloat(limitVal)) : null;
+      const external_link = document.getElementById('accExternalLink').value.trim() || null;
 
       const payload = {
         name: document.getElementById('accName').value,
@@ -3118,7 +3144,8 @@
         min_balance_alert: minAlertEnabled && Number.isFinite(minBalance) ? minBalance : null,
         max_balance_alert: maxAlertEnabled && Number.isFinite(maxBalance) ? maxBalance : null,
         due_date: due_date,
-        credit_limit: credit_limit
+        credit_limit: credit_limit,
+        external_link: external_link
       };
 
       const { error } = await saveAccountData(payload, editId || null);
