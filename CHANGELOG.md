@@ -4,21 +4,18 @@ All notable changes to this project will be documented in this file.
 
 ## [unreleased]
 
-## [1.2.5-dev] - 2026-08-21
+## [1.3.0] - 2026-08-21
 
 ### Added
-- **External Portal Integration:** Implemented an optional `external_link` column in the Supabase `accounts` table to allow linking direct web portals or custom app URI schemes (e.g., `https://` or `chase://`) to financial accounts.
-- **Dynamic Portal Launch Button:** Placed a conditional "Launch Portal" button next to the "Edit Account" action inside the Transactions View Overview Card footer, displaying dynamically only when a linked URL or app scheme is configured.
+- **External Portal Integration:** Added an optional external_link column in the Supabase accounts table, with dedicated form fields supporting standard URLs or native app URI protocols (e.g., chase://, venmo://) to trigger native mobile application launching.
+- **Quick Connect App Preset Selector:** Integrated an alphabetized dropdown list containing 25+ popular financial and P2P app presets inside the modal, automatically copying correct deep-link schemes to speed up configuration.
+- **Credit Limit & Remaining Balances:** Created a dynamic credit remaining ratio ($x / $y) and color-coded visual progress bar (Blue: healthy ≥ 50%, Amber: warning 20-49%, Red: danger < 20%) on the details overview card.
 
-## [1.2.4] - 2026-08-21
-
-### Added
-- **Credit Limit Data Collection:** Added a `credit_limit` numeric column to the Supabase `accounts` table, complete with a conditional form field inside the modal that appears strictly for "Credit Card" accounts.
-- **Credit Remaining & Utilization Tracker:** Implemented a dynamic credit remaining ratio ($x / $y) and visual progress bar inside the Account Details Overview Card for credit card accounts.
-- **Dynamic Progress Bar Color Coding:** Visual indicators color-code utilization based on remaining percentage thresholds: Blue (healthy, ≥ 50%), Amber (warning, 20% to 49%), and Red (critical debt/low credit remaining, < 20%).
+### Fixed
+- **Instant Detail View Repainting:** Refactored handleAccountSubmit() to detect if updates are submitted from 'transactions-detail' view, immediately calling showTransactionsView() to refresh the header card elements without requiring a manual page reload.
 
 ### Changed
-- **Overview Card Structure Polish:** Rearranged the visual layout of the Transactions View Overview Card, relocating the "Edit Account" action button into a separate border-separated footer division beneath the progress bar to resolve spacing fatigue.
+- **Overview Card Layout Polish:** Restructured the Transactions View header layout to separate action buttons (Edit Account and Connected Portal) into a clean, border-separated footer block at the bottom of the card.
 
 ## [1.2.3] - 2026-08-21
 
