@@ -442,20 +442,24 @@
         </div>
 
         <!-- Description (Optional) -->
-        <div id="tx-description-field">
+        <div id="tx-description-field" class="relative">
           <label class="text-xs font-semibold text-gray-600">Description</label>
-          <input type="text" id="txDesc" list="desc-suggestions"
+          <input type="text" id="txDesc" autocomplete="off"
             class="w-full border p-2 rounded-lg mt-1 font-medium text-gray-800"
             placeholder="e.g., Groceries or reimbursement" />
-          <datalist id="desc-suggestions"></datalist>
+          <div id="desc-suggestions-custom"
+            class="absolute left-0 right-0 z-50 hidden max-h-40 overflow-y-auto rounded-lg border border-slate-200 bg-white shadow-lg mt-1 text-sm">
+          </div>
         </div>
 
         <!-- Dynamic Payer / Payee Field (Optional) -->
-        <div id="tx-payee-field">
-          <label class="text-xs font-semibold text-gray-600">Payer / Payee</label>
-          <input type="text" id="txPayee" list="payee-suggestions"
+        <div id="tx-payee-field" class="relative">
+          <label id="txPayeeLabel" class="text-xs font-semibold text-gray-600">Payer / Payee</label>
+          <input type="text" id="txPayee" autocomplete="off"
             class="w-full border p-2 rounded-lg mt-1 font-medium text-gray-800" placeholder="e.g., Walmart" />
-          <datalist id="payee-suggestions"></datalist>
+          <div id="payee-suggestions-custom"
+            class="absolute left-0 right-0 z-50 hidden max-h-40 overflow-y-auto rounded-lg border border-slate-200 bg-white shadow-lg mt-1 text-sm">
+          </div>
         </div>
 
         <!-- Type & Amount -->
@@ -2200,26 +2204,31 @@
     }
 
     function updateAutocompleteSuggestions() {
-      const payeeList = document.getElementById('payee-suggestions');
-      const descList = document.getElementById('desc-suggestions');
-      if (payeeList) payeeList.innerHTML = '';
-      if (descList) descList.innerHTML = '';
+      const payeeList = document.getElementById('payee-suggestions-custom');
+      const descList = document.getElementById('desc-suggestions-custom');
+      if (payeeList) {
+        payeeList.innerHTML = '';
+        payeeList.classList.add('hidden');
+      }
+      if (descList) {
+        descList.innerHTML = '';
+        descList.classList.add('hidden');
+      }
     }
 
     function handleAutocompleteTyping(type, value) {
       const query = (value || '').trim().toLowerCase();
 
       if (type === 'payee') {
-        const payeeList = document.getElementById('payee-suggestions');
+        const payeeList = document.getElementById('payee-suggestions-custom');
         if (!payeeList || !Array.isArray(transactions)) return;
 
-        // Clear dropdown if query is empty
         if (query.length === 0) {
           payeeList.innerHTML = '';
+          payeeList.classList.add('hidden');
           return;
         }
 
-        // Gather and filter unique payees containing typed combination
         const uniquePayees = [...new Set(
           transactions
             .map(tx => (tx.payee || '').trim())
@@ -2227,19 +2236,31 @@
         )].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
 
         const filteredPayees = uniquePayees.filter(p => p.toLowerCase().includes(query));
-        payeeList.innerHTML = filteredPayees.map(p => `<option value="${escapeHtml(p)}">`).join('');
 
-      } else if (type === 'desc') {
-        const descList = document.getElementById('desc-suggestions');
-        if (!descList || !Array.isArray(transactions)) return;
-
-        // Clear dropdown if query is empty
-        if (query.length === 0) {
-          descList.innerHTML = '';
+        if (filteredPayees.length === 0) {
+          payeeList.innerHTML = '';
+          payeeList.classList.add('hidden');
           return;
         }
 
-        // Gather and filter unique descriptions containing typed combination
+        payeeList.innerHTML = filteredPayees.map(p => `
+      <div onclick="selectCustomAutocomplete('payee', '${escapeHtml(p)}')" 
+           class="px-3 py-2 cursor-pointer hover:bg-slate-100 border-b border-slate-100 last:border-b-0 text-slate-800 font-semibold text-left">
+        ${escapeHtml(p)}
+      </div>
+    `).join('');
+        payeeList.classList.remove('hidden');
+
+      } else if (type === 'desc') {
+        const descList = document.getElementById('desc-suggestions-custom');
+        if (!descList || !Array.isArray(transactions)) return;
+
+        if (query.length === 0) {
+          descList.innerHTML = '';
+          descList.classList.add('hidden');
+          return;
+        }
+
         const uniqueDescs = [...new Set(
           transactions
             .map(tx => (tx.description || '').trim())
@@ -2247,7 +2268,40 @@
         )].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
 
         const filteredDescs = uniqueDescs.filter(d => d.toLowerCase().includes(query));
-        descList.innerHTML = filteredDescs.map(d => `<option value="${escapeHtml(d)}">`).join('');
+
+        if (filteredDescs.length === 0) {
+          descList.innerHTML = '';
+          descList.classList.add('hidden');
+          return;
+        }
+
+        descList.innerHTML = filteredDescs.map(d => `
+      <div onclick="selectCustomAutocomplete('desc', '${escapeHtml(d)}')" 
+           class="px-3 py-2 cursor-pointer hover:bg-slate-100 border-b border-slate-100 last:border-b-0 text-slate-800 font-semibold text-left">
+        ${escapeHtml(d)}
+      </div>
+    `).join('');
+        descList.classList.remove('hidden');
+      }
+    }
+
+    function selectCustomAutocomplete(type, value) {
+      if (type === 'payee') {
+        const input = document.getElementById('txPayee');
+        if (input) input.value = value;
+        const container = document.getElementById('payee-suggestions-custom');
+        if (container) {
+          container.innerHTML = '';
+          container.classList.add('hidden');
+        }
+      } else if (type === 'desc') {
+        const input = document.getElementById('txDesc');
+        if (input) input.value = value;
+        const container = document.getElementById('desc-suggestions-custom');
+        if (container) {
+          container.innerHTML = '';
+          container.classList.add('hidden');
+        }
       }
     }
 
@@ -2852,6 +2906,20 @@
     document.addEventListener('wheel', () => {
       if (document.activeElement.type === 'number') {
         document.activeElement.blur();
+      }
+    });
+
+    document.addEventListener('click', (e) => {
+      const descList = document.getElementById('desc-suggestions-custom');
+      const payeeList = document.getElementById('payee-suggestions-custom');
+      const txDescInput = document.getElementById('txDesc');
+      const txPayeeInput = document.getElementById('txPayee');
+
+      if (descList && txDescInput && !txDescInput.contains(e.target) && !descList.contains(e.target)) {
+        descList.classList.add('hidden');
+      }
+      if (payeeList && txPayeeInput && !txPayeeInput.contains(e.target) && !payeeList.contains(e.target)) {
+        payeeList.classList.add('hidden');
       }
     });
 
