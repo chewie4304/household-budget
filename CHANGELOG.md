@@ -4,6 +4,25 @@ All notable changes to this project will be documented in this file.
 
 ## [unreleased]
 
+## [1.3.2] - 2026-08-22
+
+### Added
+- **Built-In Amount Field Calculator:** Upgraded the primary transaction amount (`#txAmount`) and dynamic split row amount (`[data-split-amount]`) fields from HTML `number` to `text` inputs to support raw mathematical expressions (e.g., `45 * 1.0825` or `12.50 + 3.40 + 9.99`). Attached `blur` listeners to trigger a secure, sanitized expression parser that resolves calculations into formatted decimals without executing unsafe scripts.
+- **Dynamic Split Remainder Math Evaluation:** Overhauled `updateSplitRemainder()` to parse active, incomplete mathematical strings on-the-fly while typing, allowing the automatic split remainder calculations to compute continuously without throwing errors.
+- **Press-Enter Submission Guard:** Implemented an automatic math evaluation check at the start of `handleTxSubmit(e)`. This ensures that mathematical expressions are resolved immediately upon form submission if a user presses Enter instead of tabbing away from the input, preventing native `parseFloat` truncation issues.
+
+### Fixed
+- **Ghost HTML Text Rendition:** Resolved a rendering bug in the Add/Edit Transaction Modal where a duplicate, copy-pasted `class="..."` attribute string below the Amount input was rendering as raw visible text.
+- **Savings Account Preset Value Mismatch:** Fixed a mismatch in `autoSelectPaymentMethod()` where selecting a "savings" account attempted to assign a non-existent `'transfer'` value to the payment method dropdown, correcting it to the valid `'bank_transfer'` option.
+- **Global Function Scope Resolution:** Restored the missing global reference to `updateSplitRemainder` by extracting it and its helper utilities from nested scopes and placing them back in the top-level script space.
+
+### Refactoring & Architecture
+- **Architectural Phase Alignment:** Re-aligned misplaced functions across the five-phase script architecture to restore organizational sanity:
+  - Moved `fetchTransactions()`, `uploadReceiptFiles()`, and `toggleTxStatus()` to **Phase 2: Data & API Layer**.
+  - Moved pure utility functions (`isTransferPartnerTransaction()`, `compareTransactions()`, `normalizeAccountType()`, `accountMatchesTypeFilter()`, `parseTagInput()`, `getTransactionTags()`, and `getSplitDetails()`) to **Phase 1: Core Utilities**.
+  - Relocated dynamic UI interaction event triggers (`addSplitRow()`, `removeSplitRow()`) to **Phase 5: Event Handlers**.
+- **Global State Sanitization:** Deprecated the redundant `window.currentAccountId` tracking variable, centralizing all account details and view routing handlers strictly onto the single, hoisted `activeAccountId` state.
+
 ## [1.3.1] - 2026-08-21
 
 ### Fixed

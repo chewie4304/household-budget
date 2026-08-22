@@ -235,7 +235,8 @@
   <!-- Add/Edit Account Modal -->
   <div id="account-modal"
     class="fixed inset-0 bg-black/50 hidden flex items-end sm:items-center justify-center p-0 sm:p-4 z-50">
-    <div id="account-modal-content" class="bg-white w-full max-w-md rounded-t-2xl sm:rounded-2xl p-6 space-y-4 max-h-[90vh] overflow-y-auto">
+    <div id="account-modal-content"
+      class="bg-white w-full max-w-md rounded-t-2xl sm:rounded-2xl p-6 space-y-4 max-h-[90vh] overflow-y-auto">
       <div class="flex justify-between items-center">
         <h3 id="modal-title" class="font-bold text-lg">Add New Account</h3>
         <button onclick="toggleAccountModal(false)" class="text-gray-400 text-2xl">&times;</button>
@@ -327,7 +328,8 @@
             class="w-full border p-2 rounded-lg mt-1 bg-white font-medium text-gray-800">
             <option value="">-- Custom Web URL / Other App --</option>
             <option value="https://www.ally.com">Ally Bank</option>
-            <option value="https://play.google.com/store/apps/details?id=com.syf.amazonstorecard">Amazon Store Card</option>
+            <option value="https://play.google.com/store/apps/details?id=com.syf.amazonstorecard">Amazon Store Card
+            </option>
             <option value="https://www.americanexpress.com">American Express</option>
             <option value="https://www.barclaysus.com">Barclays</option>
             <option value="https://www.bankofamerica.com">Bank of America</option>
@@ -337,9 +339,11 @@
             <option value="https://play.google.com/store/apps/details?id=com.citi.citimobile&hl=en_US">Citibank</option>
             <option value="https://www.discover.com">Discover Card</option>
             <option value="https://www.fidelity.com">Fidelity</option>
-            <option value="https://play.google.com/store/apps/details?id=com.landmarkcu.landmarkcu">Landmark Credit Union</option>
+            <option value="https://play.google.com/store/apps/details?id=com.landmarkcu.landmarkcu">Landmark Credit
+              Union</option>
             <option value="https://play.google.com/store/apps/details?id=com.syf.mysynchrony">MyWalgreens</option>
-            <option value="https://play.google.com/store/apps/details?id=com.northshorebank.northshorebank&hl=en_US">North Shore Bank</option>
+            <option value="https://play.google.com/store/apps/details?id=com.northshorebank.northshorebank&hl=en_US">
+              North Shore Bank</option>
             <option value="https://play.google.com/store/apps/details?id=com.ollocard.mobile">Ollo</option>
             <option value="paypal://">PayPal</option>
             <option value="https://www.pnc.com">PNC Bank</option>
@@ -349,12 +353,14 @@
             <option value="https://www.synchrony.com/banking">Synchrony Bank</option>
             <option value="https://www.tdameritrade.com">TD Ameritrade</option>
             <option value="https://www.td.com/us/en/personal-banking">TD Bank</option>
-            <option value="https://play.google.com/store/apps/details?id=com.ifs.banking.fiid1582">Thrivent Bank</option>
+            <option value="https://play.google.com/store/apps/details?id=com.ifs.banking.fiid1582">Thrivent Bank
+            </option>
             <option value="https://www.usaa.com">USAA</option>
             <option value="https://www.usbank.com">U.S. Bank</option>
             <option value="https://www.vanguard.com">Vanguard</option>
             <option value="https://www.venmo.com">Venmo</option>
-            <option value="https://play.google.com/store/apps/details?id=com.verizon.fintech.isaac&hl=en_US">Verizon Visa</option>
+            <option value="https://play.google.com/store/apps/details?id=com.verizon.fintech.isaac&hl=en_US">Verizon
+              Visa</option>
             <option value="https://www.wellsfargo.com">Wells Fargo</option>
           </select>
         </div>
@@ -572,7 +578,7 @@
               </label>
             </div>
             <!-- Input box height forced to h-[42px] to match the select dropdown -->
-            <input type="number" step="0.01" id="txAmount" placeholder="0.00" required oninput="updateSplitRemainder()"
+            <input type="text" id="txAmount" placeholder="0.00" required
               class="h-[42px] w-full border p-2 rounded-lg mt-1 font-medium text-gray-800" />
           </div>
         </div>
@@ -767,9 +773,111 @@
     let selectedAccountTypeFilter = 'all';
     let filteredTransactionsLookup = {};
 
-    // Phase 1:Core Utilities & State Management Functions
+    // Phase 1: Core Utilities & State Management Functions
     function roundCurrency(value) {
       return Math.round((Number(value || 0) + Number.EPSILON) * 100) / 100;
+    }
+
+    function isTransferPartnerTransaction(tx) {
+      return !!(tx && tx.transfer_id);
+    }
+
+    function compareTransactions(a, b) {
+      const statusA = a?.status === 'pending' ? 0 : 1;
+      const statusB = b?.status === 'pending' ? 0 : 1;
+      if (statusA !== statusB) return statusA - statusB;
+
+      const dateA = a?.date ? new Date(`${a.date}T00:00:00`).getTime() : 0;
+      const dateB = b?.date ? new Date(`${b.date}T00:00:00`).getTime() : 0;
+      if (dateA !== dateB) return dateB - dateA;
+
+      const createdA = a?.created_at ? new Date(a.created_at).getTime() : 0;
+      const createdB = b?.created_at ? new Date(b.created_at).getTime() : 0;
+      if (createdA !== createdB) return createdB - createdA;
+
+      if (a?.transfer_id && b?.transfer_id && a.transfer_id === b.transfer_id) return 0;
+      return (a?.transfer_id && !b?.transfer_id) ? -1 : (!a?.transfer_id && b?.transfer_id) ? 1 : 0;
+    }
+
+    function normalizeAccountType(rawType) {
+      const t = String(rawType || '').toLowerCase();
+
+      if (t.includes('checking')) return 'checking';
+      if (t.includes('savings')) return 'savings';
+      if (
+        t.includes('credit') ||
+        t.includes('card') ||
+        t.includes('visa') ||
+        t.includes('mastercard') ||
+        t.includes('amex') ||
+        t.includes('discover')
+      ) return 'credit';
+
+      return t;
+    }
+
+    function accountMatchesTypeFilter(account) {
+      if (selectedAccountTypeFilter === 'archived') return !!account?.is_archived;
+      if (account?.is_archived) return false;
+      if (selectedAccountTypeFilter === 'all') return true;
+      return normalizeAccountType(account && account.type) === selectedAccountTypeFilter;
+    }
+
+    function parseTagInput(value) {
+      return String(value || '').split(',').map(tag => tag.trim()).filter(Boolean);
+    }
+
+    function getTransactionTags(tx) {
+      const standardTags = Array.isArray(tx?.tags) ? tx.tags : [];
+      const splitTags = Array.isArray(tx?.split_details)
+        ? tx.split_details.flatMap(split => Array.isArray(split?.tags)
+          ? split.tags
+          : parseTagInput(split?.category || ''))
+        : [];
+      return [...new Set([...standardTags, ...splitTags].map(tag => String(tag).trim()).filter(Boolean))];
+    }
+
+    function getSplitDetails(tx) {
+      return Array.isArray(tx?.split_details) ? tx.split_details.filter(split => split && Number(split.amount) > 0) : [];
+    }
+
+    // Safe mathematical evaluation (replaces unsafe raw eval)
+    function evaluateExpression(str) {
+      // Sanitize: permit only digits, basic operators (+, -, *, /), decimals, parentheses, and spaces
+      const sanitized = str.replace(/[^0-9+\-*/().\s]/g, '');
+      if (!sanitized.trim()) return 0;
+      try {
+        // Dynamically evaluate the clean mathematical string safely
+        const result = Function(`"use strict"; return (${sanitized})`)();
+        return Number.isFinite(result) ? result : null;
+      } catch (e) {
+        return null; // Handle syntactical errors gracefully
+      }
+    }
+
+    // Format the field to a clean currency layout when the user clicks away
+    function handleMathEvaluation(inputEl, onParsedCallback) {
+      const rawValue = inputEl.value.trim();
+      if (!rawValue) return;
+
+      // Check if the input contains any mathematical operators
+      if (/[+\-*/()]/.test(rawValue)) {
+        const evaluated = evaluateExpression(rawValue);
+        if (evaluated !== null) {
+          inputEl.value = roundCurrency(evaluated).toFixed(2);
+        } else {
+          showAppMessage("Invalid mathematical expression. Check your syntax.");
+        }
+      } else {
+        // Run normal decimal formatting for flat numbers
+        const parsed = parseFloat(rawValue);
+        if (Number.isFinite(parsed)) {
+          inputEl.value = roundCurrency(parsed).toFixed(2);
+        }
+      }
+      if (typeof onParsedCallback === 'function') {
+        onParsedCallback();
+      }
     }
 
     function showAppMessage(message) {
@@ -819,7 +927,7 @@
         view: currentViewState,
         accountSearch: accountSearch ? accountSearch.value : '',
         transactionSearch: transactionSearch ? transactionSearch.value : '',
-        currentAccountId: window.currentAccountId || null
+        currentAccountId: activeAccountId || null
       };
       localStorage.setItem('household-budget-view-state', JSON.stringify(state));
     }
@@ -835,7 +943,6 @@
 
       currentViewState = saved.view;
       if (saved.currentAccountId) {
-        window.currentAccountId = saved.currentAccountId;
         activeAccountId = saved.currentAccountId;
       }
     }
@@ -890,7 +997,7 @@
       return `${year}-${month}-${day}`;
     }
 
-    // Phase 2:Data & API Layer (Supabase & Alerts)
+    // Phase 2: Data & API Layer (Supabase & Alerts)
     async function detectCheckNumberColumn() {
       try {
         const { error } = await sb.from('transactions').select('check_number').limit(1);
@@ -1015,6 +1122,14 @@
       // Dynamic autocomplete on typing
       const txDescInput = document.getElementById('txDesc');
       const txPayeeInput = document.getElementById('txPayee');
+      const txAmountInput = document.getElementById('txAmount');
+      if (txAmountInput) {
+        txAmountInput.addEventListener('blur', () => {
+          handleMathEvaluation(txAmountInput, () => {
+            updateSplitRemainder();
+          });
+        });
+      }
 
       if (txDescInput) {
         txDescInput.addEventListener('input', (e) => {
@@ -1096,10 +1211,82 @@
       if (txData) transactions = txData;
 
       // Re-render active view
-      if (window.currentAccountId) {
-        showTransactionsView(window.currentAccountId);
+      if (activeAccountId) {
+        showTransactionsView(activeAccountId);
       } else {
         renderAccounts();
+      }
+    }
+
+    async function fetchTransactions(accId) {
+      if (!accId) return;
+      const list = document.getElementById('transactions-list');
+      try {
+        const { data, error } = await sb.from('transactions').select('*').eq('account_id', accId)
+          .order('status', { ascending: true })
+          .order('date', { ascending: false })
+          .order('created_at', { ascending: false });
+        if (error) throw error;
+
+        currentAccountTransactions = data || [];
+
+        const acc = accounts.find(a => a.id === accId);
+        const initialBal = parseFloat(acc ? acc.initial_balance : 0);
+
+        const totalTxSum = currentAccountTransactions.reduce((sum, tx) => sum + parseFloat(tx.amount || 0), 0);
+        const currentBal = roundCurrency(initialBal + totalTxSum);
+        document.getElementById('tx-acc-balance').textContent = `$${currentBal.toFixed(2)}`;
+
+        checkAccountBalanceAlerts();
+
+        const clearedTxSum = currentAccountTransactions.reduce((sum, tx) => {
+          return tx.status === 'reconciled' ? sum + parseFloat(tx.amount || 0) : sum;
+        }, 0);
+        document.getElementById('tx-acc-cleared').textContent = `$${roundCurrency(initialBal + clearedTxSum).toFixed(2)}`;
+
+        // --- Dynamic Credit Limit and Progress Bar Handling ---
+        const limitContainer = document.getElementById('tx-acc-credit-limit-container');
+        if (limitContainer) {
+          if (acc && acc.type === 'credit' && acc.credit_limit) {
+            const limit = parseFloat(acc.credit_limit);
+            const debt = Math.abs(currentBal);
+            const remaining = Math.max(0, limit - debt);
+            const progressPercent = Math.min(100, Math.max(0, (remaining / limit) * 100));
+
+            // Update Remaining Credit Text Label
+            document.getElementById('tx-acc-credit-remaining-label').textContent = `$${remaining.toFixed(2)} / $${limit.toFixed(2)}`;
+
+            // Render & Color-Code Progress Bar
+            const progressBar = document.getElementById('tx-acc-credit-progress');
+            if (progressBar) {
+              progressBar.style.width = `${progressPercent}%`;
+              progressBar.className = 'h-full rounded-full transition-all duration-300';
+
+              if (progressPercent < 20) {
+                progressBar.classList.add('bg-red-500'); // Dangerously low credit
+              } else if (progressPercent < 50) {
+                progressBar.classList.add('bg-amber-500'); // Warning area
+              } else {
+                progressBar.classList.add('bg-blue-600'); // Healthy limit
+              }
+            }
+
+            limitContainer.classList.remove('hidden');
+          } else {
+            limitContainer.classList.add('hidden');
+          }
+        }
+
+        renderTagFilters();
+        renderTransactions();
+      } catch (err) {
+        console.error("Error fetching transactions:", err);
+        list.innerHTML = `
+      <div class="bg-red-50 p-4 rounded-xl border border-red-200 text-center space-y-2">
+        <p class="text-red-700 font-semibold text-sm">Error loading transactions</p>
+        <p class="text-xs text-red-500">${err.message || 'Check database connection'}</p>
+      </div>
+    `;
       }
     }
 
@@ -1127,7 +1314,45 @@
       return result || { error: null };
     }
 
-    // Phase 3:UI Rendering & Component Builders
+    async function uploadReceiptFiles() {
+      const uploadedUrls = [];
+
+      for (const file of activeReceiptFiles) {
+        const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+        const path = `${crypto.randomUUID()}-${safeName}`;
+        const { error: uploadError } = await sb.storage
+          .from(RECEIPTS_BUCKET)
+          .upload(path, file, { contentType: file.type, upsert: false });
+
+        if (uploadError) {
+          throw new Error(`Could not upload ${file.name}: ${uploadError.message}`);
+        }
+
+        const { data } = sb.storage.from(RECEIPTS_BUCKET).getPublicUrl(path);
+        if (!data?.publicUrl) {
+          throw new Error(`Could not create a URL for ${file.name}.`);
+        }
+        uploadedUrls.push(data.publicUrl);
+      }
+
+      return uploadedUrls;
+    }
+
+    async function toggleTxStatus(id, currentStatus) {
+      const newStatus = currentStatus === 'pending' ? 'reconciled' : 'pending';
+      const { error } = await sb.from('transactions').update({ status: newStatus }).eq('id', id);
+
+      if (error) {
+        showAppMessage("Error updating status: " + error.message);
+        return;
+      }
+
+      // FIX: Fetch the updated global transactions/accounts arrays to sync both views
+      await fetchData();
+      await fetchAccounts();
+    }
+
+    // Phase 3: UI Rendering & Component Builders
     function showHomeAccounts() {
       const accountsList = document.getElementById('accounts-list');
       const allTransactionsList = document.getElementById('all-transactions-list');
@@ -1218,10 +1443,6 @@
       renderMonthlySummary();
     }
 
-    function isTransferPartnerTransaction(tx) {
-      return !!(tx && tx.transfer_id);
-    }
-
     function getSelectedMonthTransactions() {
       const [year, month] = selectedSummaryMonth.split('-').map(Number);
       if (!year || !month) return [];
@@ -1235,23 +1456,6 @@
         if (isTransferPartnerTransaction(tx)) return false;
         return txDate >= monthStart && txDate <= monthEnd;
       });
-    }
-
-    function compareTransactions(a, b) {
-      const statusA = a?.status === 'pending' ? 0 : 1;
-      const statusB = b?.status === 'pending' ? 0 : 1;
-      if (statusA !== statusB) return statusA - statusB;
-
-      const dateA = a?.date ? new Date(`${a.date}T00:00:00`).getTime() : 0;
-      const dateB = b?.date ? new Date(`${b.date}T00:00:00`).getTime() : 0;
-      if (dateA !== dateB) return dateB - dateA;
-
-      const createdA = a?.created_at ? new Date(a.created_at).getTime() : 0;
-      const createdB = b?.created_at ? new Date(b.created_at).getTime() : 0;
-      if (createdA !== createdB) return createdB - createdA;
-
-      if (a?.transfer_id && b?.transfer_id && a.transfer_id === b.transfer_id) return 0;
-      return (a?.transfer_id && !b?.transfer_id) ? -1 : (!a?.transfer_id && b?.transfer_id) ? 1 : 0;
     }
 
     function renderMonthlySummary() {
@@ -1436,30 +1640,6 @@
       list.innerHTML = txCardsHtml.join('');
     }
 
-    function normalizeAccountType(rawType) {
-      const t = String(rawType || '').toLowerCase();
-
-      if (t.includes('checking')) return 'checking';
-      if (t.includes('savings')) return 'savings';
-      if (
-        t.includes('credit') ||
-        t.includes('card') ||
-        t.includes('visa') ||
-        t.includes('mastercard') ||
-        t.includes('amex') ||
-        t.includes('discover')
-      ) return 'credit';
-
-      return t;
-    }
-
-    function accountMatchesTypeFilter(account) {
-      if (selectedAccountTypeFilter === 'archived') return !!account?.is_archived;
-      if (account?.is_archived) return false;
-      if (selectedAccountTypeFilter === 'all') return true;
-      return normalizeAccountType(account && account.type) === selectedAccountTypeFilter;
-    }
-
     function setAccountTypeFilter(filterValue) {
       selectedAccountTypeFilter = filterValue;
       renderAccounts();
@@ -1604,8 +1784,7 @@
     }
 
     async function showTransactionsView(accId) {
-      window.currentAccountId = accId; // Store active account globally
-      activeAccountId = accId;
+      activeAccountId = accId; // Store active account globally
       selectedTagFilter = null;
       currentViewState = 'transactions-detail';
       const acc = accounts.find(a => a.id === accId);
@@ -1665,85 +1844,12 @@
     }
 
     function showAccountsView() {
-      window.currentAccountId = null; // Clear active account
-      activeAccountId = null;
+      activeAccountId = null; // Clear active account
       selectedTagFilter = null;
       currentViewState = 'accounts-detail';
       document.getElementById('transactions-view').classList.add('hidden');
       document.getElementById('accounts-view').classList.remove('hidden');
       saveViewState();
-    }
-
-    async function fetchTransactions(accId) {
-      if (!accId) return;
-      const list = document.getElementById('transactions-list');
-      try {
-        const { data, error } = await sb.from('transactions').select('*').eq('account_id', accId)
-          .order('status', { ascending: true })
-          .order('date', { ascending: false })
-          .order('created_at', { ascending: false });
-        if (error) throw error;
-
-        currentAccountTransactions = data || [];
-
-        const acc = accounts.find(a => a.id === accId);
-        const initialBal = parseFloat(acc ? acc.initial_balance : 0);
-
-        const totalTxSum = currentAccountTransactions.reduce((sum, tx) => sum + parseFloat(tx.amount || 0), 0);
-        const currentBal = roundCurrency(initialBal + totalTxSum);
-        document.getElementById('tx-acc-balance').textContent = `$${currentBal.toFixed(2)}`;
-
-        checkAccountBalanceAlerts();
-
-        const clearedTxSum = currentAccountTransactions.reduce((sum, tx) => {
-          return tx.status === 'reconciled' ? sum + parseFloat(tx.amount || 0) : sum;
-        }, 0);
-        document.getElementById('tx-acc-cleared').textContent = `$${roundCurrency(initialBal + clearedTxSum).toFixed(2)}`;
-
-        // --- Dynamic Credit Limit and Progress Bar Handling ---
-        const limitContainer = document.getElementById('tx-acc-credit-limit-container');
-        if (limitContainer) {
-          if (acc && acc.type === 'credit' && acc.credit_limit) {
-            const limit = parseFloat(acc.credit_limit);
-            const debt = Math.abs(currentBal);
-            const remaining = Math.max(0, limit - debt);
-            const progressPercent = Math.min(100, Math.max(0, (remaining / limit) * 100));
-
-            // Update Remaining Credit Text Label
-            document.getElementById('tx-acc-credit-remaining-label').textContent = `$${remaining.toFixed(2)} / $${limit.toFixed(2)}`;
-
-            // Render & Color-Code Progress Bar
-            const progressBar = document.getElementById('tx-acc-credit-progress');
-            if (progressBar) {
-              progressBar.style.width = `${progressPercent}%`;
-              progressBar.className = 'h-full rounded-full transition-all duration-300';
-
-              if (progressPercent < 20) {
-                progressBar.classList.add('bg-red-500'); // Dangerously low credit
-              } else if (progressPercent < 50) {
-                progressBar.classList.add('bg-amber-500'); // Warning area
-              } else {
-                progressBar.classList.add('bg-blue-600'); // Healthy limit
-              }
-            }
-
-            limitContainer.classList.remove('hidden');
-          } else {
-            limitContainer.classList.add('hidden');
-          }
-        }
-
-        renderTagFilters();
-        renderTransactions();
-      } catch (err) {
-        console.error("Error fetching transactions:", err);
-        list.innerHTML = `
-      <div class="bg-red-50 p-4 rounded-xl border border-red-200 text-center space-y-2">
-        <p class="text-red-700 font-semibold text-sm">Error loading transactions</p>
-        <p class="text-xs text-red-500">${err.message || 'Check database connection'}</p>
-      </div>
-    `;
-      }
     }
 
     function calculateAccountClearedBalance(account) {
@@ -1939,20 +2045,6 @@
       }
     }
 
-    function parseTagInput(value) {
-      return String(value || '').split(',').map(tag => tag.trim()).filter(Boolean);
-    }
-
-    function getTransactionTags(tx) {
-      const standardTags = Array.isArray(tx?.tags) ? tx.tags : [];
-      const splitTags = Array.isArray(tx?.split_details)
-        ? tx.split_details.flatMap(split => Array.isArray(split?.tags)
-          ? split.tags
-          : parseTagInput(split?.category || ''))
-        : [];
-      return [...new Set([...standardTags, ...splitTags].map(tag => String(tag).trim()).filter(Boolean))];
-    }
-
     function getSplitRowsFromEditor() {
       return [...document.querySelectorAll('#txSplitRows > div')].map(row => ({
         tags: parseTagInput(row.querySelector('[data-split-tags]')?.value),
@@ -1971,33 +2063,20 @@
             class="w-full border border-slate-200 bg-white px-2 py-1.5 rounded-lg text-xs" />
           <input type="text" data-split-description list="desc-suggestions" placeholder="Description" value="${escapeHtml(row.description || '')}"
             class="w-full border border-slate-200 bg-white px-2 py-1.5 rounded-lg text-xs" />
-          <input type="number" step="0.01" min="0" data-split-amount placeholder="$0.00" value="${row.amount ?? ''}"
-            class="w-full border border-slate-200 bg-white px-2 py-1.5 rounded-lg text-xs" />
+          <input type="text" data-split-amount placeholder="0.00" value="${row.amount !== '' ? Number(row.amount).toFixed(2) : ''}" class="w-full border border-slate-200 bg-white px-2 py-1.5 rounded-lg text-xs" />
           <button type="button" onclick="removeSplitRow(${index})" aria-label="Remove split"
             class="text-lg leading-none text-red-400 hover:text-red-600">&times;</button>
         </div>
       `).join('');
       container.querySelectorAll('[data-split-amount]').forEach(input => {
         input.addEventListener('input', () => updateSplitRemainder(input));
+
+        // Evaluate math expressions when a user leaves an individual split field
+        input.addEventListener('blur', () => {
+          handleMathEvaluation(input, () => updateSplitRemainder(input));
+        });
       });
       updateSplitRemainder();
-    }
-
-    function addSplitRow() {
-      const rows = getSplitRowsFromEditor();
-      rows.push({ tags: [], description: '', amount: '' });
-      renderSplitEditor(rows);
-    }
-
-    function removeSplitRow(index) {
-      const rows = getSplitRowsFromEditor();
-      if (rows.length <= 2) return;
-      rows.splice(index, 1);
-      renderSplitEditor(rows);
-    }
-
-    function getSplitDetails(tx) {
-      return Array.isArray(tx?.split_details) ? tx.split_details.filter(split => split && Number(split.amount) > 0) : [];
     }
 
     function renderSplitButton(tx) {
@@ -2100,81 +2179,6 @@
       pendingClearedBalanceEdit = null;
     }
 
-    function submitClearedBalanceEdit() {
-      if (!activeAccountId) return;
-      const acc = accounts.find(a => a.id === activeAccountId);
-      if (!acc) return;
-
-      const newBalance = roundCurrency(parseFloat(document.getElementById('clearedBalanceInput').value));
-      if (!Number.isFinite(newBalance)) {
-        showAppMessage('Please enter a valid balance.');
-        return;
-      }
-
-      const diff = roundCurrency(newBalance - calculateAccountClearedBalance(acc));
-      if (Math.abs(diff) < 0.005) {
-        closeClearedBalanceModal();
-        return;
-      }
-
-      pendingClearedBalanceEdit = { accountId: acc.id, diff };
-      closeClearedBalanceModal();
-
-      document.getElementById('cleared-choice-message').textContent =
-        `The new cleared balance differs by $${diff.toFixed(2)}. How would you like to apply this adjustment?`;
-      document.getElementById('cleared-choice-modal').classList.remove('hidden');
-    }
-
-    async function applyClearedBalanceChoice(method) {
-      if (!pendingClearedBalanceEdit) return;
-      const { accountId, diff } = pendingClearedBalanceEdit;
-      closeClearedChoiceModal();
-
-      let error;
-      if (method === 'transaction') {
-        const payload = {
-          account_id: accountId,
-          description: 'Cleared balance adjustment',
-          payee: 'Balance Adjustment',
-          payment_method: 'bank_transfer',
-          amount: diff,
-          date: getLocalDateString(),
-          status: 'reconciled',
-          tags: []
-        };
-        ({ error } = await sb.from('transactions').insert([payload]));
-      } else {
-        const acc = accounts.find(a => a.id === accountId);
-        const newInitialBalance = roundCurrency(parseFloat(acc?.initial_balance || 0) + diff);
-        ({ error } = await sb.from('accounts').update({ initial_balance: newInitialBalance }).eq('id', accountId));
-      }
-
-      if (error) {
-        showAppMessage('Error adjusting balance: ' + error.message);
-        return;
-      }
-
-      await fetchAccounts();
-      renderAccounts();
-      if (activeAccountId) {
-        await fetchTransactions(activeAccountId);
-      }
-    }
-
-    async function toggleTxStatus(id, currentStatus) {
-      const newStatus = currentStatus === 'pending' ? 'reconciled' : 'pending';
-      const { error } = await sb.from('transactions').update({ status: newStatus }).eq('id', id);
-
-      if (error) {
-        showAppMessage("Error updating status: " + error.message);
-        return;
-      }
-
-      // FIX: Fetch the updated global transactions/accounts arrays to sync both views
-      await fetchData();
-      await fetchAccounts();
-    }
-
     function handleTypeChange() {
       const type = document.getElementById('txType').value;
       const wrapper = document.getElementById('transferTargetWrapper');
@@ -2215,10 +2219,33 @@
       const rows = [...document.querySelectorAll('#txSplitRows > div')];
       if (!splitToggle?.checked || rows.length < 2) return;
 
-      const amount = roundCurrency(Math.abs(parseFloat(document.getElementById('txAmount')?.value) || 0));
+      // Dynamic evaluation of main amount (handles active math typing)
+      const txAmountVal = document.getElementById('txAmount')?.value || '0';
+      let parsedAmount = 0;
+      if (/[+\-*/()]/.test(txAmountVal)) {
+        const tempEval = evaluateExpression(txAmountVal);
+        parsedAmount = tempEval !== null ? tempEval : (parseFloat(txAmountVal) || 0);
+      } else {
+        parsedAmount = parseFloat(txAmountVal) || 0;
+      }
+      const amount = roundCurrency(Math.abs(parsedAmount));
+
       const amountInputs = rows.map(row => row.querySelector('[data-split-amount]'));
       const lastInput = amountInputs[amountInputs.length - 1];
-      const previousTotal = roundCurrency(amountInputs.slice(0, -1).reduce((sum, input) => sum + (parseFloat(input.value) || 0), 0));
+
+      // Dynamic evaluation of each split row amount
+      const previousTotal = roundCurrency(amountInputs.slice(0, -1).reduce((sum, input) => {
+        const val = input.value || '0';
+        let parsed = 0;
+        if (/[+\-*/()]/.test(val)) {
+          const temp = evaluateExpression(val);
+          parsed = temp !== null ? temp : (parseFloat(val) || 0);
+        } else {
+          parsed = parseFloat(val) || 0;
+        }
+        return sum + parsed;
+      }, 0));
+
       const remainder = roundCurrency(Math.max(0, amount - previousTotal));
 
       if (changedInput === lastInput) {
@@ -2352,30 +2379,6 @@
       renderModalReceiptList();
     }
 
-    async function uploadReceiptFiles() {
-      const uploadedUrls = [];
-
-      for (const file of activeReceiptFiles) {
-        const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
-        const path = `${crypto.randomUUID()}-${safeName}`;
-        const { error: uploadError } = await sb.storage
-          .from(RECEIPTS_BUCKET)
-          .upload(path, file, { contentType: file.type, upsert: false });
-
-        if (uploadError) {
-          throw new Error(`Could not upload ${file.name}: ${uploadError.message}`);
-        }
-
-        const { data } = sb.storage.from(RECEIPTS_BUCKET).getPublicUrl(path);
-        if (!data?.publicUrl) {
-          throw new Error(`Could not create a URL for ${file.name}.`);
-        }
-        uploadedUrls.push(data.publicUrl);
-      }
-
-      return uploadedUrls;
-    }
-
     function toggleCheckNumberField() {
       const paymentSelect = document.getElementById('txPaymentMethod');
       const checkWrapper = document.getElementById('checkNumberWrapper');
@@ -2408,7 +2411,7 @@
       } else if (nameAndType.includes('cash')) {
         paymentSelect.value = 'cash';
       } else if (nameAndType.includes('savings')) {
-        paymentSelect.value = 'transfer';
+        paymentSelect.value = 'bank_transfer';
       }
 
       toggleCheckNumberField();
@@ -2850,7 +2853,15 @@
       const shouldStoreCheckNumber = payment_method === 'check' && supportsCheckNumber;
       const check_number = shouldStoreCheckNumber ? document.getElementById('txCheckNumber').value.trim() : '';
       const txType = document.getElementById('txType').value;
-      let amount = roundCurrency(parseFloat(document.getElementById('txAmount').value) || 0);
+      const txAmountVal = document.getElementById('txAmount')?.value || '0';
+      let amount = 0;
+      if (/[+\-*/()]/.test(txAmountVal)) {
+        const tempEval = evaluateExpression(txAmountVal);
+        amount = tempEval !== null ? tempEval : (parseFloat(txAmountVal) || 0);
+      } else {
+        amount = parseFloat(txAmountVal) || 0;
+      }
+      amount = roundCurrency(Math.abs(amount));
       const date = document.getElementById('txDate').value;
       const status = document.getElementById('txStatus').value;
       const tagsRaw = document.getElementById('txTags')?.value || '';
@@ -2968,8 +2979,8 @@
 
         if (currentViewState === 'home-transactions') {
           showAllTransactions();
-        } else if (window.currentAccountId) {
-          showTransactionsView(window.currentAccountId);
+        } else if (activeAccountId) {
+          showTransactionsView(activeAccountId);
         } else {
           showHomeAccounts();
         }
@@ -3002,8 +3013,8 @@
           toggleTxModal(false);
           await fetchData();
           await fetchAccounts();
-          if (window.currentAccountId) {
-            await showTransactionsView(window.currentAccountId);
+          if (activeAccountId) {
+            await showTransactionsView(activeAccountId);
           } else if (currentViewState === 'home-transactions') {
             showAllTransactions(selectedSummaryTransactionType);
           }
@@ -3163,13 +3174,87 @@
           }
           await fetchData();
           await fetchAccounts();
-          if (window.currentAccountId) {
-            await showTransactionsView(window.currentAccountId);
+          if (activeAccountId) {
+            await showTransactionsView(activeAccountId);
           } else if (currentViewState === 'home-transactions') {
             showAllTransactions(selectedSummaryTransactionType);
           }
         }
       });
+    }
+
+    function addSplitRow() {
+      const rows = getSplitRowsFromEditor();
+      rows.push({ tags: [], description: '', amount: '' });
+      renderSplitEditor(rows);
+    }
+
+    function removeSplitRow(index) {
+      const rows = getSplitRowsFromEditor();
+      if (rows.length <= 2) return;
+      rows.splice(index, 1);
+      renderSplitEditor(rows);
+    }
+
+    function submitClearedBalanceEdit() {
+      if (!activeAccountId) return;
+      const acc = accounts.find(a => a.id === activeAccountId);
+      if (!acc) return;
+
+      const newBalance = roundCurrency(parseFloat(document.getElementById('clearedBalanceInput').value));
+      if (!Number.isFinite(newBalance)) {
+        showAppMessage('Please enter a valid balance.');
+        return;
+      }
+
+      const diff = roundCurrency(newBalance - calculateAccountClearedBalance(acc));
+      if (Math.abs(diff) < 0.005) {
+        closeClearedBalanceModal();
+        return;
+      }
+
+      pendingClearedBalanceEdit = { accountId: acc.id, diff };
+      closeClearedBalanceModal();
+
+      document.getElementById('cleared-choice-message').textContent =
+        `The new cleared balance differs by $${diff.toFixed(2)}. How would you like to apply this adjustment?`;
+      document.getElementById('cleared-choice-modal').classList.remove('hidden');
+    }
+
+    async function applyClearedBalanceChoice(method) {
+      if (!pendingClearedBalanceEdit) return;
+      const { accountId, diff } = pendingClearedBalanceEdit;
+      closeClearedChoiceModal();
+
+      let error;
+      if (method === 'transaction') {
+        const payload = {
+          account_id: accountId,
+          description: 'Cleared balance adjustment',
+          payee: 'Balance Adjustment',
+          payment_method: 'bank_transfer',
+          amount: diff,
+          date: getLocalDateString(),
+          status: 'reconciled',
+          tags: []
+        };
+        ({ error } = await sb.from('transactions').insert([payload]));
+      } else {
+        const acc = accounts.find(a => a.id === accountId);
+        const newInitialBalance = roundCurrency(parseFloat(acc?.initial_balance || 0) + diff);
+        ({ error } = await sb.from('accounts').update({ initial_balance: newInitialBalance }).eq('id', accountId));
+      }
+
+      if (error) {
+        showAppMessage('Error adjusting balance: ' + error.message);
+        return;
+      }
+
+      await fetchAccounts();
+      renderAccounts();
+      if (activeAccountId) {
+        await fetchTransactions(activeAccountId);
+      }
     }
 
     async function handleAccountSubmit(e) {
