@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [unreleased]
 
+## [1.4.0-dev] - 2026-08-22
+
+### Fixed
+- **Selected Month Summary:** Updated setSelectedSummaryMonth(this.value) function so that it updates the #home-view-title and re-filters and repaints the transaction history cards using showAllTransactions() and renderAllTransactions().
+
 ## [1.3.2] - 2026-08-22
 
 ### Added

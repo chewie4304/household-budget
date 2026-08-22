@@ -1440,7 +1440,15 @@
       selectedSummaryMonth = monthKey || selectedSummaryMonth;
       const selector = document.getElementById('summary-month-select');
       if (selector) selector.value = selectedSummaryMonth;
-      renderMonthlySummary();
+
+      // If the user is currently on the Transactions tab, trigger a full re-render
+      // of that view to update the heading text and filter the transaction history.
+      if (currentViewState === 'home-transactions') {
+        showAllTransactions(selectedSummaryTransactionType);
+      } else {
+        renderMonthlySummary();
+        renderAccounts(); // Keep the accounts view perfectly synchronized
+      }
     }
 
     function getSelectedMonthTransactions() {
