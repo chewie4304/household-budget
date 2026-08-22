@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 ## [unreleased]
 
+## [1.3.1] - 2026-08-21
+
+### Fixed
+- **External Portal Integregation Functionality:** Still not perfect but many sites, in particular those the Bladow family is most interested, were not working to launch the app. Incorporated using links to the apps in the Google Play Store to get to the apps on mobile device. 
+- **Automatic Top-launch of Modals:** Arranged it such that the view of a modal upon launch is always at the top of the modal.
+- **Tall Modal Windows:** Tall modals overflowed off-screen. Added inner content <div>.
+
+### Changed
+- **Account Overview Card Polish:** Removed the "Edit Account" and "Launch" buttons from account overview cards on main Accounts view in order to clean up the appearance.
+
 ## [1.3.0] - 2026-08-21
 
 ### Added

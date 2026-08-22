@@ -198,14 +198,13 @@
             </div>
           </div>
         </div>
-        <div class="border-t border-gray-100 pt-3 flex items-center gap-2 flex-wrap">
+        <div class="border-t border-gray-100 pt-3 flex items-center justify-between flex-wrap">
           <!-- Edit Account Button -->
           <button type="button" onclick="openAccountModal(activeAccountId)"
             class="mt-2 inline-flex items-center gap-1 rounded-lg border border-blue-200 bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-700 transition hover:bg-blue-100">
             <span aria-hidden="true">✎</span>
             Edit Account
           </button>
-
           <!-- Connected App/Website Link Button (conditionally shown) -->
           <a id="tx-acc-external-btn" href="#" target="_blank" rel="noopener noreferrer"
             class="mt-2 hidden inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-semibold text-slate-700 transition hover:bg-slate-50 hover:border-slate-300 shadow-sm">
@@ -236,7 +235,7 @@
   <!-- Add/Edit Account Modal -->
   <div id="account-modal"
     class="fixed inset-0 bg-black/50 hidden flex items-end sm:items-center justify-center p-0 sm:p-4 z-50">
-    <div class="bg-white w-full max-w-md rounded-t-2xl sm:rounded-2xl p-6 space-y-4">
+    <div id="account-modal-content" class="bg-white w-full max-w-md rounded-t-2xl sm:rounded-2xl p-6 space-y-4 max-h-[90vh] overflow-y-auto">
       <div class="flex justify-between items-center">
         <h3 id="modal-title" class="font-bold text-lg">Add New Account</h3>
         <button onclick="toggleAccountModal(false)" class="text-gray-400 text-2xl">&times;</button>
@@ -327,33 +326,36 @@
           <select id="accAppPreset" onchange="applyAppPreset()"
             class="w-full border p-2 rounded-lg mt-1 bg-white font-medium text-gray-800">
             <option value="">-- Custom Web URL / Other App --</option>
-            <option value="ally://">Ally Bank</option>
-            <option value="amex://">American Express</option>
-            <option value="barclays://">Barclays</option>
-            <option value="boa://">Bank of America</option>
-            <option value="bofa://">Bank of America</option>
-            <option value="capitalone://">Capital One</option>
-            <option value="chase://">Chase Mobile</option>
-            <option value="citibank://">Citi Bank</option>
-            <option value="discover://">Discover Card</option>
-            <option value="fidelity://">Fidelity</option>
-            <option value="intent://#Intent;scheme=https;package=com.northshorebank.northshorebank;end">North Shore Bank
-            </option>
+            <option value="https://www.ally.com">Ally Bank</option>
+            <option value="https://play.google.com/store/apps/details?id=com.syf.amazonstorecard">Amazon Store Card</option>
+            <option value="https://www.americanexpress.com">American Express</option>
+            <option value="https://www.barclaysus.com">Barclays</option>
+            <option value="https://www.bankofamerica.com">Bank of America</option>
+            <option value="https://www.capitalone.com">Capital One</option>
+            <option value="https://www.schwab.com">Charles Schwab</option>
+            <option value="https://www.chase.com">Chase Mobile</option>
+            <option value="https://play.google.com/store/apps/details?id=com.citi.citimobile&hl=en_US">Citibank</option>
+            <option value="https://www.discover.com">Discover Card</option>
+            <option value="https://www.fidelity.com">Fidelity</option>
+            <option value="https://play.google.com/store/apps/details?id=com.landmarkcu.landmarkcu">Landmark Credit Union</option>
+            <option value="https://play.google.com/store/apps/details?id=com.syf.mysynchrony">MyWalgreens</option>
+            <option value="https://play.google.com/store/apps/details?id=com.northshorebank.northshorebank&hl=en_US">North Shore Bank</option>
+            <option value="https://play.google.com/store/apps/details?id=com.ollocard.mobile">Ollo</option>
             <option value="paypal://">PayPal</option>
-            <option value="pnc://">PNC Bank</option>
-            <option value="robinhood://">Robinhood</option>
-            <option value="schwab://">Charles Schwab</option>
-            <option value="sofi://">SoFi</option>
-            <option value="suntrust://">SunTrust</option>
-            <option value="synchrony://">Synchrony Bank</option>
-            <option value="tdameritrade://">TD Ameritrade</option>
-            <option value="tdbank://">TD Bank</option>
-            <option value="usaa://">USAA</option>
-            <option value="usbank://">U.S. Bank</option>
-            <option value="vanguard://">Vanguard</option>
-            <option value="venmo://">Venmo</option>
-            <option value="intent://#Intent;scheme=https;package=com.verizon.fintech.isaac;end">Verizon Visa</option>
-            <option value="wellsfargo://">Wells Fargo</option>
+            <option value="https://www.pnc.com">PNC Bank</option>
+            <option value="https://robinhood.com">Robinhood</option>
+            <option value="https://www.sofi.com">SoFi</option>
+            <option value="https://www.suntrust.com">SunTrust</option>
+            <option value="https://www.synchrony.com/banking">Synchrony Bank</option>
+            <option value="https://www.tdameritrade.com">TD Ameritrade</option>
+            <option value="https://www.td.com/us/en/personal-banking">TD Bank</option>
+            <option value="https://play.google.com/store/apps/details?id=com.ifs.banking.fiid1582">Thrivent Bank</option>
+            <option value="https://www.usaa.com">USAA</option>
+            <option value="https://www.usbank.com">U.S. Bank</option>
+            <option value="https://www.vanguard.com">Vanguard</option>
+            <option value="https://www.venmo.com">Venmo</option>
+            <option value="https://play.google.com/store/apps/details?id=com.verizon.fintech.isaac&hl=en_US">Verizon Visa</option>
+            <option value="https://www.wellsfargo.com">Wells Fargo</option>
           </select>
         </div>
         <div>
@@ -1585,9 +1587,6 @@
           ${acc.due_date ? `<p class="mt-0.5 text-[11px] text-slate-500 uppercase tracking-[0.14em]">Due: Day ${acc.due_date}</p>` : ''}
           
           ${alertBadge}
-          <div class="mt-2 text-xs">
-            <button onclick="event.stopPropagation(); openAccountModal('${acc.id}')" class="text-blue-600 font-semibold hover:text-blue-700 hover:underline">Edit Account</button>
-          </div>
         </div>
         <div class="text-right space-y-1 shrink-0">
           <div>
@@ -2727,14 +2726,22 @@
 
     function toggleAccountModal(show) {
       const modal = document.getElementById('account-modal');
-      if (show) modal.classList.remove('hidden');
-      else modal.classList.add('hidden');
+      if (show) {
+        modal.classList.remove('hidden');
+        document.getElementById('account-modal-content')?.scrollTo(0, 0);
+      } else {
+        modal.classList.add('hidden');
+      }
     }
 
     function toggleTxModal(show) {
       const modal = document.getElementById('tx-modal');
-      if (show) modal.classList.remove('hidden');
-      else modal.classList.add('hidden');
+      if (show) {
+        modal.classList.remove('hidden');
+        modal.querySelector('div')?.scrollTo(0, 0);
+      } else {
+        modal.classList.add('hidden');
+      }
     }
 
     // --- Payment Due Date Modal & Picker Logic ---
@@ -2768,13 +2775,12 @@
     function applyAppPreset() {
       const presetSelect = document.getElementById('accAppPreset');
       const linkInput = document.getElementById('accExternalLink');
+      if (!presetSelect || !linkInput) return;
 
-      if (presetSelect && linkInput) {
-        const selectedValue = presetSelect.value;
-        if (selectedValue) {
-          linkInput.value = selectedValue;
-        }
-      }
+      // HTTPS URLs let iOS Universal Links / Android App Links open the installed app automatically, falling back to the site otherwise.
+      const selectedValue = presetSelect.value;
+      if (!selectedValue) return;
+      linkInput.value = selectedValue;
     }
 
     function openDueDateCalendarModal() {
