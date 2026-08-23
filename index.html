@@ -670,11 +670,20 @@
           </div>
         </div>
 
-        <!-- Tags -->
-        <div id="tx-tags-field">
-          <label class="text-xs font-semibold text-gray-600">Tags (comma-separated)</label>
-          <input type="text" id="txTags" placeholder="e.g., groceries, vacation, tax"
-            class="w-full border p-2 rounded-lg mt-1" />
+        <!-- Labels -->
+        <div id="tx-labels-field" class="space-y-2">
+          <div class="flex items-center justify-between">
+            <label class="text-xs font-semibold text-gray-600">Labels</label>
+            <button type="button" onclick="openLabelPicker()"
+              class="text-xs font-bold text-blue-600 hover:text-blue-700 transition flex items-center gap-1">
+              🏷️ Select Labels
+            </button>
+          </div>
+          <!-- Live Preview of currently selected label chips -->
+          <div id="selected-labels-preview"
+            class="flex flex-wrap gap-1.5 min-h-[38px] p-2 rounded-xl border border-dashed border-slate-200 bg-slate-50">
+            <span class="text-xs text-slate-400 italic my-auto pl-1">No labels selected</span>
+          </div>
         </div>
 
         <!-- Receipt Attachments Section -->
@@ -744,6 +753,70 @@
   <!-- Cropper.js Script -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
 
+  <!-- Hierarchical Label Picker Sub-Modal (z-55 to sit cleanly above main transaction modal at z-50) -->
+  <div id="label-picker-modal"
+    class="fixed inset-0 bg-black/50 hidden flex items-end sm:items-center justify-center p-0 sm:p-4 z-[1]">
+    <div
+      class="bg-white w-full max-w-md rounded-t-2xl sm:rounded-2xl p-6 space-y-4 max-h-[85vh] flex flex-col shadow-2xl">
+      <!-- Header -->
+      <div class="flex justify-between items-center shrink-0">
+        <div>
+          <h3 class="font-bold text-lg text-slate-800">Select Labels</h3>
+          <p id="label-picker-counter" class="text-xs text-slate-500 font-semibold mt-0.5">0 labels selected</p>
+        </div>
+        <button type="button" onclick="closeLabelPicker()"
+          class="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
+      </div>
+
+      <!-- Fast-Path Search Bar -->
+      <div class="relative shrink-0">
+        <input type="text" id="label-search-input" oninput="filterLabelTreeUI()"
+          placeholder="Search labels... (e.g., 'gro')"
+          class="w-full border border-slate-200 bg-white pl-9 pr-3 py-2.5 rounded-xl text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-200 shadow-sm" />
+        <span class="absolute left-3 top-3 text-slate-400 text-sm">🔎</span>
+      </div>
+
+      <!-- Scrollable Tree Container -->
+      <div id="label-tree-container" class="flex-1 overflow-y-auto pr-1 space-y-3 min-h-[200px] max-h-[45vh] text-sm">
+        <!-- JS dynamically injects the interactive hierarchical checkboxes here -->
+      </div>
+
+      <!-- Inline Custom Add Overlay (Pre-selected branch path & automatic pre-check) -->
+      <div id="inline-add-overlay"
+        class="hidden rounded-xl border border-blue-200 bg-blue-50 p-4 space-y-3 shadow-inner shrink-0">
+        <p class="text-xs font-bold text-blue-800 uppercase tracking-wider">➕ Create New Custom Label</p>
+        <div class="space-y-2">
+          <div>
+            <label class="text-[10px] font-bold text-blue-600 uppercase">Target Parent Path</label>
+            <input type="text" id="inline-parent-path-display" readonly
+              class="w-full border-0 bg-transparent text-xs font-bold text-slate-700 p-0 focus:ring-0" />
+          </div>
+          <div>
+            <label class="text-[10px] font-bold text-blue-600 uppercase">Label Name</label>
+            <input type="text" id="inline-new-label-name" placeholder="e.g., Sporting Goods"
+              class="w-full border border-slate-200 bg-white px-2 py-1.5 rounded-lg text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-blue-200" />
+          </div>
+        </div>
+        <div class="flex gap-2">
+          <button type="button" onclick="closeInlineAdd()"
+            class="flex-1 py-2 bg-white border border-slate-200 text-slate-600 rounded-lg font-bold text-xs">Cancel</button>
+          <button type="button" onclick="submitInlineAdd()"
+            class="flex-1 py-2 bg-blue-600 text-white rounded-lg font-bold text-xs shadow-sm">Save Label</button>
+        </div>
+      </div>
+
+      <!-- Apply / Action Footer -->
+      <div class="pt-2 border-t border-slate-100 flex gap-2 shrink-0">
+        <button type="button" onclick="clearAllSelections()"
+          class="flex-1 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold text-sm transition text-center">Clear
+          All</button>
+        <button type="button" onclick="applyLabelSelection()"
+          class="flex-1 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-sm transition shadow text-center">Apply
+          Selection</button>
+      </div>
+    </div>
+  </div>
+
   <script>
     const SUPABASE_URL = "https://raujjskhrprnyigfmkwq.supabase.co";
     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJhdWpqc2tocnBybnlpZ2Zta3dxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY3Njk0NzEsImV4cCI6MjEwMjM0NTQ3MX0.jEjU9BOmzpQpm-A4UlD8xrP2dpeQSiIEjj7-IuMbiVE";
@@ -772,8 +845,286 @@
     let selectedSummaryTransactionType = null;
     let selectedAccountTypeFilter = 'all';
     let filteredTransactionsLookup = {};
+    let labelTree = {};
+    let labelNatures = {};
+    let activeTxLabels = [];
+    let tempSelectedLabels = new Set();
+    let pickerExpandedNodes = new Set(["Expenses", "Goals", "Income", "Other"]);
 
     // Phase 1: Core Utilities & State Management Functions
+
+    // --- Dynamic Recursive Category Configurations & User-Defined Defaults ---
+    const DEFAULT_LABEL_TREE = {
+      "Expenses": {
+        "Housing": {
+          "Mortgage": {},
+          "Rent": {},
+          "Home Improvement": {},
+          "Maintenance": {},
+          "Services": {}
+        },
+        "Utilities": {
+          "Gas & Electric": {},
+          "Water": {},
+          "Internet": {},
+          "Mobile": {},
+          "Operational Subscriptions": {}
+        },
+        "Food": {
+          "Groceries": {},
+          "Dining": {},
+          "Bar & Cafe": {},
+          "School Lunches": {}
+        },
+        "Transit": {
+          "Gas": {},
+          "Public Transit": {},
+          "Auto Maintenance": {},
+          "Parking & Tolls": {},
+          "License & Registration": {},
+          "Rental": {},
+          "Rideshare": {},
+          "Auto Repairs": {},
+          "Auto Insurance": {},
+          "Auto Loan": {}
+        },
+        "Health": {
+          "Medical": {},
+          "Dentist": {},
+          "Vision": {},
+          "Pharmacy": {},
+          "Wellness": {},
+          "Chiropractic": {}
+        },
+        "Financial": {
+          "Insurance": {},
+          "Charges/Fees": {},
+          "Taxes": {},
+          "Fines": {},
+          "Advisory": {},
+          "Interest": {},
+          "Debt": {}
+        },
+        "Shopping": {
+          "Clothing": {},
+          "Gifts": {},
+          "Holidays": {},
+          "Electronics": {},
+          "Household": {},
+          "Lawn & Garden": {},
+          "Jewelry & Accessories": {}
+        },
+        "Personal Care": {
+          "Haircuts": {},
+          "Skincare & Makeup": {},
+          "Toiletries": {}
+        },
+        "Vacation": {
+          "Lodging": {},
+          "Transportation": {},
+          "Food": {},
+          "Entertainment": {}
+        },
+        "Life & Entertainment": {
+          "TV & Streaming": {},
+          "Books & Audio": {},
+          "Charity": {},
+          "Culture & Sports Events": {},
+          "Education & Personal Development": {},
+          "Recreation": {}
+        },
+        "Family": {
+          "Extracurriculars": {},
+          "Education Expenses": {},
+          "Pets": {},
+          "Toys": {}
+        }
+      },
+      "Goals": {
+        "Emergency Fund": {
+          "Core Savings Buffer": {}
+        },
+        "Retirement": {
+          "401k": {},
+          "IRA": {},
+          "Brokerage Investing": {}
+        },
+        "Sinking Funds": {
+          "Car Care Reserve": {},
+          "Home Repairs Reserve": {},
+          "Annual Fee Accrual": {},
+          "Holiday Accrual": {}
+        },
+        "Accelerated Debt Paydown": {
+          "Extra Principal Payments": {}
+        }
+      },
+      "Income": {
+        "Grants": {},
+        "Gifts": {},
+        "Interest/Dividend": {},
+        "Sale": {},
+        "Wages": {}
+      },
+      "Other": {} // Blank canvas for on-the-fly custom labels
+    };
+
+    const DEFAULT_LABEL_NATURES = {
+      "Expenses-Housing-Mortgage": "Must",
+      "Expenses-Housing-Rent": "Must",
+      "Expenses-Financial-Insurance": "Must",
+      "Expenses-Financial-Taxes": "Must",
+      "Expenses-Financial-Debt": "Must",
+      "Expenses-Utilities-Gas & Electric": "Must",
+      "Expenses-Utilities-Water": "Must",
+      "Expenses-Utilities-Internet": "Need",
+      "Expenses-Utilities-Mobile": "Need",
+      "Expenses-Food-Groceries": "Need",
+      "Expenses-Transit-Gas": "Need",
+      "Expenses-Transit-Auto Maintenance": "Need",
+      "Expenses-Transit-Auto Repairs": "Need",
+      "Expenses-Health-Medical": "Need",
+      "Expenses-Health-Dentist": "Need",
+      "Expenses-Health-Vision": "Need",
+      "Expenses-Health-Pharmacy": "Need",
+      "Expenses-Food-Dining": "Want",
+      "Expenses-Food-Bar & Cafe": "Want",
+      "Expenses-Shopping-Clothing": "Want",
+      "Expenses-Shopping-Gifts": "Want",
+      "Expenses-Shopping-Holidays": "Want",
+      "Expenses-Shopping-Electronics": "Want",
+      "Expenses-Personal Care-Haircuts": "Want",
+      "Expenses-Vacation-Lodging": "Want",
+      "Expenses-Vacation-Transportation": "Want",
+      "Expenses-Vacation-Food": "Want",
+      "Expenses-Vacation-Entertainment": "Want",
+      "Expenses-Life & Entertainment-TV & Streaming": "Want",
+      "Expenses-Life & Entertainment-Recreation": "Want"
+    };
+
+    function getDefaultNatureForPath(pathArray) {
+      if (!Array.isArray(pathArray) || pathArray !== 'Expenses') return 'N/A';
+      const pathStr = pathArray.join('-');
+      return labelNatures[pathStr] || 'N/A';
+    }
+
+    // Helper to recursively migrate legacy array structures to nested objects
+    function migrateTreeRecursive(node) {
+      if (Array.isArray(node)) {
+        const obj = {};
+        node.forEach(item => {
+          obj[item] = {};
+        });
+        return obj;
+      }
+      if (node && typeof node === "object") {
+        const obj = {};
+        for (const [key, val] of Object.entries(node)) {
+          obj[key] = migrateTreeRecursive(val);
+        }
+        return obj;
+      }
+      return node;
+    }
+
+    function loadLabelTree() {
+      try {
+        const storedTree = localStorage.getItem('household-budget-label-tree');
+        if (storedTree) {
+          const parsed = JSON.parse(storedTree);
+          labelTree = migrateTreeRecursive(parsed);
+          saveLabelTree(); // Save the newly migrated schema format
+        } else {
+          labelTree = JSON.parse(JSON.stringify(DEFAULT_LABEL_TREE));
+          saveLabelTree();
+        }
+
+        const storedNatures = localStorage.getItem('household-budget-label-natures');
+        if (storedNatures) {
+          labelNatures = JSON.parse(storedNatures);
+        } else {
+          labelNatures = { ...DEFAULT_LABEL_NATURES };
+          saveLabelNatures();
+        }
+      } catch (err) {
+        console.warn("Error loading configurations, resetting to fallback models:", err);
+        labelTree = JSON.parse(JSON.stringify(DEFAULT_LABEL_TREE));
+        labelNatures = { ...DEFAULT_LABEL_NATURES };
+      }
+    }
+
+    function saveLabelTree() {
+      try {
+        localStorage.setItem('household-budget-label-tree', JSON.stringify(labelTree));
+      } catch (err) {
+        console.warn("Unable to save label tree configuration to storage:", err);
+      }
+    }
+
+    function saveLabelNatures() {
+      try {
+        localStorage.setItem('household-budget-label-natures', JSON.stringify(labelNatures));
+      } catch (err) {
+        console.warn("Unable to save label natures configuration to storage:", err);
+      }
+    }
+
+    function parseLabelString(labelStr) {
+      if (!labelStr) return { path: [], nature: 'N/A', rawPath: '' };
+
+      const [pathStr, nature] = String(labelStr).split('|');
+      const path = pathStr.split('-');
+
+      return {
+        path: path,
+        nature: nature || 'N/A',
+        rawPath: pathStr
+      };
+    }
+
+    function pathToLabelString(pathArray, nature = 'N/A') {
+      if (!Array.isArray(pathArray) || pathArray.length === 0) return '';
+      const pathStr = pathArray.join('-');
+      return (nature && nature !== 'N/A') ? `${pathStr}|${nature}` : pathStr;
+    }
+
+    function getLabelDisplayPath(labelStr) {
+      const { path } = parseLabelString(labelStr);
+      return path.join(' -> ');
+    }
+
+    function getLabelDisplayName(labelStr) {
+      const { path } = parseLabelString(labelStr);
+      return path[path.length - 1] || 'Unlabeled';
+    }
+
+    // Fixed path root evaluation bug
+    function getLabelColorStyle(labelStr) {
+      const { path, nature } = parseLabelString(labelStr);
+      const root = path[0];
+
+      if (root === 'Income') {
+        return 'bg-emerald-50 text-emerald-700 border border-emerald-200';
+      }
+      if (root === 'Goals') {
+        return 'bg-purple-50 text-purple-700 border border-purple-200';
+      }
+      if (root === 'Other') {
+        return 'bg-slate-100 text-slate-700 border border-slate-300';
+      }
+
+      if (nature === 'Must') {
+        return 'bg-red-50 text-red-700 border border-red-200';
+      }
+      if (nature === 'Need') {
+        return 'bg-blue-50 text-blue-700 border border-blue-200';
+      }
+      if (nature === 'Want') {
+        return 'bg-amber-50 text-amber-700 border border-amber-200';
+      }
+      return 'bg-slate-50 text-slate-700 border border-slate-200';
+    }
+
     function roundCurrency(value) {
       return Math.round((Number(value || 0) + Number.EPSILON) * 100) / 100;
     }
@@ -1113,6 +1464,7 @@
     }
 
     async function init() {
+      loadLabelTree();
       buildMonthOptions();
       restoreViewState();
       await detectCheckNumberColumn();
@@ -1586,7 +1938,11 @@
         const isTransfer = !!tx.transfer_id;
         const tagsHtml = tags.length > 0 ? `
           <div class="flex flex-wrap gap-1 mt-1">
-            ${tags.map(t => `<span class="text-[10px] bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded font-medium">#${t}</span>`).join('')}
+            ${tags.map(t => {
+          const displayName = getLabelDisplayName(t);
+          const colorClass = getLabelColorStyle(t);
+          return `<span class="text-[10px] px-1.5 py-0.5 rounded font-semibold ${colorClass}">${displayName}</span>`;
+        }).join('')}
           </div>
         ` : '';
 
@@ -1885,13 +2241,15 @@
 
       filterContainer.classList.remove('hidden');
 
-      let html = `<button onclick="setTagFilter(null)" class="px-2 py-0.5 text-xs font-medium rounded-full ${selectedTagFilter === null ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+      let html = `<button onclick="setTagFilter(null)" class="px-2 py-0.5 text-xs font-semibold rounded-full ${selectedTagFilter === null ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
         }">All</button>`;
 
       allTags.forEach(tag => {
         const isSelected = selectedTagFilter === tag;
-        html += `<button onclick="setTagFilter('${tag}')" class="px-2 py-0.5 text-xs font-medium rounded-full ${isSelected ? 'bg-blue-600 text-white' : 'bg-blue-50 text-blue-700 hover:bg-blue-100'
-          }">#${tag}</button>`;
+        const displayName = getLabelDisplayName(tag);
+        const colorClass = getLabelColorStyle(tag);
+        const activeStyle = isSelected ? 'bg-blue-600 text-white shadow-sm' : 'bg-slate-100 text-slate-700 hover:bg-slate-200';
+        html += `<button onclick="setTagFilter('${tag}')" class="px-2 py-0.5 text-xs font-bold rounded-full transition ${activeStyle}">${displayName}</button>`;
       });
 
       chipsContainer.innerHTML = html;
@@ -1945,7 +2303,11 @@
 
         const tagsHtml = tags.length > 0 ? `
           <div class="flex flex-wrap gap-1 mt-1">
-            ${tags.map(t => `<span class="text-[10px] bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded font-medium">#${t}</span>`).join('')}
+            ${tags.map(t => {
+          const displayName = getLabelDisplayName(t);
+          const colorClass = getLabelColorStyle(t);
+          return `<span class="text-[10px] px-1.5 py-0.5 rounded font-semibold ${colorClass}">${displayName}</span>`;
+        }).join('')}
           </div>
         ` : '';
 
@@ -2560,7 +2922,8 @@
         document.getElementById('txCheckNumber').value = tx.check_number || '';
         document.getElementById('txDate').value = tx.date || getLocalDateString();
         document.getElementById('txStatus').value = tx.status || 'pending';
-        document.getElementById('txTags').value = Array.isArray(tx.tags) ? tx.tags.join(', ') : '';
+        activeTxLabels = Array.isArray(tx.tags) ? [...tx.tags] : [];
+        renderSelectedLabelsPreview();
 
         const existingSplits = getSplitDetails(tx);
         if (existingSplits.length > 0) {
@@ -2585,7 +2948,8 @@
         document.getElementById('txPayee').value = "";
         document.getElementById('txDate').value = getLocalDateString();
         document.getElementById('txStatus').value = 'pending';
-        document.getElementById('txTags').value = '';
+        activeTxLabels = [];
+        renderSelectedLabelsPreview();
 
         deleteBtn.classList.add('hidden');
       }
@@ -2844,6 +3208,298 @@
       }
     });
 
+    // --- OPEN & CLOSE CONTROLS ---
+    function openLabelPicker() {
+      tempSelectedLabels = new Set(activeTxLabels);
+      const searchInput = document.getElementById("label-search-input");
+      if (searchInput) searchInput.value = "";
+      closeInlineAdd();
+      renderLabelTreeUI();
+      document.getElementById("label-picker-modal").classList.remove("hidden");
+    }
+
+    function closeLabelPicker() {
+      document.getElementById("label-picker-modal").classList.add("hidden");
+    }
+
+    // --- RENDER SELECTED PREVIEW CHIPS ON MAIN MODAL ---
+    function renderSelectedLabelsPreview() {
+      const preview = document.getElementById("selected-labels-preview");
+      if (!preview) return;
+
+      if (activeTxLabels.length === 0) {
+        preview.innerHTML = '<span class="text-xs text-slate-400 italic my-auto pl-1">No labels selected</span>';
+        return;
+      }
+
+      preview.innerHTML = activeTxLabels.map((lbl, idx) => {
+        const displayName = getLabelDisplayName(lbl);
+        const displayPath = getLabelDisplayPath(lbl);
+        const colorClass = getLabelColorStyle(lbl);
+        const { nature } = parseLabelString(lbl);
+        const natureSuffix = nature !== "N/A" ? " (" + nature + ")" : "";
+
+        return `
+          <span class="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-bold shadow-sm transition ${colorClass}" title="${displayPath}">
+            ${displayName}${natureSuffix}
+            <button type="button" onclick="removeLabelFromPreview(${idx})" class="text-sm font-semibold opacity-70 hover:opacity-100 focus:outline-none">&times;</button>
+          </span>
+        `;
+      }).join("");
+    }
+
+    function removeLabelFromPreview(index) {
+      activeTxLabels.splice(index, 1);
+      renderSelectedLabelsPreview();
+    }
+
+    function openInlineAdd(parentPathStr) {
+      const displayEl = document.getElementById("inline-parent-path-display");
+      const nameEl = document.getElementById("inline-new-label-name");
+      const overlayEl = document.getElementById("inline-add-overlay");
+      if (displayEl) {
+        displayEl.value = parentPathStr.replace(/-/g, " ➔ ");
+        displayEl.dataset.parentPath = parentPathStr;
+      }
+      if (nameEl) nameEl.value = "";
+      if (overlayEl) {
+        overlayEl.classList.remove("hidden");
+        setTimeout(() => nameEl?.focus(), 50);
+      }
+    }
+
+    function closeInlineAdd() {
+      const overlayEl = document.getElementById("inline-add-overlay");
+      if (overlayEl) overlayEl.classList.add("hidden");
+    }
+
+    function toggleNodeExpanded(pathId) {
+      if (pickerExpandedNodes.has(pathId)) {
+        pickerExpandedNodes.delete(pathId);
+      } else {
+        pickerExpandedNodes.add(pathId);
+      }
+      renderLabelTreeUI();
+    }
+
+    function toggleLabelChecked(serializedPath) {
+      const arr = Array.from(tempSelectedLabels);
+      const matchIdx = arr.findIndex(lbl => parseLabelString(lbl).rawPath === serializedPath);
+
+      if (matchIdx > -1) {
+        tempSelectedLabels.delete(arr[matchIdx]);
+      } else {
+        const pathArray = serializedPath.split("-");
+        const defaultNature = getDefaultNatureForPath(pathArray);
+        const resolvedStr = pathToLabelString(pathArray, defaultNature);
+        tempSelectedLabels.add(resolvedStr);
+      }
+      renderLabelTreeUI();
+    }
+
+    function renderNatureToggleRow(serializedPath, currentNature) {
+      const natures = ["Must", "Need", "Want", "N/A"];
+      return `
+        <div class="flex items-center gap-1.5 mt-0.5 ml-6 py-1 bg-slate-50 px-2 rounded-lg border border-slate-100 w-fit">
+          <span class="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider mr-1">Type:</span>
+          ${natures.map(nature => {
+        const isActive = currentNature === nature;
+        let activeColor = "bg-slate-600 border-slate-600 text-white";
+        if (isActive) {
+          if (nature === "Must") activeColor = "bg-red-500 border-red-500 text-white";
+          if (nature === "Need") activeColor = "bg-blue-500 border-blue-500 text-white";
+          if (nature === "Want") activeColor = "bg-amber-500 border-amber-500 text-white";
+        }
+        const btnClass = isActive
+          ? activeColor
+          : "bg-white text-slate-500 border-slate-200 hover:bg-slate-100";
+        return `
+              <button type="button" onclick="setLabelNature('${serializedPath}', '${nature}')"
+                      class="px-1.5 py-0.5 rounded text-[9px] font-extrabold transition-all border ${btnClass}">
+                ${nature}
+              </button>
+            `;
+      }).join("")}
+        </div>
+      `;
+    }
+
+    function setLabelNature(serializedPath, targetNature) {
+      const arr = Array.from(tempSelectedLabels);
+      const matchIdx = arr.findIndex(lbl => parseLabelString(lbl).rawPath === serializedPath);
+
+      if (matchIdx > -1) {
+        tempSelectedLabels.delete(arr[matchIdx]);
+      }
+
+      const pathArray = serializedPath.split("-");
+      const updatedStr = pathToLabelString(pathArray, targetNature);
+      tempSelectedLabels.add(updatedStr);
+      renderLabelTreeUI();
+    }
+
+    function filterLabelTreeUI() {
+      renderLabelTreeUI();
+    }
+
+    function updatePickerSelectionCounter() {
+      const el = document.getElementById("label-picker-counter");
+      if (el) {
+        el.textContent = tempSelectedLabels.size + " label" + (tempSelectedLabels.size === 1 ? "" : "s") + " selected";
+      }
+    }
+
+    function clearAllSelections() {
+      tempSelectedLabels.clear();
+      renderLabelTreeUI();
+    }
+
+    // Fixed path comparison logic
+    function applyLabelSelection() {
+      activeTxLabels = Array.from(tempSelectedLabels);
+      renderSelectedLabelsPreview();
+      closeLabelPicker();
+    }
+
+    // --- RECURSIVE NODE MATCH CHECK FOR SEARCH FILTERING ---
+    function nodeMatchesQueryRecursive(nodeKey, nodeValue, query) {
+      if (!query) return true;
+      if (nodeKey.toLowerCase().includes(query)) return true;
+      if (nodeValue && typeof nodeValue === 'object') {
+        return Object.entries(nodeValue).some(([childKey, childVal]) =>
+          nodeMatchesQueryRecursive(childKey, childVal, query)
+        );
+      }
+      return false;
+    }
+
+    // --- RECURSIVE NODE RENDER ENGINE ---
+    function renderLabelNode(nodeKey, nodeValue, parentPathId, searchQuery, depth = 0) {
+      const currentPathId = parentPathId ? `${parentPathId}-${nodeKey}` : nodeKey;
+      const rootKey = currentPathId.split('-');
+
+      // Filter tree dynamically based on search matches
+      if (searchQuery && !nodeMatchesQueryRecursive(nodeKey, nodeValue, searchQuery)) {
+        return '';
+      }
+
+      const hasChildren = nodeValue && typeof nodeValue === 'object' && Object.keys(nodeValue).length > 0;
+      const isExpanded = pickerExpandedNodes.has(currentPathId) || searchQuery.length > 0;
+      const isChecked = [...tempSelectedLabels].some(lbl => parseLabelString(lbl).rawPath === currentPathId);
+      const activeLabelObj = [...tempSelectedLabels].find(lbl => parseLabelString(lbl).rawPath === currentPathId);
+      const activeNature = activeLabelObj ? parseLabelString(activeLabelObj).nature : getDefaultNatureForPath(currentPathId.split('-'));
+
+      const chevron = hasChildren ? (isExpanded ? "▼" : "▶") : "•";
+      const indentStyle = `margin-left: ${depth * 12}px;`;
+
+      let childrenHtml = '';
+      if (hasChildren && isExpanded) {
+        childrenHtml = Object.entries(nodeValue)
+          .map(([childKey, childVal]) => renderLabelNode(childKey, childVal, currentPathId, searchQuery, depth + 1))
+          .join('');
+      }
+
+      const highlightClass = searchQuery && nodeKey.toLowerCase().includes(searchQuery) ? "bg-yellow-100" : "";
+
+      return `
+        <div class="space-y-1" style="${indentStyle}">
+          <div class="flex items-center justify-between py-1 hover:bg-slate-50 rounded-lg pr-1">
+            <div class="flex items-center gap-2 min-w-0 flex-1">
+              ${hasChildren ? `
+                <button type="button" onclick="toggleNodeExpanded('${currentPathId}')" class="text-slate-400 hover:text-blue-600 focus:outline-none w-4 h-4 flex items-center justify-center text-[10px]">
+                  ${chevron}
+                </button>
+              ` : `
+                <span class="w-4 h-4 flex items-center justify-center text-[10px] text-slate-300">•</span>
+              `}
+              <label class="flex items-center gap-2 cursor-pointer min-w-0 flex-1 py-0.5">
+                <input type="checkbox" onchange="toggleLabelChecked('${currentPathId}')" ${isChecked ? "checked" : ""}
+                       class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 shrink-0" />
+                <span class="font-semibold text-slate-700 truncate ${highlightClass}">${nodeKey}</span>
+              </label>
+            </div>
+            <button type="button" onclick="openInlineAdd('${currentPathId}')" class="text-[10px] font-extrabold text-blue-500 hover:text-blue-700 px-1.5 shrink-0">➕ Add</button>
+          </div>
+          ${isChecked && rootKey === "Expenses" ? renderNatureToggleRow(currentPathId, activeNature) : ""}
+          ${childrenHtml}
+        </div>
+      `;
+    }
+
+    // --- RECURSIVE LAYOUT ENGINE ENTRY POINT ---
+    function renderLabelTreeUI() {
+      const container = document.getElementById("label-tree-container");
+      const searchQuery = document.getElementById("label-search-input")?.value.trim().toLowerCase() || "";
+      if (!container) return;
+
+      let html = "";
+
+      // Iterate through root-level macro nodes (Expenses, Goals, Income, Other)
+      for (const [rootKey, rootValue] of Object.entries(labelTree)) {
+        html += renderLabelNode(rootKey, rootValue, "", searchQuery, 0);
+      }
+
+      container.innerHTML = html || `<p class="text-xs text-slate-500 text-center py-6 font-medium">No categories match your search.</p>`;
+      updatePickerSelectionCounter();
+    }
+
+    // --- HELPER TO NAVIGATE AND APPEND LABELS AT ANY DYNAMIC DEPTH ---
+    function addLabelToTree(tree, pathArray, newLabel) {
+      let current = tree;
+      for (let i = 0; i < pathArray.length; i++) {
+        const key = pathArray[i];
+        if (typeof current[key] !== 'object' || current[key] === null) {
+          current[key] = {};
+        }
+        current = current[key];
+      }
+      if (current[newLabel] === undefined) {
+        current[newLabel] = {};
+        return true;
+      }
+      return false;
+    }
+
+    // --- UPDATE INLINE SUBMISSION TO SUPPORT DYNAMIC PATHS ---
+    function submitInlineAdd() {
+      const parentPathStr = document.getElementById("inline-parent-path-display").dataset.parentPath;
+      const newLabelName = document.getElementById("inline-new-label-name").value.trim();
+
+      if (!newLabelName) {
+        showAppMessage("Please specify a name for the new label.");
+        return;
+      }
+
+      if (newLabelName.includes("-") || newLabelName.includes("|")) {
+        showAppMessage("Label name cannot contain hyphens (-) or pipe (|) characters.");
+        return;
+      }
+
+      const pathParts = parentPathStr.split("-");
+      const added = addLabelToTree(labelTree, pathParts, newLabelName);
+
+      if (!added) {
+        showAppMessage("This label already exists under this parent.");
+        return;
+      }
+
+      saveLabelTree();
+
+      // Expand target branches so the new label is visible
+      pickerExpandedNodes.add(parentPathStr);
+
+      // Automatically check the newly added node
+      const newPathId = `${parentPathStr}-${newLabelName}`;
+      const defaultNature = getDefaultNatureForPath([...pathParts, newLabelName]);
+      const serializedNewPath = pathToLabelString([...pathParts, newLabelName], defaultNature);
+
+      tempSelectedLabels.add(serializedNewPath);
+
+      closeInlineAdd();
+      renderLabelTreeUI();
+      showAppMessage(`Successfully added and pre-selected label: ${newLabelName}`);
+    }
+
     // Phase 5: Event Handlers & Core Submission Flows
     async function handleTxSubmit(e) {
       e.preventDefault();
@@ -2872,8 +3528,7 @@
       amount = roundCurrency(Math.abs(amount));
       const date = document.getElementById('txDate').value;
       const status = document.getElementById('txStatus').value;
-      const tagsRaw = document.getElementById('txTags')?.value || '';
-      const tags = parseTagInput(tagsRaw);
+      const tags = [...activeTxLabels];
       const splitEnabled = document.getElementById('txSplitEnabled')?.checked && txType !== 'transfer';
       const splitDetails = splitEnabled ? getSplitRowsFromEditor() : [];
 

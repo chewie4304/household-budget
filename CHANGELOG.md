@@ -6,6 +6,13 @@ All notable changes to this project will be documented in this file.
 
 ## [1.4.0-dev] - 2026-08-22
 
+### Added
+- **Hierarchical Label Tree Schema:** Seeded the master multi-level category configuration (`DEFAULT_LABEL_TREE`) in memory, reflecting the exact taxonomy of your spreadsheet.
+- **User-Defined Default Natures:** Integrated default expense types supporting **Must**, **Need**, **Want**, and **N/A** classifications. Configured them to load and persist inside `localStorage` so they can be managed dynamically without hardcoding.
+- **Database Suffix Serialization Utilities:** Implemented robust serialization utilities (`parseLabelString` and `pathToLabelString`) to pack hierarchical labels and their active natures into flat, database-friendly strings (e.g., `"Expenses-Food-Groceries|Need"`), ensuring 100% backward compatibility with your existing Supabase columns.
+- **Visual Badge Formatting:** Added UI utility helpers (`getLabelDisplayPath`, `getLabelDisplayName`, and `getLabelColorStyle`) to parse and auto-stylize badges dynamically based on their category type (Income, Goals, Expenses) and specific transaction-level natures.
+- **Startup Pipeline Integration:** Connected the schema initialization hook `loadLabelTree()` directly into the core `init()` routine.
+
 ### Fixed
 - **Selected Month Summary:** Updated setSelectedSummaryMonth(this.value) function so that it updates the #home-view-title and re-filters and repaints the transaction history cards using showAllTransactions() and renderAllTransactions().
 
