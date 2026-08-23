@@ -4,17 +4,31 @@ All notable changes to this project will be documented in this file.
 
 ## [unreleased]
 
-## [1.4.0-dev] - 2026-08-22
+## [1.4.0] - 2026-08-23
 
 ### Added
+- **Interactive Drag-and-Drop Category Reordering:** Enabled users to click and drag categories strictly within their sibling branches (e.g. reordering items under "Food" without spilling into "Housing") using a visual grab handle (`⠿`). Added dynamic blue drop insertion lines (`.drag-over-above`, `.drag-over-below`) and row opacity adjustments (`.dragging`) to provide premium visual feedback during drag operations.
+- **Dynamic Action Footer Button Swapping:** Replaced the standard selection footer buttons ("Clear All" and "Apply") with context-aware session triggers ("Cancel Edits" and "Save Edits") when switching into Edit Labels mode.
+- **Deep-Snapshot Edit Session Rollbacks:** Configured `cancelCategoryEdits()` and `saveCategoryEdits()` to capture automatic deep copies of the category tree (`labelTree`) and defaults when entering edit mode, allowing users to safely discard or commit all adds, renames, deletes, and reorders in a single click.
+- **Expand / Collapse All Tree Exploration:** Integrated dual helper actions (`📂 Expand All` and `📁 Collapse All`) under the search bar to dynamically traverse and toggle the expansion state of every subfolder directory in the picker instantly.
+- **Custom App Prompt & Confirm Modals:** Engineered self-contained, responsive Tailwind prompt (`#custom-prompt-modal`) and confirm (`#confirm-modal`) cards to handle renames, additions, and deletions elegantly, fully replacing native browser `window.prompt()` and `window.confirm()` calls which were disabled in sandboxed/iframe previews.
+- **Infinite Recursive Tag Nesting:** Migrated the category tree structure from a rigid, fixed three-level layout to a fully recursive object-nested hierarchy. Users can now subdivide any category to unlimited depths (e.g., creating `Expenses -> Food -> Groceries -> Produce`).
 - **Hierarchical Label Tree Schema:** Seeded the master multi-level category configuration (`DEFAULT_LABEL_TREE`) in memory, reflecting the exact taxonomy of your spreadsheet.
 - **User-Defined Default Natures:** Integrated default expense types supporting **Must**, **Need**, **Want**, and **N/A** classifications. Configured them to load and persist inside `localStorage` so they can be managed dynamically without hardcoding.
 - **Database Suffix Serialization Utilities:** Implemented robust serialization utilities (`parseLabelString` and `pathToLabelString`) to pack hierarchical labels and their active natures into flat, database-friendly strings (e.g., `"Expenses-Food-Groceries|Need"`), ensuring 100% backward compatibility with your existing Supabase columns.
-- **Visual Badge Formatting:** Added UI utility helpers (`getLabelDisplayPath`, `getLabelDisplayName`, and `getLabelColorStyle`) to parse and auto-stylize badges dynamically based on their category type (Income, Goals, Expenses) and specific transaction-level natures.
-- **Startup Pipeline Integration:** Connected the schema initialization hook `loadLabelTree()` directly into the core `init()` routine.
+- **Four-Tiered Budget Natures:** Added support for **Must**, **Need**, **Want**, and **N/A** classifications with global user-defined configurations and dynamic default pre-checks.
+- **Dynamic Local Storage Self-Healing Migration:** Implemented `migrateTreeRecursive` to dynamically detect and convert legacy flat-array database configurations in client local storage into nested-object schemas, preventing index-rendering corruption (i.e., categories rendering as 0, 1, 2).
+- **Dynamic Mode-Indicator Headers:** Configured the modal subheader to seamlessly transition its subtitle from `"Need to edit labels?"` to `"Ready to select labels?"` when toggling between select and edit modes.
+
+### Changed
+- **Minimalist Category Typography:** Completely stripped the folder icon (`📁`) from parent directory trees in favor of a clean chevron arrow expansion toggle (`▶` / `▼`), maintaining leaf-level label tags (`🏷️`) for maximum aesthetic balance.
+- **Visual Badge Redesign:** Completely stripped the `#` hash character prefix from all transaction views. Restyled transaction cards, split transaction details, and account details filter chips to display as elegant, color-coded, border-rounded badges.
 
 ### Fixed
-- **Selected Month Summary:** Updated setSelectedSummaryMonth(this.value) function so that it updates the #home-view-title and re-filters and repaints the transaction history cards using showAllTransactions() and renderAllTransactions().
+- **Root-Path Evaluator array-to-string checks:** Resolved a bug in `getDefaultNatureForPath` and `renderLabelNode` where evaluating `currentPathArray === "Expenses"` failed due to direct array-to-string comparisons, stabilizing Must/Need/Want category natures.
+- **Force-Select State Restoration:** Patched a state synchronization bug inside the Save/Cancel pipeline by passing an explicit `forceState = false` override to `togglePickerEditMode()`, preventing loops that locked users in edit mode.
+- **Selected Month Summary:** Updated `setSelectedSummaryMonth(this.value)` function so that it updates the `#home-view-title` and re-filters and repaints the transaction history cards using `showAllTransactions()` and `renderAllTransactions()`.
+- **Restored Standard Utility Block:** Recovered the omitted frontend parsing functions (`getLabelDisplayName` and `getLabelDisplayPath`) and modal render routines (`renderSelectedLabelsPreview` and `removeLabelFromPreview`) to resolve immediate modal load and transaction screen crashes.
 
 ## [1.3.2] - 2026-08-22
 

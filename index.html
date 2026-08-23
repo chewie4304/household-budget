@@ -13,6 +13,20 @@
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
   <link rel="icon" href="data:;base64,iVBORw0KGgo=" />
+  <style>
+    /* Visual feedback classes for label reordering */
+    .drag-over-above {
+      border-top: 2px solid #3b82f6 !important;
+    }
+
+    .drag-over-below {
+      border-bottom: 2px solid #3b82f6 !important;
+    }
+
+    .dragging {
+      opacity: 0.4;
+    }
+  </style>
 </head>
 
 <body class="bg-gray-100 text-gray-900 antialiased min-h-screen pb-10">
@@ -422,12 +436,35 @@
         <h3 id="confirm-modal-title" class="font-bold text-lg text-gray-800">Confirm</h3>
         <button type="button" onclick="closeCustomConfirm()" class="text-gray-400 text-2xl">&times;</button>
       </div>
-      <p id="confirm-modal-message" class="text-gray-700 text-sm">Are you sure?</p>
+      <p id="confirm-modal-message" class="text-gray-700 text-sm whitespace-pre-line">Are you sure?</p>
       <div class="flex gap-2 pt-2">
         <button type="button" onclick="closeCustomConfirm()"
           class="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-semibold text-sm">Cancel</button>
         <button type="button" id="confirm-modal-confirm"
           class="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg font-semibold text-sm shadow">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Custom Prompt Modal -->
+  <div id="custom-prompt-modal"
+    class="fixed inset-0 bg-black/50 hidden flex items-end sm:items-center justify-center p-0 sm:p-4"
+    style="z-index: 60;">
+    <div class="bg-white w-full max-w-sm rounded-t-2xl sm:rounded-2xl p-5 space-y-4 shadow-2xl">
+      <div class="flex justify-between items-center">
+        <h3 id="prompt-modal-title" class="font-bold text-lg text-gray-800">Enter Value</h3>
+        <button type="button" onclick="closeCustomPrompt()" class="text-gray-400 text-2xl leading-none">&times;</button>
+      </div>
+      <div class="space-y-2">
+        <p id="prompt-modal-message" class="text-xs text-slate-500 font-semibold"></p>
+        <input type="text" id="prompt-modal-input"
+          class="w-full border border-slate-200 p-2.5 rounded-xl text-xs font-semibold focus:ring-2 focus:ring-blue-200 focus:outline-none text-slate-800" />
+      </div>
+      <div class="flex gap-2 pt-2">
+        <button type="button" onclick="closeCustomPrompt()"
+          class="flex-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-xl font-bold text-xs transition hover:bg-gray-200">Cancel</button>
+        <button type="button" id="prompt-modal-submit"
+          class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-xl font-bold text-xs shadow-md transition hover:bg-blue-700">Submit</button>
       </div>
     </div>
   </div>
@@ -679,10 +716,25 @@
               🏷️ Select Labels
             </button>
           </div>
-          <!-- Live Preview of currently selected label chips -->
-          <div id="selected-labels-preview"
-            class="flex flex-wrap gap-1.5 min-h-[38px] p-2 rounded-xl border border-dashed border-slate-200 bg-slate-50">
-            <span class="text-xs text-slate-400 italic my-auto pl-1">No labels selected</span>
+
+          <!-- Typable multi-select wrapper container -->
+          <div class="relative">
+            <div
+              class="flex flex-wrap items-center gap-1.5 min-h-[42px] p-2 rounded-xl border border-slate-200 bg-white focus-within:ring-2 focus-within:ring-blue-200 focus-within:border-blue-400 transition-all">
+              <!-- Dynamic color-coded label chips render inline here -->
+              <div id="selected-labels-preview" class="flex flex-wrap gap-1.5"></div>
+
+              <!-- Typable search input -->
+              <input type="text" id="tx-labels-text-input" placeholder="Type label..."
+                class="flex-1 min-w-[100px] text-xs font-semibold bg-transparent border-0 p-0 focus:ring-0 focus:outline-none text-slate-800"
+                oninput="handleLabelSearchTyping(this.value)" onkeydown="handleLabelSearchKeydown(event)" />
+            </div>
+
+            <!-- Dynamic Floating Autocomplete Dropdown -->
+            <div id="labels-autocomplete-dropdown"
+              class="hidden absolute left-0 right-0 mt-1 max-h-48 overflow-y-auto bg-white border border-slate-200 rounded-xl shadow-lg z-50">
+              <!-- Javascript will inject matching label suggestions here -->
+            </div>
           </div>
         </div>
 
@@ -768,12 +820,33 @@
           class="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
       </div>
 
+      <!-- Edit/Toggle Header -->
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3 shrink-0">
+        <span id="picker-prompt-text" class="text-xs text-slate-500 font-semibold">Need to edit labels?</span>
+        <button type="button" onclick="togglePickerEditMode()" id="picker-edit-toggle-btn"
+          class="px-2.5 py-1 text-[11px] font-bold text-slate-600 bg-slate-100 rounded-lg hover:bg-slate-200 transition">
+          ✏️ Edit Labels
+        </button>
+      </div>
+
       <!-- Fast-Path Search Bar -->
       <div class="relative shrink-0">
         <input type="text" id="label-search-input" oninput="filterLabelTreeUI()"
           placeholder="Search labels... (e.g., 'gro')"
           class="w-full border border-slate-200 bg-white pl-9 pr-3 py-2.5 rounded-xl text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-200 shadow-sm" />
         <span class="absolute left-3 top-3 text-slate-400 text-sm">🔎</span>
+      </div>
+
+      <!-- Expand/Collapse Controls (v1.4.0-dev.6) -->
+      <div class="flex justify-between items-center px-1 shrink-0">
+        <button type="button" onclick="expandAllLabels()"
+          class="text-[11px] font-bold text-blue-600 hover:text-blue-800 transition flex items-center gap-1">
+          📂 Expand All
+        </button>
+        <button type="button" onclick="collapseAllLabels()"
+          class="text-[11px] font-bold text-slate-500 hover:text-slate-700 transition flex items-center gap-1">
+          📁 Collapse All
+        </button>
       </div>
 
       <!-- Scrollable Tree Container -->
@@ -805,14 +878,16 @@
         </div>
       </div>
 
-      <!-- Apply / Action Footer -->
-      <div class="pt-2 border-t border-slate-100 flex gap-2 shrink-0">
-        <button type="button" onclick="clearAllSelections()"
-          class="flex-1 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold text-sm transition text-center">Clear
-          All</button>
-        <button type="button" onclick="applyLabelSelection()"
-          class="flex-1 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-sm transition shadow text-center">Apply
-          Selection</button>
+      <!-- Action Footer Buttons inside Label Picker Modal (v1.4.0-dev.5) -->
+      <div class="flex gap-2 pt-2 shrink-0">
+        <button type="button" id="picker-cancel-clear-btn" onclick="clearAllSelections()"
+          class="flex-1 px-4 py-2.5 bg-slate-100 text-slate-700 rounded-xl font-bold text-xs transition hover:bg-slate-200">
+          Clear All
+        </button>
+        <button type="button" id="picker-apply-save-btn" onclick="applyLabelSelection()"
+          class="flex-1 px-4 py-2.5 bg-blue-600 text-white rounded-xl font-bold text-xs shadow-md transition hover:bg-blue-700">
+          Apply
+        </button>
       </div>
     </div>
   </div>
@@ -826,6 +901,14 @@
     const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     const now = new Date();
     let accounts = [];
+    // Snapshot backups for edit-session rollbacks
+    let labelTreeBackup = null;
+    let labelNaturesBackup = null;
+    let activeTxLabelsBackup = null;
+
+    // --- Label Picker Edit Mode Logic ---
+    let pickerEditMode = false;
+
     let transactions = [];
     let currentAccountTransactions = [];
     let activeAccountId = null;
@@ -906,7 +989,7 @@
           "Debt": {}
         },
         "Shopping": {
-          "Clothing": {},
+          "Clothing & Shoes": {},
           "Gifts": {},
           "Holidays": {},
           "Electronics": {},
@@ -989,7 +1072,7 @@
       "Expenses-Health-Pharmacy": "Need",
       "Expenses-Food-Dining": "Want",
       "Expenses-Food-Bar & Cafe": "Want",
-      "Expenses-Shopping-Clothing": "Want",
+      "Expenses-Shopping-Clothing & Shoes": "Want",
       "Expenses-Shopping-Gifts": "Want",
       "Expenses-Shopping-Holidays": "Want",
       "Expenses-Shopping-Electronics": "Want",
@@ -1003,9 +1086,18 @@
     };
 
     function getDefaultNatureForPath(pathArray) {
-      if (!Array.isArray(pathArray) || pathArray !== 'Expenses') return 'N/A';
-      const pathStr = pathArray.join('-');
-      return labelNatures[pathStr] || 'N/A';
+      if (!Array.isArray(pathArray) || pathArray !== 'Expenses') return 'N/A'; // Fixed: evaluates pathArray string
+
+      // Dynamic Inheritance Engine: work backwards up the folder path to find a parent's default nature
+      let currentPath = [...pathArray];
+      while (currentPath.length > 1) {
+        const pathStr = currentPath.join('-');
+        if (labelNatures[pathStr]) {
+          return labelNatures[pathStr];
+        }
+        currentPath.pop(); // Pop off the child leaf to check the parent (e.g., Produce -> Groceries)
+      }
+      return 'N/A';
     }
 
     // Helper to recursively migrate legacy array structures to nested objects
@@ -1098,10 +1190,9 @@
       return path[path.length - 1] || 'Unlabeled';
     }
 
-    // Fixed path root evaluation bug
     function getLabelColorStyle(labelStr) {
       const { path, nature } = parseLabelString(labelStr);
-      const root = path[0];
+      const root = path; // Fixed: extracts the string folder name rather than comparing the array
 
       if (root === 'Income') {
         return 'bg-emerald-50 text-emerald-700 border border-emerald-200';
@@ -2531,6 +2622,82 @@
     }
 
     // Phase 4: Modals & Dynamic Form Controls
+    // --- CUSTOM PROMPT DIALOG MOTOR ---
+    function showCustomPrompt({ title, message, defaultValue, onSubmit }) {
+      const modal = document.getElementById("custom-prompt-modal");
+      const titleEl = document.getElementById("prompt-modal-title");
+      const msgEl = document.getElementById("prompt-modal-message");
+      const inputEl = document.getElementById("prompt-modal-input");
+      const submitBtn = document.getElementById("prompt-modal-submit");
+
+      if (!modal || !titleEl || !msgEl || !inputEl || !submitBtn) return;
+
+      titleEl.textContent = title || "Enter Value";
+      msgEl.textContent = message || "";
+      inputEl.value = defaultValue || "";
+
+      modal.classList.remove("hidden");
+
+      // Auto-focus and highlight current text for easy overwriting
+      setTimeout(() => {
+        inputEl.focus();
+        inputEl.select();
+      }, 50);
+
+      const executeSubmit = () => {
+        const value = inputEl.value;
+        if (typeof onSubmit === "function") {
+          onSubmit(value);
+        }
+        closeCustomPrompt();
+      };
+
+      submitBtn.onclick = executeSubmit;
+
+      // Submit automatically on pressing Enter inside input
+      inputEl.onkeydown = function (e) {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          executeSubmit();
+        } else if (e.key === "Escape") {
+          closeCustomPrompt();
+        }
+      };
+    }
+
+    function closeCustomPrompt() {
+      const modal = document.getElementById("custom-prompt-modal");
+      if (modal) modal.classList.add("hidden");
+    }
+
+    // --- CUSTOM CONFIRM DIALOG MOTOR ---
+    function showCustomConfirm({ title, message, confirmLabel, onConfirm }) {
+      const modal = document.getElementById("confirm-modal");
+      const titleEl = document.getElementById("confirm-modal-title");
+      const msgEl = document.getElementById("confirm-modal-message");
+      const confirmBtn = document.getElementById("confirm-modal-confirm");
+
+      if (!modal || !titleEl || !msgEl || !confirmBtn) return;
+
+      titleEl.textContent = title || "Confirm";
+      msgEl.textContent = message || "Are you sure?";
+      confirmBtn.textContent = confirmLabel || "Confirm";
+
+      confirmBtn.onclick = function () {
+        if (typeof onConfirm === "function") {
+          onConfirm();
+        }
+        closeCustomConfirm();
+      };
+
+      modal.classList.remove("hidden");
+    }
+
+    function closeCustomConfirm() {
+      const modal = document.getElementById("confirm-modal");
+      if (modal) modal.classList.add("hidden");
+    }
+
     function openClearedBalanceModal() {
       if (!activeAccountId) return;
       const acc = accounts.find(a => a.id === activeAccountId);
@@ -2960,6 +3127,11 @@
       toggleCheckNumberField();
       handleTypeChange();
       toggleTxModal(true);
+      const labelInput = document.getElementById("tx-labels-text-input");
+      if (labelInput) labelInput.value = "";
+
+      const labelDropdown = document.getElementById("labels-autocomplete-dropdown");
+      if (labelDropdown) labelDropdown.classList.add("hidden");
     }
 
     function openCustomConfirm({ title, message, confirmLabel = 'Delete', onConfirm }) {
@@ -3210,12 +3382,47 @@
 
     // --- OPEN & CLOSE CONTROLS ---
     function openLabelPicker() {
+      // Reset edit mode states on open
+      pickerEditMode = false;
+      const btn = document.getElementById("picker-edit-toggle-btn");
+      if (btn) {
+        btn.innerHTML = "✏️ Edit Labels";
+        btn.className = "px-2.5 py-1 text-[11px] font-bold text-slate-600 bg-slate-100 rounded-lg hover:bg-slate-200 transition";
+      }
+      const promptText = document.getElementById("picker-prompt-text");
+      if (promptText) {
+        promptText.textContent = "Need to edit labels?";
+      }
+      // 1. Initialize temporary selection set with currently active transaction labels
       tempSelectedLabels = new Set(activeTxLabels);
+
+      // 2. Clear out any previous search queries in the picker
       const searchInput = document.getElementById("label-search-input");
       if (searchInput) searchInput.value = "";
+
+      // 3. Ensure the inline custom add overlay is closed on reset
       closeInlineAdd();
+
+      // 4. Clear previous expanded states so we start with a clean slate
+      pickerExpandedNodes.clear();
+
+      // 5. Smart-expand only the parent paths leading directly to currently checked labels
+      tempSelectedLabels.forEach(lbl => {
+        const { path } = parseLabelString(lbl);
+        // Work down the path array and add parent folders to the expanded set
+        // e.g., ["Expenses", "Food", "Groceries"] -> expands "Expenses" and "Expenses-Food"
+        for (let i = 1; i < path.length; i++) {
+          const parentPathId = path.slice(0, i).join("-");
+          pickerExpandedNodes.add(parentPathId);
+        }
+      });
+
+      // 6. Reveal the label picker sub-modal
+      const modal = document.getElementById("label-picker-modal");
+      if (modal) modal.classList.remove("hidden");
+
+      // 7. Paint the dynamic tree
       renderLabelTreeUI();
-      document.getElementById("label-picker-modal").classList.remove("hidden");
     }
 
     function closeLabelPicker() {
@@ -3225,12 +3432,16 @@
     // --- RENDER SELECTED PREVIEW CHIPS ON MAIN MODAL ---
     function renderSelectedLabelsPreview() {
       const preview = document.getElementById("selected-labels-preview");
+      const input = document.getElementById("tx-labels-text-input");
       if (!preview) return;
 
       if (activeTxLabels.length === 0) {
-        preview.innerHTML = '<span class="text-xs text-slate-400 italic my-auto pl-1">No labels selected</span>';
+        preview.innerHTML = "";
+        if (input) input.placeholder = "Type to search or add labels...";
         return;
       }
+
+      if (input) input.placeholder = ""; // Clear placeholder so input fits perfectly next to chips
 
       preview.innerHTML = activeTxLabels.map((lbl, idx) => {
         const displayName = getLabelDisplayName(lbl);
@@ -3374,73 +3585,145 @@
     }
 
     // --- RECURSIVE NODE RENDER ENGINE ---
-    function renderLabelNode(nodeKey, nodeValue, parentPathId, searchQuery, depth = 0) {
-      const currentPathId = parentPathId ? `${parentPathId}-${nodeKey}` : nodeKey;
-      const rootKey = currentPathId.split('-');
-
-      // Filter tree dynamically based on search matches
-      if (searchQuery && !nodeMatchesQueryRecursive(nodeKey, nodeValue, searchQuery)) {
-        return '';
+    // Helper to evaluate if a category or its descendants match search queries
+    function nodeMatchesQuery(nodeName, nodeValue, query) {
+      if (!query) return true;
+      if (nodeName.toLowerCase().includes(query)) return true;
+      if (nodeValue && typeof nodeValue === "object" && !Array.isArray(nodeValue)) {
+        for (const [key, val] of Object.entries(nodeValue)) {
+          if (nodeMatchesQuery(key, val, query)) return true;
+        }
       }
-
-      const hasChildren = nodeValue && typeof nodeValue === 'object' && Object.keys(nodeValue).length > 0;
-      const isExpanded = pickerExpandedNodes.has(currentPathId) || searchQuery.length > 0;
-      const isChecked = [...tempSelectedLabels].some(lbl => parseLabelString(lbl).rawPath === currentPathId);
-      const activeLabelObj = [...tempSelectedLabels].find(lbl => parseLabelString(lbl).rawPath === currentPathId);
-      const activeNature = activeLabelObj ? parseLabelString(activeLabelObj).nature : getDefaultNatureForPath(currentPathId.split('-'));
-
-      const chevron = hasChildren ? (isExpanded ? "▼" : "▶") : "•";
-      const indentStyle = `margin-left: ${depth * 12}px;`;
-
-      let childrenHtml = '';
-      if (hasChildren && isExpanded) {
-        childrenHtml = Object.entries(nodeValue)
-          .map(([childKey, childVal]) => renderLabelNode(childKey, childVal, currentPathId, searchQuery, depth + 1))
-          .join('');
-      }
-
-      const highlightClass = searchQuery && nodeKey.toLowerCase().includes(searchQuery) ? "bg-yellow-100" : "";
-
-      return `
-        <div class="space-y-1" style="${indentStyle}">
-          <div class="flex items-center justify-between py-1 hover:bg-slate-50 rounded-lg pr-1">
-            <div class="flex items-center gap-2 min-w-0 flex-1">
-              ${hasChildren ? `
-                <button type="button" onclick="toggleNodeExpanded('${currentPathId}')" class="text-slate-400 hover:text-blue-600 focus:outline-none w-4 h-4 flex items-center justify-center text-[10px]">
-                  ${chevron}
-                </button>
-              ` : `
-                <span class="w-4 h-4 flex items-center justify-center text-[10px] text-slate-300">•</span>
-              `}
-              <label class="flex items-center gap-2 cursor-pointer min-w-0 flex-1 py-0.5">
-                <input type="checkbox" onchange="toggleLabelChecked('${currentPathId}')" ${isChecked ? "checked" : ""}
-                       class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 shrink-0" />
-                <span class="font-semibold text-slate-700 truncate ${highlightClass}">${nodeKey}</span>
-              </label>
-            </div>
-            <button type="button" onclick="openInlineAdd('${currentPathId}')" class="text-[10px] font-extrabold text-blue-500 hover:text-blue-700 px-1.5 shrink-0">➕ Add</button>
-          </div>
-          ${isChecked && rootKey === "Expenses" ? renderNatureToggleRow(currentPathId, activeNature) : ""}
-          ${childrenHtml}
-        </div>
-      `;
+      return false;
     }
 
-    // --- RECURSIVE LAYOUT ENGINE ENTRY POINT ---
-    function renderLabelTreeUI() {
-      const container = document.getElementById("label-tree-container");
-      const searchQuery = document.getElementById("label-search-input")?.value.trim().toLowerCase() || "";
-      if (!container) return;
+    // --- RECURSIVE LABEL TREE RENDERER & UI DRAW HOOKS ---
+    function renderLabelNode(nodeName, nodeValue, parentPathArray = [], query = "") {
+      const currentPathArray = [...parentPathArray, nodeName];
+      const pathId = currentPathArray.join("-");
+      const isFolder = nodeValue && typeof nodeValue === "object" && Object.keys(nodeValue).length > 0;
 
-      let html = "";
+      // Auto-expand directory if user is actively searching to reveal matching items
+      const isExpanded = pickerExpandedNodes.has(pathId) || (query !== "" && isFolder);
+      const depth = parentPathArray.length;
 
-      // Iterate through root-level macro nodes (Expenses, Goals, Income, Other)
-      for (const [rootKey, rootValue] of Object.entries(labelTree)) {
-        html += renderLabelNode(rootKey, rootValue, "", searchQuery, 0);
+      // Indent padding corresponding to recursion depth
+      const indentStyle = `style="padding-left: ${depth * 1.25}rem;"`;
+
+      // Check current selections
+      const isChecked = Array.from(tempSelectedLabels).some(lbl => parseLabelString(lbl).rawPath === pathId);
+      const activeLabelStr = Array.from(tempSelectedLabels).find(lbl => parseLabelString(lbl).rawPath === pathId);
+      const currentNature = activeLabelStr ? parseLabelString(activeLabelStr).nature : getDefaultNatureForPath(currentPathArray);
+
+      // Icon formatting
+      const chevron = isFolder
+        ? `<button type="button" onclick="toggleNodeExpanded('${pathId}')" 
+                    class="w-5 h-5 flex items-center justify-center text-slate-400 hover:text-slate-600 transition-transform ${isExpanded ? 'rotate-90' : ''}">
+             ▶
+           </button>`
+        : `<span class="w-5 h-5 inline-block"></span>`;
+
+      const icon = isFolder ? "" : "🏷️"; // Removed folder icon, keeping label tag icon for leaf nodes
+
+      // Three-line grab handle (⠿) to visually indicate dragging is possible (Only visible in Edit Mode)
+      const dragHandle = pickerEditMode ? `
+        <span class="cursor-grab active:cursor-grabbing text-slate-300 hover:text-slate-500 font-extrabold px-1 select-none text-sm transition" title="Drag to reorder">
+          ⠿
+        </span>
+      ` : "";
+
+      const managementActions = `
+        <div class="flex items-center gap-1 ml-auto opacity-70 hover:opacity-100 transition-opacity">
+          <button type="button" onclick="handleRenameCategory('${pathId}')" 
+                  class="p-1 text-slate-500 hover:text-blue-600 hover:bg-slate-100 rounded transition" title="Rename category">
+            ✏️
+          </button>
+          <button type="button" onclick="handleDeleteCategory('${pathId}')" 
+                  class="p-1 text-slate-500 hover:text-red-600 hover:bg-slate-100 rounded transition" title="Delete category">
+            🗑️
+          </button>
+          <button type="button" onclick="handleAddSubCategory('${pathId}')" 
+                  class="p-1 text-slate-500 hover:text-emerald-600 hover:bg-slate-100 rounded transition" title="Add nested sub-category">
+            ➕
+          </button>
+        </div>
+      `;
+
+      // Define drag attributes only if Edit Mode is active
+      const dragAttributes = pickerEditMode ? `
+        draggable="true"
+        ondragstart="handleLabelDragStart(event, '${pathId}')"
+        ondragend="handleLabelDragEnd(event)"
+        ondragover="handleLabelDragOver(event, '${pathId}')"
+        ondragleave="handleLabelDragLeave(event)"
+        ondrop="handleLabelDrop(event, '${pathId}')"
+      ` : "";
+
+      // Build Row HTML
+      let nodeHtml = `
+        <div ${indentStyle} class="py-1">
+          <div ${dragAttributes} class="flex items-center gap-2 group hover:bg-slate-50/80 px-2 py-1 rounded-xl transition-colors">
+            ${dragHandle}
+            ${chevron}
+            
+            ${!pickerEditMode ? `
+              <input type="checkbox" ${isChecked ? "checked" : ""} 
+                     id="chk-${pathId}"
+                     onclick="toggleLabelChecked('${pathId}')" 
+                     class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer" />
+            ` : ""}
+            
+            <label for="chk-${pathId}" class="text-xs font-semibold text-slate-700 flex items-center gap-1 cursor-pointer select-none">
+              ${icon ? `<span>${icon}</span>` : ""}
+              <span>${nodeName}</span>
+            </label>
+            
+            ${pickerEditMode ? managementActions : ""}
+          </div>
+          
+          <!-- Show dynamic nature toggles inline if category is selected inside Expenses (Root evaluation fixed [2]) -->
+          ${!pickerEditMode && isChecked && currentPathArray === "Expenses"
+          ? renderNatureToggleRow(pathId, currentNature)
+          : ""}
+        </div>
+      `;
+
+      // Recursively paint child branches if folder is expanded
+      if (isFolder && isExpanded) {
+        let childrenHtml = "";
+        for (const [childName, childValue] of Object.entries(nodeValue)) {
+          if (query === "" || nodeMatchesQuery(childName, childValue, query)) {
+            childrenHtml += renderLabelNode(childName, childValue, currentPathArray, query);
+          }
+        }
+        nodeHtml += childrenHtml;
       }
 
-      container.innerHTML = html || `<p class="text-xs text-slate-500 text-center py-6 font-medium">No categories match your search.</p>`;
-      updatePickerSelectionCounter();
+      return nodeHtml;
+    }
+
+    // Ensure main UI redraw hook points cleanly to recursive builder
+    function renderLabelTreeUI() {
+      const container = document.getElementById("label-tree-container");
+      if (!container) return;
+
+      const query = (document.getElementById("label-search-input")?.value || "").trim().toLowerCase();
+
+      let html = "";
+      for (const [key, val] of Object.entries(labelTree)) {
+        if (query === "" || nodeMatchesQuery(key, val, query)) {
+          html += renderLabelNode(key, val, [], query);
+        }
+      }
+
+      container.innerHTML = html || '<div class="p-4 text-xs text-slate-500 italic text-center">No categories found</div>';
+
+      // Selection counts and reset buttons only render in selection mode
+      const footerCounter = document.getElementById("label-picker-counter");
+      if (footerCounter) {
+        footerCounter.style.display = pickerEditMode ? "none" : "block";
+        updatePickerSelectionCounter();
+      }
     }
 
     // --- HELPER TO NAVIGATE AND APPEND LABELS AT ANY DYNAMIC DEPTH ---
@@ -3459,6 +3742,626 @@
       }
       return false;
     }
+
+    // --- LIVE LABELS AUTOCOMPLETE & KEYBOARD NAVIGATION ENGINE ---
+    let selectedDropdownIndex = -1;
+    let activeDropdownMatches = [];
+
+    // Recursively flattens your nested category tree to search all paths instantly
+    function getAllLabelPaths(tree, currentPath = []) {
+      let paths = [];
+      for (const [key, val] of Object.entries(tree)) {
+        const newPath = [...currentPath, key];
+        paths.push(newPath);
+        if (val && typeof val === "object" && !Array.isArray(val)) {
+          paths = paths.concat(getAllLabelPaths(val, newPath));
+        }
+      }
+      return paths;
+    }
+
+    // Triggers as you type into the labels input field
+    function handleLabelSearchTyping(query) {
+      const dropdown = document.getElementById("labels-autocomplete-dropdown");
+      if (!dropdown) return;
+
+      const cleanQuery = query.trim().toLowerCase();
+      if (!cleanQuery) {
+        dropdown.classList.add("hidden");
+        activeDropdownMatches = [];
+        selectedDropdownIndex = -1;
+        return;
+      }
+
+      const allPaths = getAllLabelPaths(labelTree);
+      const currentActiveRawPaths = activeTxLabels.map(lbl => parseLabelString(lbl).rawPath);
+
+      // Filter out labels that are already selected on this transaction
+      activeDropdownMatches = allPaths.filter(pathArray => {
+        const pathStr = pathArray.join("-");
+        if (currentActiveRawPaths.includes(pathStr)) return false;
+
+        const leaf = pathArray[pathArray.length - 1].toLowerCase();
+        const fullPath = pathStr.toLowerCase();
+        return leaf.includes(cleanQuery) || fullPath.includes(cleanQuery);
+      });
+
+      if (activeDropdownMatches.length === 0) {
+        dropdown.innerHTML = '<div class="p-3 text-xs text-slate-500 italic text-center">No matching labels found</div>';
+        dropdown.classList.remove("hidden");
+        selectedDropdownIndex = -1;
+        return;
+      }
+
+      selectedDropdownIndex = 0; // Default highlight the first matching element
+      renderLabelsAutocomplete();
+    }
+
+    // Renders matching label items into the floating suggestion dropdown
+    function renderLabelsAutocomplete() {
+      const dropdown = document.getElementById("labels-autocomplete-dropdown");
+      if (!dropdown) return;
+
+      dropdown.innerHTML = activeDropdownMatches.map((pathArray, idx) => {
+        const pathStr = pathArray.join("-");
+        const displayName = pathArray[pathArray.length - 1];
+        const displayPath = pathArray.join(" ➔ ");
+        const isHighlighted = idx === selectedDropdownIndex;
+
+        const highlightClass = isHighlighted
+          ? "bg-blue-50 text-blue-700 font-bold"
+          : "text-slate-700 hover:bg-slate-50";
+
+        return `
+          <div onclick="selectDropdownLabel('${pathStr}')" 
+               class="px-4 py-2.5 text-xs cursor-pointer flex flex-col gap-0.5 transition-colors ${highlightClass}">
+            <span class="font-semibold text-slate-800">${displayName}</span>
+            <span class="text-[10px] text-slate-400 font-medium">${displayPath}</span>
+          </div>
+        `;
+      }).join("");
+
+      dropdown.classList.remove("hidden");
+    }
+
+    // Enables Arrow Up/Down navigation, Enter key selections, and Backspace deletions
+    function handleLabelSearchKeydown(e) {
+      const input = document.getElementById("tx-labels-text-input");
+      const dropdown = document.getElementById("labels-autocomplete-dropdown");
+
+      // Backspace on empty input removes the most recently added chip
+      if (e.key === "Backspace" && input && input.value === "") {
+        if (activeTxLabels.length > 0) {
+          activeTxLabels.pop();
+          renderSelectedLabelsPreview();
+          e.preventDefault();
+        }
+        return;
+      }
+
+      if (activeDropdownMatches.length === 0) return;
+
+      if (e.key === "ArrowDown") {
+        selectedDropdownIndex = (selectedDropdownIndex + 1) % activeDropdownMatches.length;
+        renderLabelsAutocomplete();
+        e.preventDefault();
+        const activeItem = dropdown.children[selectedDropdownIndex];
+        activeItem?.scrollIntoView({ block: "nearest" });
+      } else if (e.key === "ArrowUp") {
+        selectedDropdownIndex = (selectedDropdownIndex - 1 + activeDropdownMatches.length) % activeDropdownMatches.length;
+        renderLabelsAutocomplete();
+        e.preventDefault();
+        const activeItem = dropdown.children[selectedDropdownIndex];
+        activeItem?.scrollIntoView({ block: "nearest" });
+      } else if (e.key === "Enter" || e.key === "Tab") {
+        // If they hit Enter/Tab and haven't arrowed down, default to the top suggestion
+        if (selectedDropdownIndex === -1 && activeDropdownMatches.length > 0) {
+          selectedDropdownIndex = 0;
+        }
+
+        if (selectedDropdownIndex > -1 && selectedDropdownIndex < activeDropdownMatches.length) {
+          const selectedPathArray = activeDropdownMatches[selectedDropdownIndex];
+          const pathStr = selectedPathArray.join("-");
+          selectDropdownLabel(pathStr);
+          e.preventDefault(); // Prevents Tab from shifting focus to the next input field
+        }
+      } else if (e.key === "Escape") {
+        dropdown.classList.add("hidden");
+        activeDropdownMatches = [];
+        selectedDropdownIndex = -1;
+        e.preventDefault();
+      }
+    }
+
+    // Completes selection, resolves correct nature types, and resets state
+    function selectDropdownLabel(serializedPath) {
+      const pathArray = serializedPath.split("-");
+      const defaultNature = getDefaultNatureForPath(pathArray);
+      const resolvedStr = pathToLabelString(pathArray, defaultNature);
+
+      if (!activeTxLabels.includes(resolvedStr)) {
+        activeTxLabels.push(resolvedStr);
+      }
+
+      const input = document.getElementById("tx-labels-text-input");
+      if (input) input.value = "";
+
+      const dropdown = document.getElementById("labels-autocomplete-dropdown");
+      if (dropdown) dropdown.classList.add("hidden");
+
+      activeDropdownMatches = [];
+      selectedDropdownIndex = -1;
+
+      renderSelectedLabelsPreview();
+      input?.focus(); // Re-focus typing input immediately for fast multi-tagging
+    }
+
+    // --- DYNAMIC TREE EXPLORATION CONTROLLERS ---
+
+    // Recursively scans the tree to find and expand every subfolder
+    function expandAllLabels() {
+      function getFolders(tree, currentPath = []) {
+        let folders = [];
+        for (const [key, val] of Object.entries(tree)) {
+          // If the node contains children, it is a directory folder
+          if (val && typeof val === "object" && Object.keys(val).length > 0) {
+            const pathArray = [...currentPath, key];
+            folders.push(pathArray.join("-"));
+            folders = folders.concat(getFolders(val, pathArray));
+          }
+        }
+        return folders;
+      }
+
+      const allFolders = getFolders(labelTree);
+      allFolders.forEach(pathId => pickerExpandedNodes.add(pathId));
+      renderLabelTreeUI();
+    }
+
+    // Wipes the expanded set to cleanly collapse the tree back to root categories
+    function collapseAllLabels() {
+      pickerExpandedNodes.clear();
+      renderLabelTreeUI();
+    }
+
+    // Toggles between Select Labels Mode and Edit Labels Mode
+    function togglePickerEditMode(forceState = null) {
+      // If a specific state is forced (like false on Save/Cancel), use it. Otherwise, flip the boolean.
+      if (forceState !== null) {
+        pickerEditMode = forceState;
+      } else {
+        pickerEditMode = !pickerEditMode;
+      }
+
+      const btn = document.getElementById("picker-edit-toggle-btn");
+      const promptText = document.getElementById("picker-prompt-text");
+      const leftBtn = document.getElementById("picker-cancel-clear-btn");
+      const rightBtn = document.getElementById("picker-apply-save-btn");
+
+      if (pickerEditMode) {
+        // --- ENTERING EDIT MODE ---
+        // 1. Take safety snapshots of the current state before any edits happen
+        labelTreeBackup = JSON.parse(JSON.stringify(labelTree));
+        labelNaturesBackup = JSON.parse(JSON.stringify(labelNatures));
+        activeTxLabelsBackup = [...activeTxLabels];
+
+        // 2. Adjust Header Prompts
+        if (btn) btn.innerHTML = "☑️ Select Labels";
+        if (promptText) promptText.textContent = "Ready to select labels?";
+
+        // 3. Transform Footer Buttons into Edit Controls
+        if (leftBtn) {
+          leftBtn.textContent = "Cancel Edits";
+          leftBtn.onclick = cancelCategoryEdits;
+          leftBtn.className = "flex-1 px-4 py-2.5 bg-red-50 text-red-600 border border-red-100 rounded-xl font-bold text-xs transition hover:bg-red-100";
+        }
+        if (rightBtn) {
+          rightBtn.textContent = "Save Edits";
+          rightBtn.onclick = saveCategoryEdits;
+          rightBtn.className = "flex-1 px-4 py-2.5 bg-emerald-600 text-white rounded-xl font-bold text-xs shadow-md transition hover:bg-emerald-700";
+        }
+      } else {
+        // --- EXITING EDIT MODE (DEFAULT SELECT VIEW) ---
+        // Restore standard header states
+        if (btn) btn.innerHTML = "✏️ Edit Labels";
+        if (promptText) promptText.textContent = "Need to edit labels?";
+
+        // Restore standard footer button roles
+        if (leftBtn) {
+          leftBtn.textContent = "Clear All";
+          leftBtn.onclick = clearAllSelections;
+          leftBtn.className = "flex-1 px-4 py-2.5 bg-slate-100 text-slate-700 rounded-xl font-bold text-xs transition hover:bg-slate-200";
+        }
+        if (rightBtn) {
+          rightBtn.textContent = "Apply";
+          rightBtn.onclick = applyLabelSelection;
+          rightBtn.className = "flex-1 px-4 py-2.5 bg-blue-600 text-white rounded-xl font-bold text-xs shadow-md transition hover:bg-blue-700";
+        }
+      }
+
+      renderLabelTreeUI();
+    }
+
+    // Commits all edits/renames/adds to LocalStorage and returns cleanly to selection view
+    function saveCategoryEdits() {
+      localStorage.setItem('household-budget-label-tree', JSON.stringify(labelTree));
+      localStorage.setItem('household-budget-label-natures', JSON.stringify(labelNatures));
+
+      labelTreeBackup = null;
+      labelNaturesBackup = null;
+      activeTxLabelsBackup = null;
+
+      // Force exit edit mode back to standard selection view
+      togglePickerEditMode(false);
+      showAppMessage("Category changes saved and locked in!");
+    }
+
+    // Completely rolls back any edits, additions, or deletions and returns to selection view
+    function cancelCategoryEdits() {
+      if (labelTreeBackup && labelNaturesBackup && activeTxLabelsBackup) {
+        labelTree = JSON.parse(JSON.stringify(labelTreeBackup));
+        labelNatures = JSON.parse(JSON.stringify(labelNaturesBackup));
+        activeTxLabels = [...activeTxLabelsBackup];
+
+        localStorage.setItem('household-budget-label-tree', JSON.stringify(labelTree));
+        localStorage.setItem('household-budget-label-natures', JSON.stringify(labelNatures));
+
+        tempSelectedLabels = new Set(activeTxLabels);
+      }
+
+      labelTreeBackup = null;
+      labelNaturesBackup = null;
+      activeTxLabelsBackup = null;
+
+      // Force exit edit mode back to standard selection view
+      togglePickerEditMode(false);
+      renderSelectedLabelsPreview();
+      showAppMessage("Edits cancelled. All changes discarded.");
+    }
+
+    // Recursively renames a key within the category object hierarchy
+    function renameLabelInTree(tree, pathArray, oldName, newName) {
+      let current = tree;
+      for (const segment of pathArray) {
+        if (current[segment] !== undefined) {
+          current = current[segment];
+        } else {
+          return false;
+        }
+      }
+      if (current[oldName] !== undefined) {
+        const subTree = current[oldName];
+        delete current[oldName];
+        current[newName] = subTree;
+        return true;
+      }
+      return false;
+    }
+
+    // Recursively deletes a key within the category object hierarchy
+    function deleteLabelFromTree(tree, pathArray, targetName) {
+      let current = tree;
+      for (const segment of pathArray) {
+        if (current[segment] !== undefined) {
+          current = current[segment];
+        } else {
+          return false;
+        }
+      }
+      if (current[targetName] !== undefined) {
+        delete current[targetName];
+        return true;
+      }
+      return false;
+    }
+
+    // Migrates all references in natures and active selections after a rename
+    function updateLabelReferencesAfterRename(oldPathStr, newPathStr) {
+      // 1. Update labelNatures keys
+      if (labelNatures[oldPathStr] !== undefined) {
+        labelNatures[newPathStr] = labelNatures[oldPathStr];
+        delete labelNatures[oldPathStr];
+      }
+      const prefix = oldPathStr + "-";
+      for (const key of Object.keys(labelNatures)) {
+        if (key.startsWith(prefix)) {
+          const suffix = key.slice(prefix.length);
+          const newKey = newPathStr + "-" + suffix;
+          labelNatures[newKey] = labelNatures[key];
+          delete labelNatures[key];
+        }
+      }
+      saveLabelNatures();
+
+      // 2. Update temporary picker selections
+      const updatedTemp = new Set();
+      tempSelectedLabels.forEach(lbl => {
+        const { rawPath, nature } = parseLabelString(lbl);
+        if (rawPath === oldPathStr) {
+          updatedTemp.add(newPathStr + "|" + nature);
+        } else if (rawPath.startsWith(prefix)) {
+          const suffix = rawPath.slice(prefix.length);
+          updatedTemp.add(newPathStr + "-" + suffix + "|" + nature);
+        } else {
+          updatedTemp.add(lbl);
+        }
+      });
+      tempSelectedLabels = updatedTemp;
+
+      // 3. Update main transaction active selections
+      activeTxLabels = activeTxLabels.map(lbl => {
+        const { rawPath, nature } = parseLabelString(lbl);
+        if (rawPath === oldPathStr) {
+          return newPathStr + "|" + nature;
+        } else if (rawPath.startsWith(prefix)) {
+          const suffix = rawPath.slice(prefix.length);
+          return newPathStr + "-" + suffix + "|" + nature;
+        }
+        return lbl;
+      });
+
+      renderSelectedLabelsPreview();
+    }
+
+    // Clears out all references in natures and active selections on deletion
+    function removeLabelReferencesAfterDelete(targetPathStr) {
+      delete labelNatures[targetPathStr];
+      const prefix = targetPathStr + "-";
+      for (const key of Object.keys(labelNatures)) {
+        if (key.startsWith(prefix)) {
+          delete labelNatures[key];
+        }
+      }
+      saveLabelNatures();
+
+      const updatedTemp = new Set();
+      tempSelectedLabels.forEach(lbl => {
+        const { rawPath } = parseLabelString(lbl);
+        if (rawPath !== targetPathStr && !rawPath.startsWith(prefix)) {
+          updatedTemp.add(lbl);
+        }
+      });
+      tempSelectedLabels = updatedTemp;
+
+      activeTxLabels = activeTxLabels.filter(lbl => {
+        const { rawPath } = parseLabelString(lbl);
+        return rawPath !== targetPathStr && !rawPath.startsWith(prefix);
+      });
+
+      renderSelectedLabelsPreview();
+    }
+
+    // ==========================================
+    // DRAG AND DROP REORDER ENGINE
+    // ==========================================
+    let draggedPathId = null;
+
+    function handleLabelDragStart(e, pathId) {
+      draggedPathId = pathId;
+      e.target.closest('.group').classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+    }
+
+    function handleLabelDragEnd(e) {
+      draggedPathId = null;
+      document.querySelectorAll('.drag-over-above, .drag-over-below').forEach(el => {
+        el.classList.remove('drag-over-above', 'drag-over-below');
+      });
+      document.querySelectorAll('.dragging').forEach(el => {
+        el.classList.remove('dragging');
+      });
+    }
+
+    function handleLabelDragOver(e, targetPathId) {
+      if (!draggedPathId || draggedPathId === targetPathId) return;
+
+      // Restrict dragging strictly to sibling categories of the same parent
+      const draggedParent = draggedPathId.split("-").slice(0, -1).join("-");
+      const targetParent = targetPathId.split("-").slice(0, -1).join("-");
+      if (draggedParent !== targetParent) return;
+
+      e.preventDefault(); // Required to allow a drop
+
+      const targetRow = e.target.closest('.group');
+      if (!targetRow) return;
+
+      const rect = targetRow.getBoundingClientRect();
+      const midpoint = rect.top + rect.height / 2;
+
+      // Draw the blue indicator line depending on where the mouse is hovering
+      if (e.clientY < midpoint) {
+        targetRow.classList.add('drag-over-above');
+        targetRow.classList.remove('drag-over-below');
+      } else {
+        targetRow.classList.add('drag-over-below');
+        targetRow.classList.remove('drag-over-above');
+      }
+    }
+
+    function handleLabelDragLeave(e) {
+      const targetRow = e.target.closest('.group');
+      if (targetRow) {
+        targetRow.classList.remove('drag-over-above', 'drag-over-below');
+      }
+    }
+
+    function handleLabelDrop(e, targetPathId) {
+      e.preventDefault();
+
+      const targetRow = e.target.closest('.group');
+      if (!targetRow || !draggedPathId || draggedPathId === targetPathId) return;
+
+      const isAbove = targetRow.classList.contains('drag-over-above');
+
+      // Clean up indicators
+      targetRow.classList.remove('drag-over-above', 'drag-over-below');
+
+      const pathArray = draggedPathId.split("-");
+      const draggedName = pathArray[pathArray.length - 1];
+      const parentPath = pathArray.slice(0, -1);
+      const targetName = targetPathId.split("-").pop();
+
+      // Navigate to the target parent node in labelTree
+      let parentObj = labelTree;
+      for (const segment of parentPath) {
+        parentObj = parentObj[segment];
+      }
+
+      // Reorder object keys preserving modern ES6 ordering
+      const keys = Object.keys(parentObj);
+      const draggedIdx = keys.indexOf(draggedName);
+      keys.splice(draggedIdx, 1); // Remove the dragged key
+
+      let targetIdx = keys.indexOf(targetName);
+      const insertIdx = isAbove ? targetIdx : targetIdx + 1;
+      keys.splice(insertIdx, 0, draggedName); // Re-insert at the new index
+
+      // Rebuild the parent folder object with the new sorted order
+      const rebuiltParent = {};
+      keys.forEach(k => {
+        rebuiltParent[k] = parentObj[k];
+      });
+
+      // Swap the reference in the master tree
+      if (parentPath.length === 0) {
+        labelTree = rebuiltParent;
+      } else {
+        let parentPointer = labelTree;
+        for (let i = 0; i < parentPath.length - 1; i++) {
+          parentPointer = parentPointer[parentPath[i]];
+        }
+        parentPointer[parentPath[parentPath.length - 1]] = rebuiltParent;
+      }
+
+      saveLabelTree();
+      renderLabelTreeUI();
+      showAppMessage("Category order updated!");
+    }
+
+    // Triggered when clicking Rename (✏️) in Edit Mode
+    function handleRenameCategory(serializedPath) {
+      const pathArray = serializedPath.split("-");
+      const oldName = pathArray[pathArray.length - 1];
+      const parentPath = pathArray.slice(0, -1);
+
+      // System categories can't be renamed to preserve root schemas
+      if (pathArray.length === 1 && ["Expenses", "Income", "Goals", "Other"].includes(oldName)) {
+        showAppMessage("Root system categories cannot be renamed.");
+        return;
+      }
+
+      showCustomPrompt({
+        title: "Rename Category",
+        message: `Enter new name for "${oldName}":`,
+        defaultValue: oldName,
+        onSubmit: (newName) => {
+          if (newName === null) return;
+          const cleanNewName = newName.trim().replace(/-/g, " "); // Avoid dash conflicts
+          if (!cleanNewName) {
+            showAppMessage("Category name cannot be empty.");
+            return;
+          }
+          if (cleanNewName === oldName) return;
+
+          const success = renameLabelInTree(labelTree, parentPath, oldName, cleanNewName);
+          if (success) {
+            const newPathStr = [...parentPath, cleanNewName].join("-");
+            updateLabelReferencesAfterRename(serializedPath, newPathStr);
+            saveLabelTree();
+            renderLabelTreeUI();
+            showAppMessage(`Renamed "${oldName}" to "${cleanNewName}" successfully!`);
+          } else {
+            showAppMessage("Error: Could not find category to rename.");
+          }
+        }
+      });
+    }
+
+    // Triggered when clicking Delete (🗑️) in Edit Mode
+    function handleDeleteCategory(serializedPath) {
+      const pathArray = serializedPath.split("-");
+      const targetName = pathArray[pathArray.length - 1];
+      const parentPath = pathArray.slice(0, -1);
+
+      if (pathArray.length === 1 && ["Expenses", "Income", "Goals", "Other"].includes(targetName)) {
+        showAppMessage("Root system categories cannot be deleted.");
+        return;
+      }
+
+      showCustomConfirm({
+        title: "Delete Category?",
+        message: `Are you sure you want to delete "${targetName}" and all its subfolders?
+
+This action can be undone by cancelling your edits.`,
+        confirmLabel: "Delete",
+        onConfirm: () => {
+          const success = deleteLabelFromTree(labelTree, parentPath, targetName);
+          if (success) {
+            removeLabelReferencesAfterDelete(serializedPath);
+            saveLabelTree();
+            renderLabelTreeUI();
+            showAppMessage(`Deleted "${targetName}" and all associated child categories.`);
+          } else {
+            showAppMessage("Error: Could not delete category.");
+          }
+        }
+      });
+    }
+
+    // Triggered when clicking Add Sub-Category (➕) in Edit Mode
+    function handleAddSubCategory(serializedPath) {
+      const pathArray = serializedPath.split("-");
+      const parentName = pathArray[pathArray.length - 1];
+
+      showCustomPrompt({
+        title: "Add Sub-Category",
+        message: `Enter a name for the new sub-category under "${parentName}":`,
+        defaultValue: "",
+        onSubmit: (name) => {
+          if (name === null) return;
+          const cleanName = name.trim().replace(/-/g, " ");
+          if (!cleanName) {
+            showAppMessage("Sub-category name cannot be empty.");
+            return;
+          }
+
+          let current = labelTree;
+          for (const segment of pathArray) {
+            if (current[segment] !== undefined) {
+              current = current[segment];
+            } else {
+              showAppMessage("Error: Parent path not found.");
+              return;
+            }
+          }
+
+          if (current[cleanName] !== undefined) {
+            showAppMessage("A sub-category with that name already exists here.");
+            return;
+          }
+
+          current[cleanName] = {};
+          saveLabelTree();
+
+          // Auto-expand parent node to reveal new child category instantly
+          pickerExpandedNodes.add(serializedPath);
+
+          renderLabelTreeUI();
+          showAppMessage(`Added "${cleanName}" under "${parentName}"!`);
+        }
+      });
+    }
+
+    // Dismisses suggestion lists if clicking outside the labels widget
+    document.addEventListener("click", function (e) {
+      const container = document.getElementById("tx-labels-field");
+      const dropdown = document.getElementById("labels-autocomplete-dropdown");
+      if (container && dropdown && !container.contains(e.target)) {
+        dropdown.classList.add("hidden");
+        activeDropdownMatches = [];
+        selectedDropdownIndex = -1;
+      }
+    });
 
     // --- UPDATE INLINE SUBMISSION TO SUPPORT DYNAMIC PATHS ---
     function submitInlineAdd() {
