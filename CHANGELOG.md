@@ -4,6 +4,20 @@ All notable changes to this project will be documented in this file.
 
 ## [unreleased]
 
+## [1.4.1] - 2026-08-23
+
+### Added
+- **Split View Label Tree Modal Integration:** Configured split transaction rows to support double-clicking (`ondblclick`) a split "Type to search" input field to instantly pop open the full recursive category tree picker.
+- **Multi-Device Configuration Import Hook:** Embedded a dynamic URL parameter detector (`?importConfig=...`) inside the initialization routine. Decodes and auto-loads custom categories and natures via a single magic link, enabling seamless sync from computer to mobile devices.
+- **Targeted Sibling-Branch Tree State Restoration:** Extended the label picker modal to track active split row selection indices, dynamically pre-checking existing split tags when loading the tree, and cleanly routing selected categories back to the corresponding split row.
+
+### Changed
+- **Decoupled Category Tree Selection & Navigation:** Swapped the legacy `<label>` elements for `<span>` nodes inside the category renderer. Restricted category selection strictly to direct checkbox clicks, configuring parent category text clicks to toggle folder expansion without accidentally checking boxes.
+
+### Fixed
+- **Main Label Input Split View Visibility:** Patched the split editor toggle to look up `'tx-labels-field'` instead of `'tx-tags-field'`, ensuring the main labels input area hides cleanly when split mode is active.
+- **Split Autocomplete Dropdown String Interpolation:** Swapped single quotes with backticks in the split autocomplete helpers to enable successful query parsing and dynamic UI rendering.
+
 ## [1.4.0] - 2026-08-23
 
 ### Added

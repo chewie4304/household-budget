@@ -624,7 +624,7 @@
         <div id="txSplitEditor" class="hidden space-y-3 rounded-xl border border-emerald-200 bg-emerald-50 p-3">
           <div>
             <p class="text-sm font-bold text-emerald-800">Split details</p>
-            <p class="mt-0.5 text-[11px] text-emerald-700">Add tags, a description, and an amount for each part.</p>
+            <p class="mt-0.5 text-[11px] text-emerald-700">Add labels, a description, and an amount for each part.</p>
           </div>
           <div class="space-y-2">
             <div id="txSplitRows" class="space-y-2"></div>
@@ -908,6 +908,11 @@
 
     // --- Label Picker Edit Mode Logic ---
     let pickerEditMode = false;
+
+    // --- SPLIT TRANSACTION LABELS AUTOCOMPLETE & NAVIGATION ---
+    let activeSplitDropdownIndex = -1;
+    let activeSplitDropdownMatches = [];
+    let activeSplitRowPickerIndex = null;
 
     let transactions = [];
     let currentAccountTransactions = [];
@@ -1555,6 +1560,22 @@
     }
 
     async function init() {
+      // --- MAGIC LINK CONFIGURATION IMPORT HOOK ---
+      const urlParams = new URLSearchParams(window.location.search);
+      const importData = urlParams.get('importConfig');
+      if (importData) {
+        try {
+          const decoded = JSON.parse(decodeURIComponent(atob(importData)));
+          if (decoded.tree) localStorage.setItem('household-budget-label-tree', decoded.tree);
+          if (decoded.natures) localStorage.setItem('household-budget-label-natures', decoded.natures);
+
+          // Clean up the URL bar immediately so refreshing doesn't trigger alerts
+          window.history.replaceState({}, document.title, window.location.pathname);
+          showAppMessage("Categories & natures successfully synced to this device! 🎉");
+        } catch (err) {
+          console.warn("Failed to import configuration from URL:", err);
+        }
+      }
       loadLabelTree();
       buildMonthOptions();
       restoreViewState();
@@ -2520,15 +2541,28 @@
 
       container.innerHTML = rows.map((row, index) => `
         <div class="grid grid-cols-1 gap-2 rounded-lg border border-emerald-100 bg-white p-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)_5rem_auto] sm:items-center">
-          <input type="text" data-split-tags placeholder="Tags, comma-separated" value="${escapeHtml((row.tags || (row.category ? [row.category] : [])).join(', '))}"
-            class="w-full border border-slate-200 bg-white px-2 py-1.5 rounded-lg text-xs" />
-          <input type="text" data-split-description list="desc-suggestions" placeholder="Description" value="${escapeHtml(row.description || '')}"
+          <!-- Labels input with local autocomplete dropdown -->
+          <div class="relative">
+            <input type="text" data-split-tags placeholder="Type to search" 
+              value="${escapeHtml((row.tags || (row.category ? [row.category] : [])).join(', '))}"
+              oninput="handleSplitLabelTyping(this, ${index})"
+              onkeydown="handleSplitLabelKeydown(event, this, ${index})"
+              ondblclick="openLabelPicker(${index})"
+              title="Double-click to open full label tree"
+              class="w-full border border-slate-200 bg-white px-2 py-1.5 rounded-lg text-xs" />
+            <div id="split-labels-dropdown-${index}"
+              class="hidden absolute left-0 right-0 mt-1 max-h-40 overflow-y-auto bg-white border border-slate-200 rounded-xl shadow-lg z-[6]">
+            </div>
+          </div>
+          
+          <input type="text" data-split-description placeholder="Description" value="${escapeHtml(row.description || '')}"
             class="w-full border border-slate-200 bg-white px-2 py-1.5 rounded-lg text-xs" />
           <input type="text" data-split-amount placeholder="0.00" value="${row.amount !== '' ? Number(row.amount).toFixed(2) : ''}" class="w-full border border-slate-200 bg-white px-2 py-1.5 rounded-lg text-xs" />
           <button type="button" onclick="removeSplitRow(${index})" aria-label="Remove split"
             class="text-lg leading-none text-red-400 hover:text-red-600">&times;</button>
         </div>
       `).join('');
+
       container.querySelectorAll('[data-split-amount]').forEach(input => {
         input.addEventListener('input', () => updateSplitRemainder(input));
 
@@ -2538,6 +2572,254 @@
         });
       });
       updateSplitRemainder();
+    }
+
+    // --- Autocomplete logic for split inputs ---
+    function handleSplitLabelTyping(input, rowIndex) {
+      const dropdown = document.getElementById(`split-labels-dropdown-${rowIndex}`);
+      if (!dropdown) return;
+
+      const rawVal = input.value;
+      const parts = rawVal.split(',');
+      const currentQuery = parts[parts.length - 1].trim().toLowerCase();
+
+      if (!currentQuery) {
+        dropdown.classList.add("hidden");
+        activeSplitDropdownMatches = [];
+        activeSplitDropdownIndex = -1;
+        return;
+      }
+
+      const allPaths = getAllLabelPaths(labelTree);
+      const alreadySelectedRawPaths = parts.slice(0, -1).map(p => parseLabelString(p.trim()).rawPath);
+
+      // Filters matching paths and prevents duplicate tags in the same split row
+      activeSplitDropdownMatches = allPaths.filter(pathArray => {
+        const pathStr = pathArray.join("-");
+        if (alreadySelectedRawPaths.includes(pathStr)) return false;
+
+        const leaf = pathArray[pathArray.length - 1].toLowerCase();
+        const fullPath = pathStr.toLowerCase();
+        return leaf.includes(currentQuery) || fullPath.includes(currentQuery);
+      });
+
+      if (activeSplitDropdownMatches.length === 0) {
+        dropdown.innerHTML = '<div class="p-2.5 text-[11px] text-slate-400 italic text-center">No matching labels</div>';
+        dropdown.classList.remove("hidden");
+        activeSplitDropdownIndex = -1;
+        return;
+      }
+
+      activeSplitDropdownIndex = 0; // Highlight the top suggestion by default
+      renderSplitLabelsAutocomplete(rowIndex, input);
+    }
+
+    // Paints the matching items in the suggestion box
+    function renderSplitLabelsAutocomplete(rowIndex, input) {
+      const dropdown = document.getElementById(`split-labels-dropdown-${rowIndex}`);
+      if (!dropdown) return;
+
+      dropdown.innerHTML = activeSplitDropdownMatches.map((pathArray, idx) => {
+        const pathStr = pathArray.join("-");
+        const displayName = pathArray[pathArray.length - 1];
+        const displayPath = pathArray.join(" ➔ ");
+        const isHighlighted = idx === activeSplitDropdownIndex;
+
+        const highlightClass = isHighlighted
+          ? "bg-emerald-50 text-emerald-700 font-bold"
+          : "text-slate-700 hover:bg-slate-50";
+
+        return `
+          <div onclick="selectSplitDropdownLabel(${rowIndex}, '${pathStr}')"
+               class="px-3 py-2 text-[11px] cursor-pointer flex flex-col gap-0.5 transition-colors ${highlightClass}">
+            <span class="font-semibold text-slate-800">${displayName}</span>
+            <span class="text-[9px] text-slate-400 font-medium">${displayPath}</span>
+          </div>
+        `;
+      }).join("");
+
+      dropdown.classList.remove("hidden");
+    }
+
+    // Applies selected category path to split input
+    function selectSplitDropdownLabel(rowIndex, serializedPath) {
+      const dropdown = document.getElementById(`split-labels-dropdown-${rowIndex}`);
+      const input = dropdown?.previousElementSibling;
+      if (!input) return;
+
+      const pathArray = serializedPath.split("-");
+      const defaultNature = getDefaultNatureForPath(pathArray);
+      const resolvedStr = pathToLabelString(pathArray, defaultNature);
+
+      const parts = input.value.split(',');
+      parts.pop(); // Remove typed query segment
+      parts.push(resolvedStr); // Insert serialized hierarchical label
+
+      input.value = parts.map(p => p.trim()).filter(Boolean).join(', ') + ', ';
+
+      if (dropdown) dropdown.classList.add("hidden");
+      activeSplitDropdownMatches = [];
+      activeSplitDropdownIndex = -1;
+
+      input.focus();
+    }
+
+    // Captures keyboard navigation commands (Arrows, Enter, Tab, Escape)
+    function handleSplitLabelKeydown(e, input, rowIndex) {
+      const dropdown = document.getElementById(`split-labels-dropdown-${rowIndex}`);
+      if (activeSplitDropdownMatches.length === 0) return;
+
+      if (e.key === "ArrowDown") {
+        activeSplitDropdownIndex = (activeSplitDropdownIndex + 1) % activeSplitDropdownMatches.length;
+        renderSplitLabelsAutocomplete(rowIndex, input);
+        e.preventDefault();
+        const activeItem = dropdown?.children[activeSplitDropdownIndex];
+        activeItem?.scrollIntoView({ block: "nearest" });
+      } else if (e.key === "ArrowUp") {
+        activeSplitDropdownIndex = (activeSplitDropdownIndex - 1 + activeSplitDropdownMatches.length) % activeSplitDropdownMatches.length;
+        renderSplitLabelsAutocomplete(rowIndex, input);
+        e.preventDefault();
+        const activeItem = dropdown?.children[activeSplitDropdownIndex];
+        activeItem?.scrollIntoView({ block: "nearest" });
+      } else if (e.key === "Enter" || e.key === "Tab") {
+        if (activeSplitDropdownIndex === -1 && activeSplitDropdownMatches.length > 0) {
+          activeSplitDropdownIndex = 0;
+        }
+        if (activeSplitDropdownIndex > -1 && activeSplitDropdownIndex < activeSplitDropdownMatches.length) {
+          const selectedPathArray = activeSplitDropdownMatches[activeSplitDropdownIndex];
+          const pathStr = selectedPathArray.join("-");
+          selectSplitDropdownLabel(rowIndex, pathStr);
+          e.preventDefault();
+        }
+      } else if (e.key === "Escape") {
+        if (dropdown) dropdown.classList.add("hidden");
+        activeSplitDropdownMatches = [];
+        activeSplitDropdownIndex = -1;
+        e.preventDefault();
+      }
+    }
+
+    function handleSplitLabelTyping(input, rowIndex) {
+      const dropdown = document.getElementById(`split-labels-dropdown-${rowIndex}`);
+      if (!dropdown) return;
+
+      const rawVal = input.value;
+      const parts = rawVal.split(',');
+      const currentQuery = parts[parts.length - 1].trim().toLowerCase();
+
+      if (!currentQuery) {
+        dropdown.classList.add("hidden");
+        activeSplitDropdownMatches = [];
+        activeSplitDropdownIndex = -1;
+        return;
+      }
+
+      const allPaths = getAllLabelPaths(labelTree);
+
+      // Extract raw paths already selected in this specific split input to prevent duplicate recommendations
+      const alreadySelectedRawPaths = parts.slice(0, -1).map(p => parseLabelString(p.trim()).rawPath);
+
+      activeSplitDropdownMatches = allPaths.filter(pathArray => {
+        const pathStr = pathArray.join("-");
+        if (alreadySelectedRawPaths.includes(pathStr)) return false;
+
+        const leaf = pathArray[pathArray.length - 1].toLowerCase();
+        const fullPath = pathStr.toLowerCase();
+        return leaf.includes(currentQuery) || fullPath.includes(currentQuery);
+      });
+
+      if (activeSplitDropdownMatches.length === 0) {
+        dropdown.innerHTML = '<div class="p-2 text-xs text-slate-500 italic text-center">No matching labels</div>';
+        dropdown.classList.remove("hidden");
+        activeSplitDropdownIndex = -1;
+        return;
+      }
+
+      activeSplitDropdownIndex = 0; // Default highlight the first recommendation
+      renderSplitLabelsAutocomplete(rowIndex, input);
+    }
+
+    function renderSplitLabelsAutocomplete(rowIndex, input) {
+      const dropdown = document.getElementById(`split-labels-dropdown-${rowIndex}`);
+      if (!dropdown) return;
+
+      dropdown.innerHTML = activeSplitDropdownMatches.map((pathArray, idx) => {
+        const pathStr = pathArray.join("-");
+        const displayName = pathArray[pathArray.length - 1];
+        const displayPath = pathArray.join(" ➔ ");
+        const isHighlighted = idx === activeSplitDropdownIndex;
+
+        const highlightClass = isHighlighted
+          ? "bg-emerald-50 text-emerald-700 font-bold"
+          : "text-slate-700 hover:bg-slate-50";
+
+        return `
+          <div onclick="selectSplitDropdownLabel(${rowIndex}, '${pathStr}')"
+               class="px-3 py-2 text-[11px] cursor-pointer flex flex-col gap-0.5 transition-colors ${highlightClass}">
+            <span class="font-semibold text-slate-800">${displayName}</span>
+            <span class="text-[9px] text-slate-400 font-medium">${displayPath}</span>
+          </div>
+        `;
+      }).join("");
+
+      dropdown.classList.remove("hidden");
+    }
+
+    function selectSplitDropdownLabel(rowIndex, serializedPath) {
+      const dropdown = document.getElementById(`split-labels-dropdown-${rowIndex}`);
+      const input = dropdown?.previousElementSibling;
+      if (!input) return;
+
+      const pathArray = serializedPath.split("-");
+      const defaultNature = getDefaultNatureForPath(pathArray);
+      const resolvedStr = pathToLabelString(pathArray, defaultNature);
+
+      const parts = input.value.split(',');
+      parts.pop(); // Remove the current typing segment
+      parts.push(resolvedStr); // Insert our beautifully serialized hierarchical label
+
+      // Re-join selections cleanly and append a comma-space to invite the next label
+      input.value = parts.map(p => p.trim()).filter(Boolean).join(', ') + ', ';
+
+      if (dropdown) dropdown.classList.add("hidden");
+      activeSplitDropdownMatches = [];
+      activeSplitDropdownIndex = -1;
+
+      input.focus(); // Retain focus for rapid tagging
+    }
+
+    function handleSplitLabelKeydown(e, input, rowIndex) {
+      const dropdown = document.getElementById(`split-labels-dropdown-${rowIndex}`);
+      if (activeSplitDropdownMatches.length === 0) return;
+
+      if (e.key === "ArrowDown") {
+        activeSplitDropdownIndex = (activeSplitDropdownIndex + 1) % activeSplitDropdownMatches.length;
+        renderSplitLabelsAutocomplete(rowIndex, input);
+        e.preventDefault();
+        const activeItem = dropdown?.children[activeSplitDropdownIndex];
+        activeItem?.scrollIntoView({ block: "nearest" });
+      } else if (e.key === "ArrowUp") {
+        activeSplitDropdownIndex = (activeSplitDropdownIndex - 1 + activeSplitDropdownMatches.length) % activeSplitDropdownMatches.length;
+        renderSplitLabelsAutocomplete(rowIndex, input);
+        e.preventDefault();
+        const activeItem = dropdown?.children[activeSplitDropdownIndex];
+        activeItem?.scrollIntoView({ block: "nearest" });
+      } else if (e.key === "Enter" || e.key === "Tab") {
+        if (activeSplitDropdownIndex === -1 && activeSplitDropdownMatches.length > 0) {
+          activeSplitDropdownIndex = 0;
+        }
+        if (activeSplitDropdownIndex > -1 && activeSplitDropdownIndex < activeSplitDropdownMatches.length) {
+          const selectedPathArray = activeSplitDropdownMatches[activeSplitDropdownIndex];
+          const pathStr = selectedPathArray.join("-");
+          selectSplitDropdownLabel(rowIndex, pathStr);
+          e.preventDefault();
+        }
+      } else if (e.key === "Escape") {
+        if (dropdown) dropdown.classList.add("hidden");
+        activeSplitDropdownMatches = [];
+        activeSplitDropdownIndex = -1;
+        e.preventDefault();
+      }
     }
 
     function renderSplitButton(tx) {
@@ -2555,18 +2837,31 @@
       const splits = getSplitDetails(tx);
       if (splits.length === 0 || !splitDetailsExpanded.has(tx.id)) return '';
       return `
-          <div class="mt-2 space-y-1 rounded-xl border border-blue-100 bg-blue-50 p-2">
-            ${splits.map(split => `
-              <div class="flex items-center justify-between gap-2 text-xs">
-                <span class="min-w-0 text-slate-700">
-                  <span class="block font-semibold">${escapeHtml((split.tags || (split.category ? [split.category] : [])).join(', ') || 'Untagged')}</span>
-                  ${split.description ? `<span class="block text-[11px] text-slate-500">${escapeHtml(split.description)}</span>` : ''}
-                </span>
-                <span class="font-bold text-slate-900">$${Number(split.amount).toFixed(2)}</span>
-              </div>
-            `).join('')}
-          </div>
-      `;
+           <div class="mt-2 space-y-1 rounded-xl border border-blue-100 bg-blue-50 p-2">
+             ${splits.map(split => {
+        const splitTags = Array.isArray(split.tags) ? split.tags : (split.category ? parseTagInput(split.category) : []);
+        const tagsHtml = splitTags.length > 0 ? `
+                 <div class="flex flex-wrap gap-1 mt-1">
+                   ${splitTags.map(t => {
+          const displayName = getLabelDisplayName(t);
+          const colorClass = getLabelColorStyle(t);
+          return `<span class="text-[9px] px-1.5 py-0.5 rounded font-semibold ${colorClass}">${displayName}</span>`;
+        }).join('')}
+                 </div>
+               ` : '<span class="text-[10px] text-slate-400 italic">Unlabeled</span>';
+
+        return `
+                 <div class="flex items-start justify-between gap-2 text-xs py-1.5 border-b border-blue-100 last:border-b-0">
+                   <div class="min-w-0">
+                     ${tagsHtml}
+                     ${split.description ? `<span class="block text-[10px] text-slate-500 mt-0.5">${escapeHtml(split.description)}</span>` : ''}
+                   </div>
+                   <span class="font-extrabold text-slate-900 shrink-0">$${Number(split.amount).toFixed(2)}</span>
+                 </div>
+               `;
+      }).join('')}
+           </div>
+       `;
     }
 
     function renderModalReceiptList() {
@@ -2796,7 +3091,8 @@
     function toggleSplitEditor() {
       const toggle = document.getElementById('txSplitEnabled');
       const editor = document.getElementById('txSplitEditor');
-      const standardFields = ['tx-description-field', 'tx-tags-field'];
+      // FIXED: Pointing to 'tx-labels-field' instead of 'tx-tags-field'
+      const standardFields = ['tx-description-field', 'tx-labels-field'];
       if (!toggle || !editor) return;
       editor.classList.toggle('hidden', !toggle.checked);
       standardFields.forEach(id => document.getElementById(id)?.classList.toggle('hidden', toggle.checked));
@@ -3381,47 +3677,55 @@
     });
 
     // --- OPEN & CLOSE CONTROLS ---
-    function openLabelPicker() {
+    function openLabelPicker(splitRowIndex = null) {
+      activeSplitRowPickerIndex = splitRowIndex;
+
       // Reset edit mode states on open
       pickerEditMode = false;
       const btn = document.getElementById("picker-edit-toggle-btn");
       if (btn) {
-        btn.innerHTML = "✏️ Edit Labels";
+        btn.innerHTML = "✏ Edit Labels";
         btn.className = "px-2.5 py-1 text-[11px] font-bold text-slate-600 bg-slate-100 rounded-lg hover:bg-slate-200 transition";
       }
       const promptText = document.getElementById("picker-prompt-text");
       if (promptText) {
         promptText.textContent = "Need to edit labels?";
       }
-      // 1. Initialize temporary selection set with currently active transaction labels
-      tempSelectedLabels = new Set(activeTxLabels);
 
-      // 2. Clear out any previous search queries in the picker
+      // Initialize temporary selection set (Checks current values in split OR main form)
+      if (activeSplitRowPickerIndex !== null) {
+        const splitRows = document.querySelectorAll('#txSplitRows > div');
+        const splitInput = splitRows[activeSplitRowPickerIndex]?.querySelector('[data-split-tags]');
+        const splitTags = splitInput ? parseTagInput(splitInput.value) : [];
+        tempSelectedLabels = new Set(splitTags);
+      } else {
+        tempSelectedLabels = new Set(activeTxLabels);
+      }
+
+      // Clear out any previous search queries in the picker
       const searchInput = document.getElementById("label-search-input");
       if (searchInput) searchInput.value = "";
 
-      // 3. Ensure the inline custom add overlay is closed on reset
+      // Ensure the inline custom add overlay is closed on reset
       closeInlineAdd();
 
-      // 4. Clear previous expanded states so we start with a clean slate
+      // Clear previous expanded states so we start with a clean slate
       pickerExpandedNodes.clear();
 
-      // 5. Smart-expand only the parent paths leading directly to currently checked labels
+      // Smart-expand only the parent paths leading directly to currently checked labels
       tempSelectedLabels.forEach(lbl => {
         const { path } = parseLabelString(lbl);
-        // Work down the path array and add parent folders to the expanded set
-        // e.g., ["Expenses", "Food", "Groceries"] -> expands "Expenses" and "Expenses-Food"
         for (let i = 1; i < path.length; i++) {
           const parentPathId = path.slice(0, i).join("-");
           pickerExpandedNodes.add(parentPathId);
         }
       });
 
-      // 6. Reveal the label picker sub-modal
+      // Reveal the label picker sub-modal
       const modal = document.getElementById("label-picker-modal");
       if (modal) modal.classList.remove("hidden");
 
-      // 7. Paint the dynamic tree
+      // Paint the dynamic tree
       renderLabelTreeUI();
     }
 
@@ -3567,8 +3871,21 @@
 
     // Fixed path comparison logic
     function applyLabelSelection() {
-      activeTxLabels = Array.from(tempSelectedLabels);
-      renderSelectedLabelsPreview();
+      if (activeSplitRowPickerIndex !== null) {
+        // Apply back to specific split row
+        const splitRows = document.querySelectorAll('#txSplitRows > div');
+        const splitInput = splitRows[activeSplitRowPickerIndex]?.querySelector('[data-split-tags]');
+        if (splitInput) {
+          // Join selections cleanly and append comma-space to invite further typing/editing
+          splitInput.value = Array.from(tempSelectedLabels).join(', ') + (tempSelectedLabels.size > 0 ? ', ' : '');
+          splitInput.focus();
+        }
+        activeSplitRowPickerIndex = null;
+      } else {
+        // Apply back to main transaction
+        activeTxLabels = Array.from(tempSelectedLabels);
+        renderSelectedLabelsPreview();
+      }
       closeLabelPicker();
     }
 
@@ -3617,33 +3934,33 @@
 
       // Icon formatting
       const chevron = isFolder
-        ? `<button type="button" onclick="toggleNodeExpanded('${pathId}')" 
-                    class="w-5 h-5 flex items-center justify-center text-slate-400 hover:text-slate-600 transition-transform ${isExpanded ? 'rotate-90' : ''}">
-             ▶
-           </button>`
+        ? `<button type="button" onclick="toggleNodeExpanded('${pathId}')"
+                      class="w-5 h-5 flex items-center justify-center text-slate-400 hover:text-slate-600 transition-transform ${isExpanded ? 'rotate-90' : ''}">
+              ▶
+            </button>`
         : `<span class="w-5 h-5 inline-block"></span>`;
 
-      const icon = isFolder ? "" : "🏷️"; // Removed folder icon, keeping label tag icon for leaf nodes
+      const icon = isFolder ? "" : "🏷"; // Removed folder icon, keeping label tag icon for leaf nodes
 
       // Three-line grab handle (⠿) to visually indicate dragging is possible (Only visible in Edit Mode)
       const dragHandle = pickerEditMode ? `
-        <span class="cursor-grab active:cursor-grabbing text-slate-300 hover:text-slate-500 font-extrabold px-1 select-none text-sm transition" title="Drag to reorder">
-          ⠿
-        </span>
-      ` : "";
+         <span class="cursor-grab active:cursor-grabbing text-slate-300 hover:text-slate-500 font-extrabold px-1 select-none text-sm transition" title="Drag to reorder">
+           ⠿
+         </span>
+       ` : "";
 
       const managementActions = `
         <div class="flex items-center gap-1 ml-auto opacity-70 hover:opacity-100 transition-opacity">
-          <button type="button" onclick="handleRenameCategory('${pathId}')" 
-                  class="p-1 text-slate-500 hover:text-blue-600 hover:bg-slate-100 rounded transition" title="Rename category">
-            ✏️
+          <button type="button" onclick="handleRenameCategory('${pathId}')"
+                   class="p-1 text-slate-500 hover:text-blue-600 hover:bg-slate-100 rounded transition" title="Rename category">
+            ✏
           </button>
-          <button type="button" onclick="handleDeleteCategory('${pathId}')" 
-                  class="p-1 text-slate-500 hover:text-red-600 hover:bg-slate-100 rounded transition" title="Delete category">
-            🗑️
+          <button type="button" onclick="handleDeleteCategory('${pathId}')"
+                   class="p-1 text-slate-500 hover:text-red-600 hover:bg-slate-100 rounded transition" title="Delete category">
+            🗑
           </button>
-          <button type="button" onclick="handleAddSubCategory('${pathId}')" 
-                  class="p-1 text-slate-500 hover:text-emerald-600 hover:bg-slate-100 rounded transition" title="Add nested sub-category">
+          <button type="button" onclick="handleAddSubCategory('${pathId}')"
+                   class="p-1 text-slate-500 hover:text-emerald-600 hover:bg-slate-100 rounded transition" title="Add nested sub-category">
             ➕
           </button>
         </div>
@@ -3651,42 +3968,44 @@
 
       // Define drag attributes only if Edit Mode is active
       const dragAttributes = pickerEditMode ? `
-        draggable="true"
-        ondragstart="handleLabelDragStart(event, '${pathId}')"
-        ondragend="handleLabelDragEnd(event)"
-        ondragover="handleLabelDragOver(event, '${pathId}')"
-        ondragleave="handleLabelDragLeave(event)"
-        ondrop="handleLabelDrop(event, '${pathId}')"
-      ` : "";
+         draggable="true"
+         ondragstart="handleLabelDragStart(event, '${pathId}')"
+         ondragend="handleLabelDragEnd(event)"
+         ondragover="handleLabelDragOver(event, '${pathId}')"
+         ondragleave="handleLabelDragLeave(event)"
+         ondrop="handleLabelDrop(event, '${pathId}')"
+       ` : "";
 
       // Build Row HTML
       let nodeHtml = `
-        <div ${indentStyle} class="py-1">
-          <div ${dragAttributes} class="flex items-center gap-2 group hover:bg-slate-50/80 px-2 py-1 rounded-xl transition-colors">
-            ${dragHandle}
-            ${chevron}
-            
-            ${!pickerEditMode ? `
-              <input type="checkbox" ${isChecked ? "checked" : ""} 
-                     id="chk-${pathId}"
-                     onclick="toggleLabelChecked('${pathId}')" 
-                     class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer" />
-            ` : ""}
-            
-            <label for="chk-${pathId}" class="text-xs font-semibold text-slate-700 flex items-center gap-1 cursor-pointer select-none">
-              ${icon ? `<span>${icon}</span>` : ""}
-              <span>${nodeName}</span>
-            </label>
-            
-            ${pickerEditMode ? managementActions : ""}
-          </div>
-          
-          <!-- Show dynamic nature toggles inline if category is selected inside Expenses (Root evaluation fixed [2]) -->
-          ${!pickerEditMode && isChecked && currentPathArray === "Expenses"
+         <div ${indentStyle} class="py-1">
+           <div ${dragAttributes} class="flex items-center gap-2 group hover:bg-slate-50/80 px-2 py-1 rounded-xl transition-colors">
+             ${dragHandle}
+             ${chevron}
+             
+             ${!pickerEditMode ? `
+               <input type="checkbox" ${isChecked ? "checked" : ""}
+                      id="chk-${pathId}"
+                      onclick="toggleLabelChecked('${pathId}')"
+                      class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer" />
+             ` : ""}
+             
+             <!-- FIXED: Swapped label with span. Folders toggle collapse; leaf clicks do not toggle checkbox -->
+             <span ${isFolder ? `onclick="toggleNodeExpanded('${pathId}')"` : ""} 
+                   class="text-xs font-semibold text-slate-700 flex items-center gap-1 select-none ${isFolder ? 'cursor-pointer hover:text-blue-600 transition-colors' : ''}">
+               ${icon ? `<span>${icon}</span>` : ""}
+               <span>${nodeName}</span>
+             </span>
+             
+             ${pickerEditMode ? managementActions : ""}
+           </div>
+           
+           <!-- Show dynamic nature toggles inline if category is selected inside Expenses (Root evaluation fixed [1]) -->
+           ${!pickerEditMode && isChecked && currentPathArray === "Expenses"
           ? renderNatureToggleRow(pathId, currentNature)
           : ""}
-        </div>
-      `;
+         </div>
+       `;
 
       // Recursively paint child branches if folder is expanded
       if (isFolder && isExpanded) {
@@ -4895,6 +5214,14 @@ This action can be undone by cancelling your edits.`,
       if (payeeList && txPayeeInput && !txPayeeInput.contains(e.target) && !payeeList.contains(e.target)) {
         payeeList.classList.add('hidden');
       }
+
+      // Auto-collapse open autocomplete dropdowns in split rows when clicking elsewhere
+      const activeDropdowns = document.querySelectorAll('[id^="split-labels-dropdown-"]');
+      activeDropdowns.forEach(dd => {
+        if (!dd.contains(e.target) && !dd.previousElementSibling?.contains(e.target)) {
+          dd.classList.add("hidden");
+        }
+      });
     });
 
     window.onload = init;
