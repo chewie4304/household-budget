@@ -4,18 +4,25 @@ All notable changes to this project will be documented in this file.
 
 ## [unreleased]
 
-## [1.4.2-dev] - 2026-08-24
+## 1.4.2 - 2026-08-25
 
 ### Added
-- **Mobile Numeric Keypad Enforcement:** Integrated the `inputmode="decimal"` attribute across financial inputs to force mobile browsers (iOS and Android) to automatically launch a clean, decimal-ready numeric keypad on tap, minimizing input friction.
+- **Mobile Numeric Keypad Enforcement:** Embedded the `inputmode="decimal"` attribute across all financial inputs to force mobile browsers (iOS and Android) to automatically launch a clean, decimal-ready numeric keypad on tap, minimizing mobile input friction.
 - **Master Default Nature Editing:** Expanded the "Edit Labels" panel to display "Must / Need / Want" nature toggles next to all Expense categories. Toggling these options now updates your master default configurations in local storage upon saving.
+- **Split Multi-Select Color-Coded Chips:** Overhauled split rows to render selected tags as gorgeous, color-coded interactive pills/chips with a delete "x" button directly inline, perfectly matching the look and feel of the primary transaction form.
+- **Normal Transaction Label Double-Click Trigger:** Integrated double-click (`ondblclick`) to open the full hierarchical label tree sub-modal inside the main transaction labels input field for maximum desktop accessibility.
 
 ### Changed
-- **Amount Input Keypads Optimized:** Upgraded the main transaction amount input (`txAmount`), split transaction row amounts (`data-split-amount`), cleared balance adjustments (`clearedBalanceInput`), and account creation parameters—including Initial Balance (`accBalance`), Credit Limit (`accCreditLimit`), Minimum Alert (`accMinBalance`), and Maximum Alert (`accMaxBalance`)—to trigger the decimal keypad while perfectly preserving mathematical formula evaluation on field blur.
+- **Horizontal Split View Layout Overhaul:** Re-aligned the split row grid to display Labels and Amount inline on the top row, and Description full-width on the bottom row. This offers massive horizontal space, prevents cramped input lines, and ensures uniform label header heights.
+- **Amount Input Keypads Optimized:** Upgraded the main transaction amount input (`txAmount`), split transaction row amounts (`data-split-amount`), cleared balance adjustment fields (`clearedBalanceInput`), and account creation parameters—including Initial Balance (`accBalance`), Credit Limit (`accCreditLimit`), Minimum Alert (`accMinBalance`), and Maximum Alert (`accMaxBalance`)—to trigger the decimal keypad while perfectly preserving your custom in-app mathematical formula evaluation engine on field blur.
+- **Tightened Layout Padding:** Re-engineered the tag containers to use the CSS `contents` layout behavior, allowing chips and input boxes to wrap elegantly word-by-word, eliminating the empty trailing space and "ghost line" wrapper heights.
 
 ### Fixed
 - **Label Nature Inheritance:** Configured `getDefaultNatureForPath` to query your active, live `labelNatures` state instead of fallback defaults, ensuring newly created labels automatically inherit parent category natures on-the-fly.
 - **Inline Selector Evaluation:** Resolved an array-to-string evaluation bug in `renderLabelNode` by correctly evaluating the root of the folder path array (`currentPathArray.at(0)`) to ensure the inline type selectors render reliably under Expenses.
+- **Label Tree Modal Stacking (z-index):** Fixed a visibility issue where double-clicking the split fields opened the label tree picker underneath the active transaction modal. Adjusted the picker's stacking wrapper inline style to `z-index: 60`, forcing it to slide cleanly on top of the `z-50` transaction overlay.
+- **Split Autocomplete Dropdown Overlaps:** Resolved a stacking context bug where Row 1's autocomplete suggestion boxes would get buried under Row 2's inputs. Applied dynamic active row hovering classes `relative focus-within:z-20 hover:z-20 transition-all` to float the active row cleanly above its siblings.
+- **Clean Autocomplete Comma Joining:** Cleaned up selected autocomplete insertion logic, joining items with comma-spaces cleanly and completely dropping trailing commas from the end of the input fields.
 
 ## [1.4.1] - 2026-08-23
 

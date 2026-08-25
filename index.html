@@ -721,14 +721,15 @@
           <!-- Typable multi-select wrapper container -->
           <div class="relative">
             <div
-              class="flex flex-wrap items-center gap-1.5 min-h-[42px] p-2 rounded-xl border border-slate-200 bg-white focus-within:ring-2 focus-within:ring-blue-200 focus-within:border-blue-400 transition-all">
+              class="flex flex-wrap items-center gap-1 min-h-[36px] p-1 rounded-xl border border-slate-200 bg-white focus-within:ring-2 focus-within:ring-blue-200 focus-within:border-blue-400 transition-all">
               <!-- Dynamic color-coded label chips render inline here -->
-              <div id="selected-labels-preview" class="flex flex-wrap gap-1.5"></div>
+              <div id="selected-labels-preview" class="contents"></div>
 
               <!-- Typable search input -->
               <input type="text" id="tx-labels-text-input" placeholder="Type label..."
                 class="flex-1 min-w-[100px] text-xs font-semibold bg-transparent border-0 p-0 focus:ring-0 focus:outline-none text-slate-800"
-                oninput="handleLabelSearchTyping(this.value)" onkeydown="handleLabelSearchKeydown(event)" />
+                oninput="handleLabelSearchTyping(this.value)" onkeydown="handleLabelSearchKeydown(event)"
+                ondblclick="openLabelPicker()" title="Double-click to open full label tree" />
             </div>
 
             <!-- Dynamic Floating Autocomplete Dropdown -->
@@ -806,9 +807,10 @@
   <!-- Cropper.js Script -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
 
-  <!-- Hierarchical Label Picker Sub-Modal (z-55 to sit cleanly above main transaction modal at z-50) -->
+  <!-- Hierarchical Label Picker Sub-Modal (z-60 to sit cleanly above main transaction modal at z-50) -->
   <div id="label-picker-modal"
-    class="fixed inset-0 bg-black/50 hidden flex items-end sm:items-center justify-center p-0 sm:p-4 z-[1]">
+    class="fixed inset-0 bg-black/50 hidden flex items-end sm:items-center justify-center p-0 sm:p-4"
+    style="z-index: 60;">
     <div
       class="bg-white w-full max-w-md rounded-t-2xl sm:rounded-2xl p-6 space-y-4 max-h-[85vh] flex flex-col shadow-2xl">
       <!-- Header -->
@@ -1196,6 +1198,62 @@
     function getLabelDisplayName(labelStr) {
       const { path } = parseLabelString(labelStr);
       return path[path.length - 1] || 'Unlabeled';
+    }
+
+    function resolveShortLabelToSerialized(labelStr) {
+      const clean = String(labelStr || '').trim();
+      if (!clean) return '';
+
+      if (clean.includes('-')) {
+        return clean;
+      }
+
+      let nameOnly = clean.split('|').trim();
+      nameOnly = nameOnly.replace(/\s*\([^)]+\)$/, '').trim();
+
+      const allPaths = getAllLabelPaths(labelTree);
+      const match = allPaths.find(pathArray => {
+        const leaf = pathArray[pathArray.length - 1];
+        return leaf.toLowerCase() === nameOnly.toLowerCase();
+      });
+
+      if (match) {
+        const serializedPath = match.join('-');
+        const currentNature = labelNatures[serializedPath] || getDefaultNatureForPath(match);
+        return pathToLabelString(match, currentNature);
+      }
+
+      return clean;
+    }
+
+    function resolveShortLabelToSerialized(labelStr) {
+      const clean = String(labelStr || '').trim();
+      if (!clean) return '';
+
+      // If it already looks like a serialized path (contains '-'), keep it
+      if (clean.includes('-')) {
+        return clean;
+      }
+
+      // Parse out any explicit nature suffix if they typed it, e.g., "Groceries|Need" or "Groceries (Need)"
+      let nameOnly = clean.split('|').trim();
+      nameOnly = nameOnly.replace(/\s*\([^)]+\)$/, '').trim(); // Remove trailing "(Need)" if present
+
+      // Find the matching hierarchical path in the labelTree
+      const allPaths = getAllLabelPaths(labelTree);
+      const match = allPaths.find(pathArray => {
+        const leaf = pathArray[pathArray.length - 1];
+        return leaf.toLowerCase() === nameOnly.toLowerCase();
+      });
+
+      if (match) {
+        const serializedPath = match.join('-');
+        const currentNature = labelNatures[serializedPath] || getDefaultNatureForPath(match);
+        return pathToLabelString(match, currentNature);
+      }
+
+      // Fallback: If no match is found, save as-is
+      return clean;
     }
 
     function getLabelColorStyle(labelStr) {
@@ -2531,62 +2589,177 @@
     }
 
     function getSplitRowsFromEditor() {
-      return [...document.querySelectorAll('#txSplitRows > div')].map(row => ({
-        tags: parseTagInput(row.querySelector('[data-split-tags]')?.value),
-        description: row.querySelector('[data-split-description]')?.value.trim() || '',
-        amount: roundCurrency(parseFloat(row.querySelector('[data-split-amount]')?.value) || 0)
-      }));
+      return [...document.querySelectorAll('#txSplitRows > div')].map(row => {
+        const rawTags = parseTagInput(row.querySelector('[data-split-tags]')?.value);
+        const resolvedTags = rawTags.map(tag => resolveShortLabelToSerialized(tag)).filter(Boolean);
+        return {
+          tags: resolvedTags,
+          description: row.querySelector('[data-split-description]')?.value.trim() || '',
+          amount: roundCurrency(parseFloat(row.querySelector('[data-split-amount]')?.value) || 0)
+        };
+      });
     }
 
     function renderSplitEditor(rows = [{ tags: [], description: '', amount: '' }, { tags: [], description: '', amount: '' }]) {
       const container = document.getElementById('txSplitRows');
       if (!container) return;
 
-      container.innerHTML = rows.map((row, index) => `
-        <div class="grid grid-cols-1 gap-2 rounded-lg border border-emerald-100 bg-white p-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)_5rem_auto] sm:items-center">
-          <!-- Labels input with local autocomplete dropdown -->
-          <div class="relative">
-            <input type="text" data-split-tags placeholder="Type to search" 
-              value="${escapeHtml((row.tags || (row.category ? [row.category] : [])).join(', '))}"
-              oninput="handleSplitLabelTyping(this, ${index})"
-              onkeydown="handleSplitLabelKeydown(event, this, ${index})"
-              ondblclick="openLabelPicker(${index})"
-              title="Double-click to open full label tree"
-              class="w-full border border-slate-200 bg-white px-2 py-1.5 rounded-lg text-xs" />
-            <div id="split-labels-dropdown-${index}"
-              class="hidden absolute left-0 right-0 mt-1 max-h-40 overflow-y-auto bg-white border border-slate-200 rounded-xl shadow-lg z-[6]">
+      container.innerHTML = rows.map((row, index) => {
+        const rowTags = row.tags || (row.category ? [row.category] : []);
+
+        // Generate the HTML for active color-coded pills inside this split row
+        const tagsHtml = rowTags.map((t, tagIdx) => {
+          const displayName = getLabelDisplayName(t);
+          const displayPath = getLabelDisplayPath(t);
+          const colorClass = getLabelColorStyle(t);
+          const { nature } = parseLabelString(t);
+          const natureSuffix = nature !== "N/A" ? ` (${nature})` : "";
+          return `
+        <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-lg text-[10px] font-bold shadow-sm transition ${colorClass}" title="${displayPath}">
+          ${displayName}${natureSuffix}
+          <button type="button" onclick="removeSplitLabelFromPreview(${index}, ${tagIdx})" 
+            class="text-xs font-semibold opacity-70 hover:opacity-100 focus:outline-none">&times;</button>
+        </span>
+      `;
+        }).join('');
+
+        return `
+      <div class="rounded-xl border border-emerald-100 bg-white p-3 space-y-3 relative focus-within:z-20 hover:z-20 transition-all">
+        <!-- Hidden input to store fully-serialized tag paths for Supabase -->
+        <input type="hidden" data-split-tags value="${escapeHtml(rowTags.join(', '))}" />
+
+        <!-- Top Line: Labels (Left) and Amount (Right) + Delete button (Top-aligned for clean label flow) -->
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-[1fr_6rem_auto] sm:items-start">
+          
+          <!-- Labels container mirroring the main modal layout -->
+          <div class="space-y-1 relative">
+            <div class="flex items-center justify-between h-4">
+              <label class="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">Labels</label>
+              <button type="button" onclick="openLabelPicker(${index})"
+                class="text-[10px] font-bold text-blue-600 hover:text-blue-700 transition flex items-center gap-0.5">
+                🏷️ Select
+              </button>
+            </div>
+            
+            <div class="relative">
+              <div class="flex flex-wrap items-center gap-1 min-h-[32px] p-1 rounded-lg border border-slate-200 bg-white focus-within:ring-2 focus-within:ring-blue-100 focus-within:border-blue-300 transition-all">
+                <!-- Color-coded pills container -->
+                <div id="split-labels-preview-${index}" class="contents">
+                  ${tagsHtml}
+                </div>
+                <!-- Typable search input -->
+                <input type="text" id="split-labels-text-input-${index}" placeholder="${rowTags.length === 0 ? 'Type tag...' : ''}"
+                  class="flex-1 min-w-[60px] text-xs font-semibold bg-transparent border-0 p-0 focus:ring-0 focus:outline-none text-slate-800"
+                  oninput="handleSplitLabelSearchTyping(this.value, ${index})" 
+                  onkeydown="handleSplitLabelSearchKeydown(event, ${index})"
+                  ondblclick="openLabelPicker(${index})"
+                  title="Double-click to open full label tree" />
+              </div>
+              
+              <!-- Local suggestions dropdown -->
+              <div id="split-labels-dropdown-${index}"
+                class="hidden absolute left-0 right-0 mt-1 max-h-40 overflow-y-auto bg-white border border-slate-200 rounded-xl shadow-lg z-50">
+              </div>
             </div>
           </div>
-          
-          <input type="text" data-split-description placeholder="Description" value="${escapeHtml(row.description || '')}"
-            class="w-full border border-slate-200 bg-white px-2 py-1.5 rounded-lg text-xs" />
-          <input type="text" data-split-amount inputmode="decimal" placeholder="0.00" value="${row.amount !== '' ? Number(row.amount).toFixed(2) : ''}" class="w-full border border-slate-200 bg-white px-2 py-1.5 rounded-lg text-xs" />
-          <button type="button" onclick="removeSplitRow(${index})" aria-label="Remove split"
-            class="text-lg leading-none text-red-400 hover:text-red-600">&times;</button>
+
+          <!-- Amount input field -->
+          <div class="space-y-1">
+            <div class="flex items-center h-4">
+              <label class="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">Amount ($)</label>
+            </div>
+            <input type="text" data-split-amount inputmode="decimal" placeholder="0.00" 
+              value="${row.amount !== '' ? Number(row.amount).toFixed(2) : ''}" 
+              class="h-[36px] w-full border border-slate-200 px-2 py-1.5 rounded-lg text-xs font-semibold text-gray-800 focus:ring-2 focus:ring-blue-100 focus:outline-none" />
+          </div>
+
+          <!-- Remove row action (Aligned to bottom of inputs) -->
+          <div class="flex items-center justify-end sm:self-end sm:pb-2">
+            <button type="button" onclick="removeSplitRow(${index})" aria-label="Remove split"
+              class="text-lg leading-none text-red-400 hover:text-red-600 transition-all">&times;</button>
+          </div>
         </div>
-      `).join('');
+
+        <!-- Bottom Line: Description (Spans full width) -->
+        <div class="space-y-1">
+          <div class="flex items-center h-4">
+            <label class="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">Description</label>
+          </div>
+          <input type="text" data-split-description placeholder="What is this split allocation for?" 
+            value="${escapeHtml(row.description || '')}"
+            class="h-[36px] w-full border border-slate-200 bg-white px-2.5 py-1.5 rounded-lg text-xs font-semibold text-gray-800 focus:ring-2 focus:ring-blue-100 focus:outline-none" />
+        </div>
+      </div>
+    `;
+      }).join('');
 
       container.querySelectorAll('[data-split-amount]').forEach(input => {
         input.addEventListener('input', () => updateSplitRemainder(input));
-
-        // Evaluate math expressions when a user leaves an individual split field
         input.addEventListener('blur', () => {
           handleMathEvaluation(input, () => updateSplitRemainder(input));
         });
       });
+
       updateSplitRemainder();
     }
 
-    // --- Autocomplete logic for split inputs ---
-    function handleSplitLabelTyping(input, rowIndex) {
+    // --- MODERN SPLIT MULTI-SELECT CHIP & AUTOCOMPLETE ENGINE ---
+
+    function updateSplitRowChips(rowIndex) {
+      const splitRows = document.querySelectorAll('#txSplitRows > div');
+      const splitRow = splitRows[rowIndex];
+      if (!splitRow) return;
+
+      const splitInput = splitRow.querySelector('[data-split-tags]');
+      const previewContainer = document.getElementById(`split-labels-preview-${rowIndex}`);
+      const textInput = document.getElementById(`split-labels-text-input-${rowIndex}`);
+
+      const rawTags = parseTagInput(splitInput?.value);
+      const resolvedTags = rawTags.map(tag => resolveShortLabelToSerialized(tag)).filter(Boolean);
+
+      if (previewContainer) {
+        previewContainer.innerHTML = resolvedTags.map((t, tagIdx) => {
+          const displayName = getLabelDisplayName(t);
+          const displayPath = getLabelDisplayPath(t);
+          const colorClass = getLabelColorStyle(t);
+          const { nature } = parseLabelString(t);
+          const natureSuffix = nature !== "N/A" ? ` (${nature})` : "";
+          return `
+        <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-lg text-[10px] font-bold shadow-sm transition ${colorClass}" title="${displayPath}">
+          ${displayName}${natureSuffix}
+          <button type="button" onclick="removeSplitLabelFromPreview(${rowIndex}, ${tagIdx})" 
+            class="text-xs font-semibold opacity-70 hover:opacity-100 focus:outline-none">&times;</button>
+        </span>
+      `;
+        }).join('');
+      }
+
+      if (textInput) {
+        textInput.placeholder = resolvedTags.length === 0 ? 'Type tag...' : '';
+        textInput.value = '';
+      }
+    }
+
+    function removeSplitLabelFromPreview(rowIndex, tagIdx) {
+      const splitRows = document.querySelectorAll('#txSplitRows > div');
+      const splitRow = splitRows[rowIndex];
+      const splitInput = splitRow?.querySelector('[data-split-tags]');
+      if (!splitInput) return;
+
+      const rawTags = parseTagInput(splitInput.value);
+      rawTags.splice(tagIdx, 1);
+      splitInput.value = rawTags.join(', ');
+
+      updateSplitRowChips(rowIndex);
+      updateSplitRemainder();
+    }
+
+    function handleSplitLabelSearchTyping(query, rowIndex) {
       const dropdown = document.getElementById(`split-labels-dropdown-${rowIndex}`);
       if (!dropdown) return;
 
-      const rawVal = input.value;
-      const parts = rawVal.split(',');
-      const currentQuery = parts[parts.length - 1].trim().toLowerCase();
-
-      if (!currentQuery) {
+      const cleanQuery = query.trim().toLowerCase();
+      if (!cleanQuery) {
         dropdown.classList.add("hidden");
         activeSplitDropdownMatches = [];
         activeSplitDropdownIndex = -1;
@@ -2594,16 +2767,19 @@
       }
 
       const allPaths = getAllLabelPaths(labelTree);
-      const alreadySelectedRawPaths = parts.slice(0, -1).map(p => parseLabelString(p.trim()).rawPath);
 
-      // Filters matching paths and prevents duplicate tags in the same split row
+      // Exclude already selected tags inside this split row from suggestions
+      const splitRows = document.querySelectorAll('#txSplitRows > div');
+      const splitInput = splitRows[rowIndex]?.querySelector('[data-split-tags]');
+      const rawTags = parseTagInput(splitInput?.value);
+      const currentActiveRawPaths = rawTags.map(t => parseLabelString(resolveShortLabelToSerialized(t)).rawPath);
+
       activeSplitDropdownMatches = allPaths.filter(pathArray => {
         const pathStr = pathArray.join("-");
-        if (alreadySelectedRawPaths.includes(pathStr)) return false;
-
+        if (currentActiveRawPaths.includes(pathStr)) return false;
         const leaf = pathArray[pathArray.length - 1].toLowerCase();
         const fullPath = pathStr.toLowerCase();
-        return leaf.includes(currentQuery) || fullPath.includes(currentQuery);
+        return leaf.includes(cleanQuery) || fullPath.includes(cleanQuery);
       });
 
       if (activeSplitDropdownMatches.length === 0) {
@@ -2613,12 +2789,11 @@
         return;
       }
 
-      activeSplitDropdownIndex = 0; // Highlight the top suggestion by default
-      renderSplitLabelsAutocomplete(rowIndex, input);
+      activeSplitDropdownIndex = 0;
+      renderSplitLabelsSearchAutocomplete(rowIndex);
     }
 
-    // Paints the matching items in the suggestion box
-    function renderSplitLabelsAutocomplete(rowIndex, input) {
+    function renderSplitLabelsSearchAutocomplete(rowIndex) {
       const dropdown = document.getElementById(`split-labels-dropdown-${rowIndex}`);
       if (!dropdown) return;
 
@@ -2627,62 +2802,82 @@
         const displayName = pathArray[pathArray.length - 1];
         const displayPath = pathArray.join(" ➔ ");
         const isHighlighted = idx === activeSplitDropdownIndex;
-
         const highlightClass = isHighlighted
-          ? "bg-emerald-50 text-emerald-700 font-bold"
+          ? "bg-blue-50 text-blue-700 font-bold"
           : "text-slate-700 hover:bg-slate-50";
 
         return `
-          <div onclick="selectSplitDropdownLabel(${rowIndex}, '${pathStr}')"
-               class="px-3 py-2 text-[11px] cursor-pointer flex flex-col gap-0.5 transition-colors ${highlightClass}">
-            <span class="font-semibold text-slate-800">${displayName}</span>
-            <span class="text-[9px] text-slate-400 font-medium">${displayPath}</span>
-          </div>
-        `;
+      <div onclick="selectSplitSearchDropdownLabel(${rowIndex}, '${pathStr}')"
+        class="px-3 py-2 text-[11px] cursor-pointer flex flex-col gap-0.5 transition-colors ${highlightClass}">
+        <span class="font-semibold text-slate-800">${displayName}</span>
+        <span class="text-[9px] text-slate-400 font-medium">${displayPath}</span>
+      </div>
+    `;
       }).join("");
 
       dropdown.classList.remove("hidden");
     }
 
-    // Applies selected category path to split input
-    function selectSplitDropdownLabel(rowIndex, serializedPath) {
+    function selectSplitSearchDropdownLabel(rowIndex, serializedPath) {
       const dropdown = document.getElementById(`split-labels-dropdown-${rowIndex}`);
-      const input = dropdown?.previousElementSibling;
-      if (!input) return;
+      const splitRows = document.querySelectorAll('#txSplitRows > div');
+      const splitInput = splitRows[rowIndex]?.querySelector('[data-split-tags]');
+      if (!splitInput) return;
 
       const pathArray = serializedPath.split("-");
       const defaultNature = getDefaultNatureForPath(pathArray);
       const resolvedStr = pathToLabelString(pathArray, defaultNature);
 
-      const parts = input.value.split(',');
-      parts.pop(); // Remove typed query segment
-      parts.push(resolvedStr); // Insert serialized hierarchical label
-
-      input.value = parts.map(p => p.trim()).filter(Boolean).join(', ') + ', ';
+      const rawTags = parseTagInput(splitInput.value);
+      if (!rawTags.includes(resolvedStr)) {
+        rawTags.push(resolvedStr);
+      }
+      splitInput.value = rawTags.join(', ');
 
       if (dropdown) dropdown.classList.add("hidden");
       activeSplitDropdownMatches = [];
       activeSplitDropdownIndex = -1;
 
-      input.focus();
+      updateSplitRowChips(rowIndex);
+
+      const textInput = document.getElementById(`split-labels-text-input-${rowIndex}`);
+      textInput?.focus();
     }
 
-    // Captures keyboard navigation commands (Arrows, Enter, Tab, Escape)
-    function handleSplitLabelKeydown(e, input, rowIndex) {
+    function handleSplitLabelSearchKeydown(e, rowIndex) {
+      const input = document.getElementById(`split-labels-text-input-${rowIndex}`);
       const dropdown = document.getElementById(`split-labels-dropdown-${rowIndex}`);
+      if (!dropdown) return;
+
+      // Backspace deletes the last pill if typable field is empty
+      if (e.key === "Backspace" && input && input.value === "") {
+        const splitRows = document.querySelectorAll('#txSplitRows > div');
+        const splitInput = splitRows[rowIndex]?.querySelector('[data-split-tags]');
+        if (splitInput) {
+          const rawTags = parseTagInput(splitInput.value);
+          if (rawTags.length > 0) {
+            rawTags.pop();
+            splitInput.value = rawTags.join(', ');
+            updateSplitRowChips(rowIndex);
+            e.preventDefault();
+          }
+        }
+        return;
+      }
+
       if (activeSplitDropdownMatches.length === 0) return;
 
       if (e.key === "ArrowDown") {
         activeSplitDropdownIndex = (activeSplitDropdownIndex + 1) % activeSplitDropdownMatches.length;
-        renderSplitLabelsAutocomplete(rowIndex, input);
+        renderSplitLabelsSearchAutocomplete(rowIndex);
         e.preventDefault();
-        const activeItem = dropdown?.children[activeSplitDropdownIndex];
+        const activeItem = dropdown.children[activeSplitDropdownIndex];
         activeItem?.scrollIntoView({ block: "nearest" });
       } else if (e.key === "ArrowUp") {
         activeSplitDropdownIndex = (activeSplitDropdownIndex - 1 + activeSplitDropdownMatches.length) % activeSplitDropdownMatches.length;
-        renderSplitLabelsAutocomplete(rowIndex, input);
+        renderSplitLabelsSearchAutocomplete(rowIndex);
         e.preventDefault();
-        const activeItem = dropdown?.children[activeSplitDropdownIndex];
+        const activeItem = dropdown.children[activeSplitDropdownIndex];
         activeItem?.scrollIntoView({ block: "nearest" });
       } else if (e.key === "Enter" || e.key === "Tab") {
         if (activeSplitDropdownIndex === -1 && activeSplitDropdownMatches.length > 0) {
@@ -2690,135 +2885,11 @@
         }
         if (activeSplitDropdownIndex > -1 && activeSplitDropdownIndex < activeSplitDropdownMatches.length) {
           const selectedPathArray = activeSplitDropdownMatches[activeSplitDropdownIndex];
-          const pathStr = selectedPathArray.join("-");
-          selectSplitDropdownLabel(rowIndex, pathStr);
+          selectSplitSearchDropdownLabel(rowIndex, selectedPathArray.join("-"));
           e.preventDefault();
         }
       } else if (e.key === "Escape") {
-        if (dropdown) dropdown.classList.add("hidden");
-        activeSplitDropdownMatches = [];
-        activeSplitDropdownIndex = -1;
-        e.preventDefault();
-      }
-    }
-
-    function handleSplitLabelTyping(input, rowIndex) {
-      const dropdown = document.getElementById(`split-labels-dropdown-${rowIndex}`);
-      if (!dropdown) return;
-
-      const rawVal = input.value;
-      const parts = rawVal.split(',');
-      const currentQuery = parts[parts.length - 1].trim().toLowerCase();
-
-      if (!currentQuery) {
         dropdown.classList.add("hidden");
-        activeSplitDropdownMatches = [];
-        activeSplitDropdownIndex = -1;
-        return;
-      }
-
-      const allPaths = getAllLabelPaths(labelTree);
-
-      // Extract raw paths already selected in this specific split input to prevent duplicate recommendations
-      const alreadySelectedRawPaths = parts.slice(0, -1).map(p => parseLabelString(p.trim()).rawPath);
-
-      activeSplitDropdownMatches = allPaths.filter(pathArray => {
-        const pathStr = pathArray.join("-");
-        if (alreadySelectedRawPaths.includes(pathStr)) return false;
-
-        const leaf = pathArray[pathArray.length - 1].toLowerCase();
-        const fullPath = pathStr.toLowerCase();
-        return leaf.includes(currentQuery) || fullPath.includes(currentQuery);
-      });
-
-      if (activeSplitDropdownMatches.length === 0) {
-        dropdown.innerHTML = '<div class="p-2 text-xs text-slate-500 italic text-center">No matching labels</div>';
-        dropdown.classList.remove("hidden");
-        activeSplitDropdownIndex = -1;
-        return;
-      }
-
-      activeSplitDropdownIndex = 0; // Default highlight the first recommendation
-      renderSplitLabelsAutocomplete(rowIndex, input);
-    }
-
-    function renderSplitLabelsAutocomplete(rowIndex, input) {
-      const dropdown = document.getElementById(`split-labels-dropdown-${rowIndex}`);
-      if (!dropdown) return;
-
-      dropdown.innerHTML = activeSplitDropdownMatches.map((pathArray, idx) => {
-        const pathStr = pathArray.join("-");
-        const displayName = pathArray[pathArray.length - 1];
-        const displayPath = pathArray.join(" ➔ ");
-        const isHighlighted = idx === activeSplitDropdownIndex;
-
-        const highlightClass = isHighlighted
-          ? "bg-emerald-50 text-emerald-700 font-bold"
-          : "text-slate-700 hover:bg-slate-50";
-
-        return `
-          <div onclick="selectSplitDropdownLabel(${rowIndex}, '${pathStr}')"
-               class="px-3 py-2 text-[11px] cursor-pointer flex flex-col gap-0.5 transition-colors ${highlightClass}">
-            <span class="font-semibold text-slate-800">${displayName}</span>
-            <span class="text-[9px] text-slate-400 font-medium">${displayPath}</span>
-          </div>
-        `;
-      }).join("");
-
-      dropdown.classList.remove("hidden");
-    }
-
-    function selectSplitDropdownLabel(rowIndex, serializedPath) {
-      const dropdown = document.getElementById(`split-labels-dropdown-${rowIndex}`);
-      const input = dropdown?.previousElementSibling;
-      if (!input) return;
-
-      const pathArray = serializedPath.split("-");
-      const defaultNature = getDefaultNatureForPath(pathArray);
-      const resolvedStr = pathToLabelString(pathArray, defaultNature);
-
-      const parts = input.value.split(',');
-      parts.pop(); // Remove the current typing segment
-      parts.push(resolvedStr); // Insert our beautifully serialized hierarchical label
-
-      // Re-join selections cleanly and append a comma-space to invite the next label
-      input.value = parts.map(p => p.trim()).filter(Boolean).join(', ') + ', ';
-
-      if (dropdown) dropdown.classList.add("hidden");
-      activeSplitDropdownMatches = [];
-      activeSplitDropdownIndex = -1;
-
-      input.focus(); // Retain focus for rapid tagging
-    }
-
-    function handleSplitLabelKeydown(e, input, rowIndex) {
-      const dropdown = document.getElementById(`split-labels-dropdown-${rowIndex}`);
-      if (activeSplitDropdownMatches.length === 0) return;
-
-      if (e.key === "ArrowDown") {
-        activeSplitDropdownIndex = (activeSplitDropdownIndex + 1) % activeSplitDropdownMatches.length;
-        renderSplitLabelsAutocomplete(rowIndex, input);
-        e.preventDefault();
-        const activeItem = dropdown?.children[activeSplitDropdownIndex];
-        activeItem?.scrollIntoView({ block: "nearest" });
-      } else if (e.key === "ArrowUp") {
-        activeSplitDropdownIndex = (activeSplitDropdownIndex - 1 + activeSplitDropdownMatches.length) % activeSplitDropdownMatches.length;
-        renderSplitLabelsAutocomplete(rowIndex, input);
-        e.preventDefault();
-        const activeItem = dropdown?.children[activeSplitDropdownIndex];
-        activeItem?.scrollIntoView({ block: "nearest" });
-      } else if (e.key === "Enter" || e.key === "Tab") {
-        if (activeSplitDropdownIndex === -1 && activeSplitDropdownMatches.length > 0) {
-          activeSplitDropdownIndex = 0;
-        }
-        if (activeSplitDropdownIndex > -1 && activeSplitDropdownIndex < activeSplitDropdownMatches.length) {
-          const selectedPathArray = activeSplitDropdownMatches[activeSplitDropdownIndex];
-          const pathStr = selectedPathArray.join("-");
-          selectSplitDropdownLabel(rowIndex, pathStr);
-          e.preventDefault();
-        }
-      } else if (e.key === "Escape") {
-        if (dropdown) dropdown.classList.add("hidden");
         activeSplitDropdownMatches = [];
         activeSplitDropdownIndex = -1;
         e.preventDefault();
@@ -3700,7 +3771,10 @@
         const splitRows = document.querySelectorAll('#txSplitRows > div');
         const splitInput = splitRows[activeSplitRowPickerIndex]?.querySelector('[data-split-tags]');
         const splitTags = splitInput ? parseTagInput(splitInput.value) : [];
-        tempSelectedLabels = new Set(splitTags);
+
+        // Resolve short labels to their fully serialized paths for proper picker matching!
+        const resolvedTags = splitTags.map(tag => resolveShortLabelToSerialized(tag)).filter(Boolean);
+        tempSelectedLabels = new Set(resolvedTags);
       } else {
         tempSelectedLabels = new Set(activeTxLabels);
       }
@@ -3880,16 +3954,19 @@
       renderLabelTreeUI();
     }
 
-    // Fixed path comparison logic
+    // --- APPLY SELECTIONS BACK TO MAIN FORM OR SPLIT ROW ---
     function applyLabelSelection() {
       if (activeSplitRowPickerIndex !== null) {
         // Apply back to specific split row
         const splitRows = document.querySelectorAll('#txSplitRows > div');
-        const splitInput = splitRows[activeSplitRowPickerIndex]?.querySelector('[data-split-tags]');
+        const splitRow = splitRows[activeSplitRowPickerIndex];
+        const splitInput = splitRow?.querySelector('[data-split-tags]');
         if (splitInput) {
-          // Join selections cleanly and append comma-space to invite further typing/editing
-          splitInput.value = Array.from(tempSelectedLabels).join(', ') + (tempSelectedLabels.size > 0 ? ', ' : '');
-          splitInput.focus();
+          // Sync selections back to raw string list
+          splitInput.value = Array.from(tempSelectedLabels).join(', ');
+
+          // Instantly redraw color-coded pills inside the split row
+          updateSplitRowChips(activeSplitRowPickerIndex);
         }
         activeSplitRowPickerIndex = null;
       } else {
