@@ -1096,10 +1096,12 @@
 
       // Dynamic Inheritance Engine: work backwards up the folder path to find a parent's default nature
       let currentPath = [...pathArray];
+      const activeNatures = (typeof labelNatures !== 'undefined' && Object.keys(labelNatures).length > 0) ? labelNatures : DEFAULT_LABEL_NATURES;
+
       while (currentPath.length > 1) {
         const pathStr = currentPath.join('-');
-        if (DEFAULT_LABEL_NATURES[pathStr]) {
-          return DEFAULT_LABEL_NATURES[pathStr];
+        if (activeNatures[pathStr]) {
+          return activeNatures[pathStr];
         }
         currentPath.pop(); // Pop off the child leaf to check the parent (e.g., Produce -> Groceries)
       }
@@ -3813,12 +3815,12 @@
       renderLabelTreeUI();
     }
 
-    function renderNatureToggleRow(serializedPath, currentNature) {
+    function renderNatureToggleRow(serializedPath, currentNature, isMasterEdit = false) {
       const natures = ["Must", "Need", "Want", "N/A"];
       return `
-        <div class="flex items-center gap-1.5 mt-0.5 ml-6 py-1 bg-slate-50 px-2 rounded-lg border border-slate-100 w-fit">
-          <span class="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider mr-1">Type:</span>
-          ${natures.map(nature => {
+    <div class="flex items-center gap-1.5 mt-0.5 ml-6 py-1 bg-slate-50 px-2 rounded-lg border border-slate-100 w-fit">
+      <span class="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider mr-1">${isMasterEdit ? "Default:" : "Type:"}</span>
+      ${natures.map(nature => {
         const isActive = currentNature === nature;
         let activeColor = "bg-slate-600 border-slate-600 text-white";
         if (isActive) {
@@ -3830,27 +3832,35 @@
           ? activeColor
           : "bg-white text-slate-500 border-slate-200 hover:bg-slate-100";
         return `
-              <button type="button" onclick="setLabelNature('${serializedPath}', '${nature}')"
-                      class="px-1.5 py-0.5 rounded text-[9px] font-extrabold transition-all border ${btnClass}">
-                ${nature}
-              </button>
-            `;
+          <button type="button" onclick="setLabelNature('${serializedPath}', '${nature}', ${isMasterEdit})"
+            class="px-1.5 py-0.5 rounded text-[9px] font-extrabold transition-all border ${btnClass}">
+            ${nature}
+          </button>
+        `;
       }).join("")}
-        </div>
-      `;
+    </div>
+  `;
     }
 
-    function setLabelNature(serializedPath, targetNature) {
-      const arr = Array.from(tempSelectedLabels);
-      const matchIdx = arr.findIndex(lbl => parseLabelString(lbl).rawPath === serializedPath);
-
-      if (matchIdx > -1) {
-        tempSelectedLabels.delete(arr[matchIdx]);
+    function setLabelNature(serializedPath, targetNature, isMasterEdit = false) {
+      if (isMasterEdit) {
+        // 1. Update the master default nature permanently
+        if (targetNature === 'N/A') {
+          delete labelNatures[serializedPath];
+        } else {
+          labelNatures[serializedPath] = targetNature;
+        }
+      } else {
+        // 2. Update transaction-level override
+        const arr = Array.from(tempSelectedLabels);
+        const matchIdx = arr.findIndex(lbl => parseLabelString(lbl).rawPath === serializedPath);
+        if (matchIdx > -1) {
+          tempSelectedLabels.delete(arr[matchIdx]);
+        }
+        const pathArray = serializedPath.split("-");
+        const updatedStr = pathToLabelString(pathArray, targetNature);
+        tempSelectedLabels.add(updatedStr);
       }
-
-      const pathArray = serializedPath.split("-");
-      const updatedStr = pathToLabelString(pathArray, targetNature);
-      tempSelectedLabels.add(updatedStr);
       renderLabelTreeUI();
     }
 
@@ -4001,9 +4011,9 @@
              ${pickerEditMode ? managementActions : ""}
            </div>
            
-           <!-- Show dynamic nature toggles inline if category is selected inside Expenses (Root evaluation fixed [1]) -->
-          ${!pickerEditMode && isChecked && currentPathArray === "Expenses"
-          ? renderNatureToggleRow(pathId, currentNature)
+           <!-- Show dynamic nature toggles inline if selected (transaction override) OR if we are in Edit Mode (master default config) -->
+          ${((!pickerEditMode && isChecked) || pickerEditMode) && currentPathArray.at(0) === "Expenses"
+          ? renderNatureToggleRow(pathId, currentNature, pickerEditMode)
           : ""}
          </div>
        `;

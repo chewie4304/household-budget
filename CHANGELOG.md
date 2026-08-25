@@ -7,10 +7,15 @@ All notable changes to this project will be documented in this file.
 ## [1.4.2-dev] - 2026-08-24
 
 ### Added
-- **Mobile Numeric Keypad Enforcement:** Embedded the `inputmode="decimal"` attribute across all financial inputs to force mobile browsers (iOS and Android) to automatically launch a clean, decimal-ready numeric keypad on tap, minimizing mobile input friction.
+- **Mobile Numeric Keypad Enforcement:** Integrated the `inputmode="decimal"` attribute across financial inputs to force mobile browsers (iOS and Android) to automatically launch a clean, decimal-ready numeric keypad on tap, minimizing input friction.
+- **Master Default Nature Editing:** Expanded the "Edit Labels" panel to display "Must / Need / Want" nature toggles next to all Expense categories. Toggling these options now updates your master default configurations in local storage upon saving.
 
 ### Changed
-- **Amount Input Keypads Optimized:** Upgraded the main transaction amount input (`txAmount`), split transaction row amounts (`data-split-amount`), cleared balance adjustment fields (`clearedBalanceInput`), and account creation parameters—including Initial Balance (`accBalance`), Credit Limit (`accCreditLimit`), Minimum Alert (`accMinBalance`), and Maximum Alert (`accMaxBalance`)—to trigger the decimal keypad while perfectly preserving your custom in-app mathematical formula evaluation engine on field blur.
+- **Amount Input Keypads Optimized:** Upgraded the main transaction amount input (`txAmount`), split transaction row amounts (`data-split-amount`), cleared balance adjustments (`clearedBalanceInput`), and account creation parameters—including Initial Balance (`accBalance`), Credit Limit (`accCreditLimit`), Minimum Alert (`accMinBalance`), and Maximum Alert (`accMaxBalance`)—to trigger the decimal keypad while perfectly preserving mathematical formula evaluation on field blur.
+
+### Fixed
+- **Label Nature Inheritance:** Configured `getDefaultNatureForPath` to query your active, live `labelNatures` state instead of fallback defaults, ensuring newly created labels automatically inherit parent category natures on-the-fly.
+- **Inline Selector Evaluation:** Resolved an array-to-string evaluation bug in `renderLabelNode` by correctly evaluating the root of the folder path array (`currentPathArray.at(0)`) to ensure the inline type selectors render reliably under Expenses.
 
 ## [1.4.1] - 2026-08-23
 
