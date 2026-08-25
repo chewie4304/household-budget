@@ -1092,14 +1092,14 @@
     };
 
     function getDefaultNatureForPath(pathArray) {
-      if (!Array.isArray(pathArray) || pathArray !== 'Expenses') return 'N/A'; // Fixed: evaluates pathArray string
+      if (!Array.isArray(pathArray) || pathArray[0] !== 'Expenses') return 'N/A';
 
       // Dynamic Inheritance Engine: work backwards up the folder path to find a parent's default nature
       let currentPath = [...pathArray];
       while (currentPath.length > 1) {
         const pathStr = currentPath.join('-');
-        if (labelNatures[pathStr]) {
-          return labelNatures[pathStr];
+        if (DEFAULT_LABEL_NATURES[pathStr]) {
+          return DEFAULT_LABEL_NATURES[pathStr];
         }
         currentPath.pop(); // Pop off the child leaf to check the parent (e.g., Produce -> Groceries)
       }
@@ -1198,7 +1198,7 @@
 
     function getLabelColorStyle(labelStr) {
       const { path, nature } = parseLabelString(labelStr);
-      const root = path; // Fixed: extracts the string folder name rather than comparing the array
+      const root = path[0]; // Extracts the root string folder name (e.g., 'Expenses')
 
       if (root === 'Income') {
         return 'bg-emerald-50 text-emerald-700 border border-emerald-200';
@@ -4002,7 +4002,7 @@
            </div>
            
            <!-- Show dynamic nature toggles inline if category is selected inside Expenses (Root evaluation fixed [1]) -->
-           ${!pickerEditMode && isChecked && currentPathArray === "Expenses"
+          ${!pickerEditMode && isChecked && currentPathArray === "Expenses"
           ? renderNatureToggleRow(pathId, currentNature)
           : ""}
          </div>
