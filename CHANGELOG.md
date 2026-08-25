@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ## [unreleased]
 
+## [1.4.2-dev] - 2026-08-24
+
+### Added
+- **Mobile Numeric Keypad Enforcement:** Embedded the `inputmode="decimal"` attribute across all financial inputs to force mobile browsers (iOS and Android) to automatically launch a clean, decimal-ready numeric keypad on tap, minimizing mobile input friction.
+
+### Changed
+- **Amount Input Keypads Optimized:** Upgraded the main transaction amount input (`txAmount`), split transaction row amounts (`data-split-amount`), cleared balance adjustment fields (`clearedBalanceInput`), and account creation parameters—including Initial Balance (`accBalance`), Credit Limit (`accCreditLimit`), Minimum Alert (`accMinBalance`), and Maximum Alert (`accMaxBalance`)—to trigger the decimal keypad while perfectly preserving your custom in-app mathematical formula evaluation engine on field blur.
+
 ## [1.4.1] - 2026-08-23
 
 ### Added
