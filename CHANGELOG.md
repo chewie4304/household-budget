@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 ## [unreleased]
 
+## [1.4.4-dev] - 2026-08-26
+
+### Fixed
+
+- **Ghost Wrap Prevention in Tag Inputs:** Shrank the minimum-width constraint of autocomplete-capable label search inputs (main form, detailed account filter, global filter, and split transaction rows) down to `8px`. This ensures that the input field remains inline with the tags rather than wrapping prematurely to a new line and creating empty vertical spacing.
+- **Parent Container Click-to-Focus:** Integrated click listeners (`onclick`) and text-cursor pointer styles (`cursor-text`) across all label input parent wrappers, allowing users to tap anywhere inside the bordered area to instantly focus the underlying text field and trigger the cursor.
+
 ## [1.4.3] - 2026-08-26
 
 ### Added
