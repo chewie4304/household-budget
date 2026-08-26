@@ -8,8 +8,10 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 
-- **Ghost Wrap Prevention in Tag Inputs:** Shrank the minimum-width constraint of autocomplete-capable label search inputs (main form, detailed account filter, global filter, and split transaction rows) down to `8px`. This ensures that the input field remains inline with the tags rather than wrapping prematurely to a new line and creating empty vertical spacing.
-- **Parent Container Click-to-Focus:** Integrated click listeners (`onclick`) and text-cursor pointer styles (`cursor-text`) across all label input parent wrappers, allowing users to tap anywhere inside the bordered area to instantly focus the underlying text field and trigger the cursor.
+- **Ghost Wrap Prevention in Tag Inputs:** Shrank the minimum-width constraint of autocomplete-capable label search inputs down to `8px`. This prevents inputs from prematurely wrapping to a new line and creating empty vertical "ghost rows" when tag chips fill the horizontal space.
+- **Parent Container Click-to-Focus:** Integrated active click-to-focus triggers (`onclick`) and text-cursor pointer styles (`cursor-text`) across label input parent wrapper borders. This makes the entire container box a seamless click target that focuses the underlying cursor.
+- **Touchstart Virtual Keyboard Suppression:** Embedded a touch sequence debouncer (`handleLabelTouchStart`) tracking custom tap intervals. When a double-tap is registered on touch-screen devices, the event instantly blurs active document elements, seamlessly dismissing the mobile keyboard before the hierarchical label picker slides into view.
+
 
 ## [1.4.3] - 2026-08-26
 

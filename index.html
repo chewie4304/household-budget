@@ -163,6 +163,7 @@
             </div>
             <div class="relative">
               <div onclick="document.getElementById('global-tag-filter-search-input').focus()"
+                ontouchstart="handleLabelTouchStart(event, 'global-tag-filter-search-input', 'global-filter')"
                 class="flex flex-wrap items-center gap-1 min-h-[36px] p-1.5 rounded-xl border border-slate-200 bg-white focus-within:ring-2 focus-within:ring-blue-100 focus-within:border-blue-300 transition-all cursor-text">
                 <!-- Color-coded filter pills render inline here -->
                 <div id="global-tag-filter-preview" class="contents"></div>
@@ -298,17 +299,17 @@
         </div>
         <div class="relative">
           <div onclick="document.getElementById('tag-filter-search-input').focus()"
+            ontouchstart="handleLabelTouchStart(event, 'tag-filter-search-input', 'filter')"
             class="flex flex-wrap items-center gap-1 min-h-[36px] p-1.5 rounded-xl border border-slate-200 bg-white focus-within:ring-2 focus-within:ring-blue-100 focus-within:border-blue-300 transition-all cursor-text">
             <!-- Color-coded filter pills render inline here -->
             <div id="tag-filter-preview" class="contents"></div>
             <!-- Typable tag filter search input -->
             <input type="text" id="tag-filter-search-input" placeholder="Type to filter..."
-              ontouchstart="handleLabelTouchStart(event, 'tag-filter-search-input', 'filter')"
               class="flex-1 min-w-[8px] text-xs font-semibold bg-transparent border-0 p-0 focus:ring-0 focus:outline-none text-slate-800"
               oninput="handleTagFilterSearchTyping(this.value)" onkeydown="handleTagFilterSearchKeydown(event)"
               ondblclick="openLabelPicker('filter')" title="Double-click to open full label tree" />
           </div>
-          
+
           <!-- Autocomplete suggestions dropdown -->
           <div id="tag-filter-autocomplete-dropdown"
             class="hidden absolute left-0 right-0 mt-1 max-h-40 overflow-y-auto bg-white border border-slate-200 rounded-xl shadow-lg z-50">
@@ -802,12 +803,12 @@
           <!-- Typable multi-select wrapper container -->
           <div class="relative">
             <div onclick="document.getElementById('tx-labels-text-input').focus()"
+              ontouchstart="handleLabelTouchStart(event, 'tx-labels-text-input')"
               class="flex flex-wrap items-center gap-1 min-h-[36px] p-1 rounded-xl border border-slate-200 bg-white focus-within:ring-2 focus-within:ring-blue-200 focus-within:border-blue-400 transition-all cursor-text">
               <!-- Dynamic color-coded label chips render inline here -->
               <div id="selected-labels-preview" class="contents"></div>
               <!-- Typable search input -->
               <input type="text" id="tx-labels-text-input" placeholder="Type label..."
-                ontouchstart="handleLabelTouchStart(event, 'tx-labels-text-input')"
                 class="flex-1 min-w-[8px] text-xs font-semibold bg-transparent border-0 p-0 focus:ring-0 focus:outline-none text-slate-800"
                 oninput="handleLabelSearchTyping(this.value)" onkeydown="handleLabelSearchKeydown(event)"
                 ondblclick="openLabelPicker()" title="Double-click to open full label tree" />
@@ -3081,19 +3082,20 @@
             </div>
             
             <div class="relative">
-              <div onclick="document.getElementById('split-labels-text-input-${index}').focus()"
-                class="flex flex-wrap items-center gap-1 min-h-[32px] p-1 rounded-lg border border-slate-200 bg-white focus-within:ring-2 focus-within:ring-blue-100 focus-within:border-blue-300 transition-all cursor-text">
+              <div onclick="document.getElementById('split-labels-text-input-${index}').focus()" 
+                  ontouchstart="handleLabelTouchStart(event, 'split-labels-text-input-${index}', ${index})"
+                  class="flex flex-wrap items-center gap-1 min-h-[32px] p-1 rounded-lg border border-slate-200 bg-white focus-within:ring-2 focus-within:ring-blue-100 focus-within:border-blue-300 transition-all cursor-text">
                 <!-- Color-coded pills container -->
                 <div id="split-labels-preview-${index}" class="contents">
-                ${tagsHtml}
+                  ${tagsHtml}
                 </div>
-              <!-- Typable search input -->
-              <input type="text" id="split-labels-text-input-${index}" placeholder="${rowTags.length === 0 ? 'Type tag...' : ''}"
-                class="flex-1 min-w-[8px] text-xs font-semibold bg-transparent border-0 p-0 focus:ring-0 focus:outline-none text-slate-800"
-                oninput="handleSplitLabelSearchTyping(this.value, ${index})"
-                onkeydown="handleSplitLabelSearchKeydown(event, ${index})"
-                ondblclick="openLabelPicker(${index})"
-                title="Double-click to open full label tree" />
+                <!-- Typable search input -->
+                <input type="text" id="split-labels-text-input-${index}" placeholder="${rowTags.length === 0 ? 'Type tag...' : ''}"
+                      class="flex-1 min-w-[8px] text-xs font-semibold bg-transparent border-0 p-0 focus:ring-0 focus:outline-none text-slate-800"
+                      oninput="handleSplitLabelSearchTyping(this.value, ${index})"
+                      onkeydown="handleSplitLabelSearchKeydown(event, ${index})"
+                      ondblclick="openLabelPicker(${index})"
+                      title="Double-click to open full label tree" />
               </div>
               
               <!-- Local suggestions dropdown -->
@@ -4192,6 +4194,11 @@
 
     // --- SNAP-DISMISS KEYBOARD ON TOUCH DOUBLE-TAP ---
     function handleLabelTouchStart(e, inputId, splitRowIndex = null) {
+      // 📱 Ignore touches on chip close buttons
+      if (e.target.tagName === 'BUTTON' || e.target.closest('button')) {
+        return;
+      }
+
       const now = Date.now();
       const timespan = now - lastLabelTapTime;
 
