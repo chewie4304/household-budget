@@ -229,11 +229,33 @@
       </div>
     </div>
 
-    <!-- Tag Filter Bar -->
-    <div id="tag-filter-container"
-      class="hidden flex flex-wrap items-center gap-1.5 bg-white p-3 rounded-xl border border-gray-100 shadow-sm">
-      <span class="text-xs font-semibold text-gray-500 mr-1">Filter by Tag:</span>
-      <div id="tag-filter-chips" class="flex flex-wrap gap-1"></div>
+    <!-- Label Filter Container -->
+    <div id="tag-filter-container" class="hidden bg-white p-3.5 rounded-xl border border-gray-100 shadow-sm space-y-2">
+      <div class="flex items-center justify-between">
+        <span class="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Filter by Labels</span>
+        <button type="button" onclick="openLabelPicker('filter')"
+          class="text-[10px] font-bold text-blue-600 hover:text-blue-700 transition flex items-center gap-0.5">
+          🏷️ Select Labels
+        </button>
+      </div>
+
+      <div class="relative">
+        <div
+          class="flex flex-wrap items-center gap-1 min-h-[36px] p-1.5 rounded-xl border border-slate-200 bg-white focus-within:ring-2 focus-within:ring-blue-100 focus-within:border-blue-300 transition-all">
+          <!-- Color-coded filter pills render inline here -->
+          <div id="tag-filter-preview" class="contents"></div>
+          <!-- Typable tag filter search input -->
+          <input type="text" id="tag-filter-search-input" placeholder="Type to filter..."
+            class="flex-1 min-w-[120px] text-xs font-semibold bg-transparent border-0 p-0 focus:ring-0 focus:outline-none text-slate-800"
+            oninput="handleTagFilterSearchTyping(this.value)" onkeydown="handleTagFilterSearchKeydown(event)"
+            ondblclick="openLabelPicker('filter')" title="Double-click to open full label tree" />
+        </div>
+
+        <!-- Autocomplete suggestions dropdown -->
+        <div id="tag-filter-autocomplete-dropdown"
+          class="hidden absolute left-0 right-0 mt-1 max-h-40 overflow-y-auto bg-white border border-slate-200 rounded-xl shadow-lg z-50">
+        </div>
+      </div>
     </div>
 
     <!-- Transactions List -->
@@ -939,6 +961,7 @@
     let labelTree = {};
     let labelNatures = {};
     let activeTxLabels = [];
+    let activeTagFilters = []; // Tracks the multi-select labels active in detailed filter view
     let tempSelectedLabels = new Set();
     let pickerExpandedNodes = new Set(["Expenses", "Goals", "Income", "Other"]);
 
@@ -1802,7 +1825,7 @@
           }
         }
 
-        renderTagFilters();
+        renderTagFilterSection(); // Renders dynamic search filters card
         renderTransactions();
       } catch (err) {
         console.error("Error fetching transactions:", err);
@@ -2322,7 +2345,7 @@
 
     async function showTransactionsView(accId) {
       activeAccountId = accId; // Store active account globally
-      selectedTagFilter = null;
+      activeTagFilters = []; // Reset dynamic search filters on view shift
       currentViewState = 'transactions-detail';
       const acc = accounts.find(a => a.id === accId);
       if (!acc) return;
@@ -2382,7 +2405,7 @@
 
     function showAccountsView() {
       activeAccountId = null; // Clear active account
-      selectedTagFilter = null;
+      activeTagFilters = []; // Reset dynamic search filters on view shift
       currentViewState = 'accounts-detail';
       document.getElementById('transactions-view').classList.add('hidden');
       document.getElementById('accounts-view').classList.remove('hidden');
@@ -2398,48 +2421,215 @@
       return roundCurrency(initialBal + clearedSum);
     }
 
-    function renderTagFilters() {
+    // --- MULTI-SELECT FILTER ENGINE ---
+    function renderTagFilterSection() {
       const filterContainer = document.getElementById('tag-filter-container');
-      const chipsContainer = document.getElementById('tag-filter-chips');
+      const previewContainer = document.getElementById('tag-filter-preview');
+      const searchInput = document.getElementById('tag-filter-search-input');
+      if (!filterContainer || !previewContainer) return;
 
-      const allTags = new Set();
+      // Gather all unique tags present in the current account's transaction list
+      const allAccountTags = new Set();
       currentAccountTransactions.forEach(tx => {
-        getTransactionTags(tx).forEach(tag => allTags.add(tag));
+        getTransactionTags(tx).forEach(tag => allAccountTags.add(tag));
       });
 
-      if (allTags.size === 0) {
+      // If there are no tags on any transaction and no filters are active, hide the filter box
+      if (allAccountTags.size === 0 && activeTagFilters.length === 0) {
         filterContainer.classList.add('hidden');
         return;
       }
-
       filterContainer.classList.remove('hidden');
 
-      let html = `<button onclick="setTagFilter(null)" class="px-2 py-0.5 text-xs font-semibold rounded-full ${selectedTagFilter === null ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-        }">All</button>`;
-
-      allTags.forEach(tag => {
-        const isSelected = selectedTagFilter === tag;
-        const displayName = getLabelDisplayName(tag);
-        const colorClass = getLabelColorStyle(tag);
-        const activeStyle = isSelected ? 'bg-blue-600 text-white shadow-sm' : 'bg-slate-100 text-slate-700 hover:bg-slate-200';
-        html += `<button onclick="setTagFilter('${tag}')" class="px-2 py-0.5 text-xs font-bold rounded-full transition ${activeStyle}">${displayName}</button>`;
-      });
-
-      chipsContainer.innerHTML = html;
+      // Render color-coded pills for active filters
+      if (activeTagFilters.length === 0) {
+        previewContainer.innerHTML = '';
+        if (searchInput) {
+          searchInput.placeholder = "Type to filter by labels...";
+          searchInput.value = '';
+        }
+      } else {
+        if (searchInput) {
+          searchInput.placeholder = '';
+          searchInput.value = '';
+        }
+        previewContainer.innerHTML = activeTagFilters.map((t, idx) => {
+          const displayName = getLabelDisplayName(t);
+          const displayPath = getLabelDisplayPath(t);
+          const colorClass = getLabelColorStyle(t);
+          return `
+        <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-lg text-[10px] font-bold shadow-sm transition ${colorClass}" title="${displayPath}">
+          ${displayName}
+          <button type="button" onclick="removeTagFilter(${idx})" 
+            class="text-xs font-semibold opacity-70 hover:opacity-100 focus:outline-none">&times;</button>
+        </span>
+      `;
+        }).join('');
+      }
     }
 
-    function setTagFilter(tag) {
-      selectedTagFilter = tag;
-      renderTagFilters();
+    // --- AUTOCOMPLETE & KEYBOARD NAVIGATION FOR FILTER INPUT ---
+    let activeFilterDropdownMatches = [];
+    let activeFilterDropdownIndex = -1;
+
+    function handleTagFilterSearchTyping(query) {
+      const dropdown = document.getElementById("tag-filter-autocomplete-dropdown");
+      if (!dropdown) return;
+
+      const cleanQuery = query.trim().toLowerCase();
+      if (!cleanQuery) {
+        dropdown.classList.add("hidden");
+        activeFilterDropdownMatches = [];
+        activeFilterDropdownIndex = -1;
+        return;
+      }
+
+      const allPaths = getAllLabelPaths(labelTree);
+
+      // Find only the tags that exist on the current account transactions
+      const allAccountTags = new Set();
+      currentAccountTransactions.forEach(tx => {
+        getTransactionTags(tx).forEach(tag => allAccountTags.add(tag));
+      });
+
+      const currentActiveRawPaths = activeTagFilters.map(f => parseLabelString(f).rawPath);
+
+      // Filter recommendations matching query, present on active transactions, and not already selected
+      activeFilterDropdownMatches = allPaths.filter(pathArray => {
+        const pathStr = pathArray.join("-");
+        if (currentActiveRawPaths.includes(pathStr)) return false;
+
+        // Must be actively utilized in this account's transactions
+        const isUsed = Array.from(allAccountTags).some(tag => parseLabelString(tag).rawPath === pathStr);
+        if (!isUsed) return false;
+
+        const leaf = pathArray[pathArray.length - 1].toLowerCase();
+        const fullPath = pathStr.toLowerCase();
+        return leaf.includes(cleanQuery) || fullPath.includes(cleanQuery);
+      });
+
+      if (activeFilterDropdownMatches.length === 0) {
+        dropdown.innerHTML = '<div class="p-2.5 text-[11px] text-slate-400 italic text-center">No matching account labels</div>';
+        dropdown.classList.remove("hidden");
+        activeFilterDropdownIndex = -1;
+        return;
+      }
+
+      activeFilterDropdownIndex = 0;
+      renderTagFilterSearchAutocomplete();
+    }
+
+    function renderTagFilterSearchAutocomplete() {
+      const dropdown = document.getElementById("tag-filter-autocomplete-dropdown");
+      if (!dropdown) return;
+
+      dropdown.innerHTML = activeFilterDropdownMatches.map((pathArray, idx) => {
+        const pathStr = pathArray.join("-");
+        const displayName = pathArray[pathArray.length - 1];
+        const displayPath = pathArray.join(" ➔ ");
+        const isHighlighted = idx === activeFilterDropdownIndex;
+        const highlightClass = isHighlighted
+          ? "bg-blue-50 text-blue-700 font-bold"
+          : "text-slate-700 hover:bg-slate-50";
+
+        return `
+      <div onclick="selectTagFilterDropdownLabel('${pathStr}')"
+        class="px-3 py-2 text-[11px] cursor-pointer flex flex-col gap-0.5 transition-colors ${highlightClass}">
+        <span class="font-semibold text-slate-800">${displayName}</span>
+        <span class="text-[9px] text-slate-400 font-medium">${displayPath}</span>
+      </div>
+    `;
+      }).join("");
+
+      dropdown.classList.remove("hidden");
+    }
+
+    function selectTagFilterDropdownLabel(serializedPath) {
+      const dropdown = document.getElementById("tag-filter-autocomplete-dropdown");
+      const input = document.getElementById("tag-filter-search-input");
+      if (!input) return;
+
+      const pathArray = serializedPath.split("-");
+      const defaultNature = getDefaultNatureForPath(pathArray);
+      const resolvedStr = pathToLabelString(pathArray, defaultNature);
+
+      if (!activeTagFilters.includes(resolvedStr)) {
+        activeTagFilters.push(resolvedStr);
+      }
+
+      input.value = "";
+      if (dropdown) dropdown.classList.add("hidden");
+      activeFilterDropdownMatches = [];
+      activeFilterDropdownIndex = -1;
+
+      renderTagFilterSection();
+      renderTransactions();
+      input.focus();
+    }
+
+    function handleTagFilterSearchKeydown(e) {
+      const input = document.getElementById("tag-filter-search-input");
+      const dropdown = document.getElementById("tag-filter-autocomplete-dropdown");
+      if (!dropdown) return;
+
+      // Backspace on empty input removes the most recently added filter pill
+      if (e.key === "Backspace" && input && input.value === "") {
+        if (activeTagFilters.length > 0) {
+          activeTagFilters.pop();
+          renderTagFilterSection();
+          renderTransactions();
+          e.preventDefault();
+        }
+        return;
+      }
+
+      if (activeFilterDropdownMatches.length === 0) return;
+
+      if (e.key === "ArrowDown") {
+        activeFilterDropdownIndex = (activeFilterDropdownIndex + 1) % activeFilterDropdownMatches.length;
+        renderTagFilterSearchAutocomplete();
+        e.preventDefault();
+        const activeItem = dropdown.children[activeFilterDropdownIndex];
+        activeItem?.scrollIntoView({ block: "nearest" });
+      } else if (e.key === "ArrowUp") {
+        activeFilterDropdownIndex = (activeFilterDropdownIndex - 1 + activeFilterDropdownMatches.length) % activeFilterDropdownMatches.length;
+        renderTagFilterSearchAutocomplete();
+        e.preventDefault();
+        const activeItem = dropdown.children[activeFilterDropdownIndex];
+        activeItem?.scrollIntoView({ block: "nearest" });
+      } else if (e.key === "Enter" || e.key === "Tab") {
+        if (activeFilterDropdownIndex === -1 && activeFilterDropdownMatches.length > 0) {
+          activeFilterDropdownIndex = 0;
+        }
+        if (activeFilterDropdownIndex > -1 && activeFilterDropdownIndex < activeFilterDropdownMatches.length) {
+          const selectedPathArray = activeFilterDropdownMatches[activeFilterDropdownIndex];
+          selectTagFilterDropdownLabel(selectedPathArray.join("-"));
+          e.preventDefault();
+        }
+      } else if (e.key === "Escape") {
+        dropdown.classList.add("hidden");
+        activeFilterDropdownMatches = [];
+        activeFilterDropdownIndex = -1;
+        e.preventDefault();
+      }
+    }
+
+    function removeTagFilter(index) {
+      activeTagFilters.splice(index, 1);
+      renderTagFilterSection();
       renderTransactions();
     }
 
     function renderTransactions() {
       const list = document.getElementById('transactions-list');
-
       let filteredTx = currentAccountTransactions;
-      if (selectedTagFilter) {
-        filteredTx = currentAccountTransactions.filter(tx => getTransactionTags(tx).includes(selectedTagFilter));
+
+      // Filter matches if transaction tags contain any of our selected filter paths
+      if (activeTagFilters && activeTagFilters.length > 0) {
+        filteredTx = currentAccountTransactions.filter(tx => {
+          const txTags = getTransactionTags(tx).map(t => parseLabelString(t).rawPath);
+          return activeTagFilters.some(f => txTags.includes(parseLabelString(f).rawPath));
+        });
       }
 
       const addButton = `
@@ -3758,23 +3948,23 @@
       pickerEditMode = false;
       const btn = document.getElementById("picker-edit-toggle-btn");
       if (btn) {
-        btn.innerHTML = "✏ Edit Labels";
+        btn.innerHTML = "✏️ Edit Labels";
         btn.className = "px-2.5 py-1 text-[11px] font-bold text-slate-600 bg-slate-100 rounded-lg hover:bg-slate-200 transition";
       }
+
       const promptText = document.getElementById("picker-prompt-text");
       if (promptText) {
         promptText.textContent = "Need to edit labels?";
       }
 
-      // Initialize temporary selection set (Checks current values in split OR main form)
-      if (activeSplitRowPickerIndex !== null) {
+      // Safe State Initialization Router
+      if (activeSplitRowPickerIndex === 'filter') {
+        tempSelectedLabels = new Set(activeTagFilters);
+      } else if (activeSplitRowPickerIndex !== null && activeSplitRowPickerIndex !== 'filter') {
         const splitRows = document.querySelectorAll('#txSplitRows > div');
         const splitInput = splitRows[activeSplitRowPickerIndex]?.querySelector('[data-split-tags]');
         const splitTags = splitInput ? parseTagInput(splitInput.value) : [];
-
-        // Resolve short labels to their fully serialized paths for proper picker matching!
-        const resolvedTags = splitTags.map(tag => resolveShortLabelToSerialized(tag)).filter(Boolean);
-        tempSelectedLabels = new Set(resolvedTags);
+        tempSelectedLabels = new Set(splitTags);
       } else {
         tempSelectedLabels = new Set(activeTxLabels);
       }
@@ -3956,16 +4146,18 @@
 
     // --- APPLY SELECTIONS BACK TO MAIN FORM OR SPLIT ROW ---
     function applyLabelSelection() {
-      if (activeSplitRowPickerIndex !== null) {
+      if (activeSplitRowPickerIndex === 'filter') {
+        // Apply back to dynamic account filters list
+        activeTagFilters = Array.from(tempSelectedLabels);
+        renderTagFilterSection();
+        renderTransactions();
+        activeSplitRowPickerIndex = null;
+      } else if (activeSplitRowPickerIndex !== null) {
         // Apply back to specific split row
         const splitRows = document.querySelectorAll('#txSplitRows > div');
-        const splitRow = splitRows[activeSplitRowPickerIndex];
-        const splitInput = splitRow?.querySelector('[data-split-tags]');
+        const splitInput = splitRows[activeSplitRowPickerIndex]?.querySelector('[data-split-tags]');
         if (splitInput) {
-          // Sync selections back to raw string list
           splitInput.value = Array.from(tempSelectedLabels).join(', ');
-
-          // Instantly redraw color-coded pills inside the split row
           updateSplitRowChips(activeSplitRowPickerIndex);
         }
         activeSplitRowPickerIndex = null;
@@ -5295,6 +5487,9 @@ This action can be undone by cancelling your edits.`,
       const payeeList = document.getElementById('payee-suggestions-custom');
       const txDescInput = document.getElementById('txDesc');
       const txPayeeInput = document.getElementById('txPayee');
+      const filterDropdown = document.getElementById("tag-filter-autocomplete-dropdown");
+      const filterContainer = document.getElementById("tag-filter-container");
+      const activeDropdowns = document.querySelectorAll('[id^="split-labels-dropdown-"]');
 
       if (descList && txDescInput && !txDescInput.contains(e.target) && !descList.contains(e.target)) {
         descList.classList.add('hidden');
@@ -5304,12 +5499,17 @@ This action can be undone by cancelling your edits.`,
       }
 
       // Auto-collapse open autocomplete dropdowns in split rows when clicking elsewhere
-      const activeDropdowns = document.querySelectorAll('[id^="split-labels-dropdown-"]');
       activeDropdowns.forEach(dd => {
         if (!dd.contains(e.target) && !dd.previousElementSibling?.contains(e.target)) {
           dd.classList.add("hidden");
         }
       });
+      // Auto-collapse dynamic tag filter autocomplete when clicking elsewhere
+      if (filterDropdown && filterContainer && !filterContainer.contains(e.target)) {
+        filterDropdown.classList.add("hidden");
+        activeFilterDropdownMatches = [];
+        activeFilterDropdownIndex = -1;
+      }
     });
 
     window.onload = init;
