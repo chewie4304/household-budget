@@ -4,6 +4,20 @@ All notable changes to this project will be documented in this file.
 
 ## [unreleased]
 
+## [1.4.3-dev] - 2026-08-26
+
+### Added
+
+- **Forced Inline Display Overrides:** Injected explicit inline layout overrides (`display: flex !important` and `display: none !important`) on label picker modal open/close actions, permanently bypassing compiled Tailwind stylesheet and layout caching conflicts [2, 3].
+
+### Fixed
+
+- **Modal Stacking & View Nesting Leak:** Resolved a critical structural bug by sealing an unclosed `</div>` tag inside the receipt attachments preview container (`#receiptPreview`) [4]. This successfully unnested the subsequent Image Cropper and hierarchical Label Picker modals from `#tx-modal` [2, 5], restoring perfect modal visibility and layout rendering across all active app views.
+
+- **Split Array Suffix Trimming Crash:** Patched `resolveShortLabelToSerialized` to safely grab the string segment from split arrays prior to applying `.trim()` [6], preventing a silent `TypeError` thread crash during automated tag resolutions and split transaction typing.
+
+- **Root-Directory Folder Comparison:** Corrected the dynamic Expense branch evaluator inside `renderLabelNode` [7] by changing the strict array-to-string equality check (`currentPathArray === "Expenses"`) to target the root string index cleanly [8], stabilizing the display of "Must / Need / Want" nature selectors [7-9].
+
 ## 1.4.2 - 2026-08-25
 
 ### Added

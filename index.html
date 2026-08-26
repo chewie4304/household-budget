@@ -790,18 +790,19 @@
               <div id="receiptLinksList" class="space-y-1"></div>
             </div>
           </div>
+        </div>
 
-          <!-- Submit Buttons -->
-          <div class="pt-2 space-y-2">
-            <button type="submit" id="txSubmitBtn"
-              class="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold shadow">
-              Save Transaction
-            </button>
-            <button type="button" id="txDeleteBtn" onclick="handleDeleteTxFromModal()"
-              class="w-full bg-red-50 text-red-600 border border-red-200 py-2 rounded-lg font-semibold shadow-sm hidden">
-              Delete Transaction
-            </button>
-          </div>
+        <!-- Submit Buttons -->
+        <div class="pt-2 space-y-2">
+          <button type="submit" id="txSubmitBtn"
+            class="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold shadow">
+            Save Transaction
+          </button>
+          <button type="button" id="txDeleteBtn" onclick="handleDeleteTxFromModal()"
+            class="w-full bg-red-50 text-red-600 border border-red-200 py-2 rounded-lg font-semibold shadow-sm hidden">
+            Delete Transaction
+          </button>
+        </div>
       </form>
     </div>
   </div>
@@ -1231,8 +1232,9 @@
         return clean;
       }
 
-      // Parse out any explicit nature suffix if typed, e.g., "Groceries|Need"
-      let nameOnly = clean.split('|').trim();
+      // FIXED: Parse the string element from split arrays before trimming!
+      const parts = clean.split('|');
+      let nameOnly = String(parts || '').trim();
       nameOnly = nameOnly.replace(/\s*\([^)]+\)$/, '').trim(); // Remove trailing "(Need)" if present
 
       // Find the matching hierarchical path in the labelTree
@@ -3955,16 +3957,23 @@
         }
       });
 
-      // Reveal the label picker sub-modal
+      // Reveal the label picker sub-modal and force render overlays
       const modal = document.getElementById("label-picker-modal");
-      if (modal) modal.classList.remove("hidden");
+      if (modal) {
+        modal.classList.remove("hidden");
+        modal.style.setProperty("display", "flex", "important"); // 🚀 Forces browser redraw!
+      }
 
       // Paint the dynamic tree
       renderLabelTreeUI();
     }
 
     function closeLabelPicker() {
-      document.getElementById("label-picker-modal").classList.add("hidden");
+      const modal = document.getElementById("label-picker-modal");
+      if (modal) {
+        modal.classList.add("hidden");
+        modal.style.setProperty("display", "none", "important"); // 🚀 Forces browser collapse!
+      }
     }
 
     // --- RENDER SELECTED PREVIEW CHIPS ON MAIN MODAL ---
@@ -4162,6 +4171,7 @@
     }
 
     // --- RECURSIVE LABEL TREE RENDERER & UI DRAW HOOKS ---
+
     function renderLabelNode(nodeName, nodeValue, parentPathArray = [], query = "") {
       const currentPathArray = [...parentPathArray, nodeName];
       const pathId = currentPathArray.join("-");
@@ -4182,77 +4192,72 @@
       // Icon formatting
       const chevron = isFolder
         ? `<button type="button" onclick="toggleNodeExpanded('${pathId}')"
-                      class="w-5 h-5 flex items-center justify-center text-slate-400 hover:text-slate-600 transition-transform ${isExpanded ? 'rotate-90' : ''}">
-              ▶
-            </button>`
+        class="w-5 h-5 flex items-center justify-center text-slate-400 hover:text-slate-600 transition-transform ${isExpanded ? 'rotate-90' : ''}">
+        ▶
+      </button>`
         : `<span class="w-5 h-5 inline-block"></span>`;
 
-      const icon = isFolder ? "" : "🏷"; // Removed folder icon, keeping label tag icon for leaf nodes
+      const icon = isFolder ? "" : "🏷";
 
       // Three-line grab handle (⠿) to visually indicate dragging is possible (Only visible in Edit Mode)
       const dragHandle = pickerEditMode ? `
-         <span class="cursor-grab active:cursor-grabbing text-slate-300 hover:text-slate-500 font-extrabold px-1 select-none text-sm transition" title="Drag to reorder">
-           ⠿
-         </span>
-       ` : "";
+    <span class="cursor-grab active:cursor-grabbing text-slate-300 hover:text-slate-500 font-extrabold px-1 select-none text-sm transition" title="Drag to reorder">
+      ⠿
+    </span>
+  ` : "";
 
       const managementActions = `
-        <div class="flex items-center gap-1 ml-auto opacity-70 hover:opacity-100 transition-opacity">
-          <button type="button" onclick="handleRenameCategory('${pathId}')"
-                   class="p-1 text-slate-500 hover:text-blue-600 hover:bg-slate-100 rounded transition" title="Rename category">
-            ✏
-          </button>
-          <button type="button" onclick="handleDeleteCategory('${pathId}')"
-                   class="p-1 text-slate-500 hover:text-red-600 hover:bg-slate-100 rounded transition" title="Delete category">
-            🗑
-          </button>
-          <button type="button" onclick="handleAddSubCategory('${pathId}')"
-                   class="p-1 text-slate-500 hover:text-emerald-600 hover:bg-slate-100 rounded transition" title="Add nested sub-category">
-            ➕
-          </button>
-        </div>
-      `;
+    <div class="flex items-center gap-1 ml-auto opacity-70 hover:opacity-100 transition-opacity">
+      <button type="button" onclick="handleRenameCategory('${pathId}')"
+        class="p-1 text-slate-500 hover:text-blue-600 hover:bg-slate-100 rounded transition" title="Rename category">
+        ✏
+      </button>
+      <button type="button" onclick="handleDeleteCategory('${pathId}')"
+        class="p-1 text-slate-500 hover:text-red-600 hover:bg-slate-100 rounded transition" title="Delete category">
+        🗑
+      </button>
+      <button type="button" onclick="handleAddSubCategory('${pathId}')"
+        class="p-1 text-slate-500 hover:text-emerald-600 hover:bg-slate-100 rounded transition" title="Add nested sub-category">
+        ➕
+      </button>
+    </div>
+  `;
 
       // Define drag attributes only if Edit Mode is active
       const dragAttributes = pickerEditMode ? `
-         draggable="true"
-         ondragstart="handleLabelDragStart(event, '${pathId}')"
-         ondragend="handleLabelDragEnd(event)"
-         ondragover="handleLabelDragOver(event, '${pathId}')"
-         ondragleave="handleLabelDragLeave(event)"
-         ondrop="handleLabelDrop(event, '${pathId}')"
-       ` : "";
+    draggable="true"
+    ondragstart="handleLabelDragStart(event, '${pathId}')"
+    ondragend="handleLabelDragEnd(event)"
+    ondragover="handleLabelDragOver(event, '${pathId}')"
+    ondragleave="handleLabelDragLeave(event)"
+    ondrop="handleLabelDrop(event, '${pathId}')"
+  ` : "";
 
       // Build Row HTML
       let nodeHtml = `
-         <div ${indentStyle} class="py-1">
-           <div ${dragAttributes} class="flex items-center gap-2 group hover:bg-slate-50/80 px-2 py-1 rounded-xl transition-colors">
-             ${dragHandle}
-             ${chevron}
-             
-             ${!pickerEditMode ? `
-               <input type="checkbox" ${isChecked ? "checked" : ""}
-                      id="chk-${pathId}"
-                      onclick="toggleLabelChecked('${pathId}')"
-                      class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer" />
-             ` : ""}
-             
-             <!-- FIXED: Swapped label with span. Folders toggle collapse; leaf clicks do not toggle checkbox -->
-             <span ${isFolder ? `onclick="toggleNodeExpanded('${pathId}')"` : ""} 
-                   class="text-xs font-semibold text-slate-700 flex items-center gap-1 select-none ${isFolder ? 'cursor-pointer hover:text-blue-600 transition-colors' : ''}">
-               ${icon ? `<span>${icon}</span>` : ""}
-               <span>${nodeName}</span>
-             </span>
-             
-             ${pickerEditMode ? managementActions : ""}
-           </div>
-           
-           <!-- Show dynamic nature toggles inline if selected (transaction override) OR if we are in Edit Mode (master default config) -->
-          ${((!pickerEditMode && isChecked) || pickerEditMode) && currentPathArray === "Expenses"
+    <div ${indentStyle} class="py-1">
+      <div ${dragAttributes} class="flex items-center gap-2 group hover:bg-slate-50/80 px-2 py-1 rounded-xl transition-colors">
+        ${dragHandle}
+        ${chevron}
+        ${!pickerEditMode ? `
+          <input type="checkbox" ${isChecked ? "checked" : ""}
+            id="chk-${pathId}"
+            onclick="toggleLabelChecked('${pathId}')"
+            class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer" />
+        ` : ""}
+        <span ${isFolder ? `onclick="toggleNodeExpanded('${pathId}')"` : ""}
+          class="text-xs font-semibold text-slate-700 flex items-center gap-1 select-none ${isFolder ? 'cursor-pointer hover:text-blue-600 transition-colors' : ''}">
+          ${icon ? `<span>${icon}</span>` : ""}
+          <span>${nodeName}</span>
+        </span>
+        ${pickerEditMode ? managementActions : ""}
+      </div>
+      <!-- FIXED: Avoid strict array-to-string comparison with bracket-less root finder -->
+      ${((!pickerEditMode && isChecked) || pickerEditMode) && currentPathArray.indexOf("Expenses") === 0
           ? renderNatureToggleRow(pathId, currentNature, pickerEditMode)
           : ""}
-         </div>
-       `;
+    </div>
+  `;
 
       // Recursively paint child branches if folder is expanded
       if (isFolder && isExpanded) {
@@ -4268,13 +4273,15 @@
       return nodeHtml;
     }
 
-    // Ensure main UI redraw hook points cleanly to recursive builder
     function renderLabelTreeUI() {
+      console.log("[DEBUG] renderLabelTreeUI rendering...");
       const container = document.getElementById("label-tree-container");
-      if (!container) return;
+      if (!container) {
+        console.error("[DEBUG] CRITICAL: Element with ID 'label-tree-container' was NOT found in the DOM!");
+        return;
+      }
 
       const query = (document.getElementById("label-search-input")?.value || "").trim().toLowerCase();
-
       let html = "";
       for (const [key, val] of Object.entries(labelTree)) {
         if (query === "" || nodeMatchesQuery(key, val, query)) {
@@ -4283,6 +4290,7 @@
       }
 
       container.innerHTML = html || '<div class="p-4 text-xs text-slate-500 italic text-center">No categories found</div>';
+      console.log("[DEBUG] renderLabelTreeUI finished. Mapped rows length:", html.length);
 
       // Selection counts and reset buttons only render in selection mode
       const footerCounter = document.getElementById("label-picker-counter");
