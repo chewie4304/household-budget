@@ -74,7 +74,7 @@
 
     <!-- Content Container -->
     <div class="max-w-6xl mx-auto p-4 space-y-4">
-      <div class="space-y-3">
+      <div class="space-y-4">
         <div class="flex min-h-[38px] items-center justify-between gap-3">
           <h2 id="home-view-title" class="text-2xl font-extrabold tracking-tight text-slate-800">Your Accounts</h2>
           <button id="new-account-button" onclick="openAccountModal()"
@@ -86,7 +86,7 @@
 
         <div class="lg:grid lg:grid-cols-3 lg:items-stretch lg:gap-3">
           <div id="monthly-summary"
-            class="hidden rounded-3xl border border-slate-200 bg-gradient-to-br from-slate-50 via-white to-blue-50 shadow-sm p-4 space-y-3 lg:col-span-2">
+            class="hidden mb-4 lg:mb-0 rounded-3xl border border-slate-200 bg-gradient-to-br from-slate-50 via-white to-blue-50 shadow-sm p-4 space-y-3 lg:col-span-2">
             <div class="flex items-center justify-between gap-2">
               <div>
                 <p class="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">Monthly Summary</p>
@@ -141,10 +141,50 @@
 
         <div id="account-type-filter-bar" class="mt-2 flex flex-wrap gap-2"></div>
 
-        <div id="transaction-search-wrap" class="hidden space-y-2 lg:ml-auto lg:w-[calc((100%-24px)/3)]">
+        <div id="transaction-search-wrap" class="hidden space-y-4 lg:ml-auto lg:w-[calc((100%-24px)/3)]">
+
+          <!-- Global Label Filter Container -->
+          <div id="global-tag-filter-container"
+            class="bg-white p-3.5 rounded-xl border border-gray-100 shadow-sm space-y-2">
+            <div class="flex items-center justify-between flex-wrap gap-2">
+              <div class="flex items-center gap-2.5">
+                <span class="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Filter by Labels</span>
+                <label
+                  class="inline-flex items-center gap-1 text-[10px] font-bold text-slate-500 cursor-pointer select-none">
+                  <input type="checkbox" id="global-tag-filter-match-all" onchange="toggleGlobalTagFilterMatchMode()"
+                    class="h-3.5 w-3.5 rounded border-slate-300 text-blue-600 focus:ring-blue-500" />
+                  <span>Match All (AND)</span>
+                </label>
+              </div>
+              <button type="button" onclick="openLabelPicker('global-filter')"
+                class="text-[10px] font-bold text-blue-600 hover:text-blue-700 transition flex items-center gap-0.5">
+                🏷️ Select Labels
+              </button>
+            </div>
+            <div class="relative">
+              <div
+                class="flex flex-wrap items-center gap-1 min-h-[36px] p-1.5 rounded-xl border border-slate-200 bg-white focus-within:ring-2 focus-within:ring-blue-100 focus-within:border-blue-300 transition-all">
+                <!-- Color-coded filter pills render inline here -->
+                <div id="global-tag-filter-preview" class="contents"></div>
+                <!-- Typable tag filter search input -->
+                <input type="text" id="global-tag-filter-search-input" placeholder="Type to filter..."
+                  class="flex-1 min-w-[120px] text-xs font-semibold bg-transparent border-0 p-0 focus:ring-0 focus:outline-none text-slate-800"
+                  oninput="handleGlobalTagFilterSearchTyping(this.value)"
+                  onkeydown="handleGlobalTagFilterSearchKeydown(event)" ondblclick="openLabelPicker('global-filter')"
+                  title="Double-click to open full label tree" />
+              </div>
+              <!-- Autocomplete suggestions dropdown -->
+              <div id="global-tag-filter-autocomplete-dropdown"
+                class="hidden absolute left-0 right-0 mt-1 max-h-40 overflow-y-auto bg-white border border-slate-200 rounded-xl shadow-lg z-50">
+              </div>
+            </div>
+          </div>
+
+          <!-- Search Input Field -->
           <input id="transaction-search" type="text" oninput="renderAllTransactions()"
             placeholder="Search transactions..."
             class="w-full border border-slate-200 bg-white px-3 py-2.5 rounded-xl text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-200 shadow-sm" />
+
         </div>
 
         <div id="accounts-list" class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
@@ -172,7 +212,9 @@
       </button>
     </div>
 
+    <!-- Main Scrollable Wrapper with Uniform 16px Sibling Spacing -->
     <div class="max-w-md mx-auto p-4 space-y-4">
+
       <!-- Account Overview Card -->
       <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 space-y-3">
         <div class="flex justify-between items-center">
@@ -201,6 +243,7 @@
             </div>
           </div>
         </div>
+
         <!-- Credit Remaining Label & Utilization Progress Bar -->
         <div id="tx-acc-credit-limit-container" class="hidden border-t border-gray-100 pt-3 space-y-2">
           <div class="flex justify-between text-xs font-semibold">
@@ -212,6 +255,7 @@
             </div>
           </div>
         </div>
+
         <div class="border-t border-gray-100 pt-3 flex items-center justify-between flex-wrap">
           <!-- Edit Account Button -->
           <button type="button" onclick="openAccountModal(activeAccountId)"
@@ -226,46 +270,60 @@
             <span>Launch Portal</span>
           </a>
         </div>
-      </div>
-    </div>
+      </div> <!-- Closes Account Overview Card -->
 
-    <!-- Label Filter Container -->
-    <div id="tag-filter-container" class="hidden bg-white p-3.5 rounded-xl border border-gray-100 shadow-sm space-y-2">
-      <div class="flex items-center justify-between">
-        <span class="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Filter by Labels</span>
-        <button type="button" onclick="openLabelPicker('filter')"
-          class="text-[10px] font-bold text-blue-600 hover:text-blue-700 transition flex items-center gap-0.5">
-          🏷️ Select Labels
-        </button>
-      </div>
+      <!-- Static Add Transaction Button (No extra vertical margins needed!) -->
+      <button onclick="openTxModal()"
+        class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition flex items-center justify-center gap-2 shadow-sm">
+        <span class="text-lg leading-none">+</span> Add Transaction
+      </button>
 
-      <div class="relative">
-        <div
-          class="flex flex-wrap items-center gap-1 min-h-[36px] p-1.5 rounded-xl border border-slate-200 bg-white focus-within:ring-2 focus-within:ring-blue-100 focus-within:border-blue-300 transition-all">
-          <!-- Color-coded filter pills render inline here -->
-          <div id="tag-filter-preview" class="contents"></div>
-          <!-- Typable tag filter search input -->
-          <input type="text" id="tag-filter-search-input" placeholder="Type to filter..."
-            class="flex-1 min-w-[120px] text-xs font-semibold bg-transparent border-0 p-0 focus:ring-0 focus:outline-none text-slate-800"
-            oninput="handleTagFilterSearchTyping(this.value)" onkeydown="handleTagFilterSearchKeydown(event)"
-            ondblclick="openLabelPicker('filter')" title="Double-click to open full label tree" />
+      <!-- Label Filter Container -->
+      <div id="tag-filter-container"
+        class="hidden bg-white p-3.5 rounded-xl border border-gray-100 shadow-sm space-y-2">
+        <div class="flex items-center justify-between flex-wrap gap-2">
+          <div class="flex items-center gap-2.5">
+            <span class="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Filter by Labels</span>
+            <label
+              class="inline-flex items-center gap-1 text-[10px] font-bold text-slate-500 cursor-pointer select-none">
+              <input type="checkbox" id="tag-filter-match-all" onchange="toggleTagFilterMatchMode()"
+                class="h-3.5 w-3.5 rounded border-slate-300 text-blue-600 focus:ring-blue-500" />
+              <span>Match All (AND)</span>
+            </label>
+          </div>
+          <button type="button" onclick="openLabelPicker('filter')"
+            class="text-[10px] font-bold text-blue-600 hover:text-blue-700 transition flex items-center gap-0.5">
+            🏷️ Select Labels
+          </button>
         </div>
-
-        <!-- Autocomplete suggestions dropdown -->
-        <div id="tag-filter-autocomplete-dropdown"
-          class="hidden absolute left-0 right-0 mt-1 max-h-40 overflow-y-auto bg-white border border-slate-200 rounded-xl shadow-lg z-50">
+        <div class="relative">
+          <div
+            class="flex flex-wrap items-center gap-1 min-h-[36px] p-1.5 rounded-xl border border-slate-200 bg-white focus-within:ring-2 focus-within:ring-blue-100 focus-within:border-blue-300 transition-all">
+            <!-- Color-coded filter pills render inline here -->
+            <div id="tag-filter-preview" class="contents"></div>
+            <!-- Typable tag filter search input -->
+            <input type="text" id="tag-filter-search-input" placeholder="Type to filter..."
+              class="flex-1 min-w-[120px] text-xs font-semibold bg-transparent border-0 p-0 focus:ring-0 focus:outline-none text-slate-800"
+              oninput="handleTagFilterSearchTyping(this.value)" onkeydown="handleTagFilterSearchKeydown(event)"
+              ondblclick="openLabelPicker('filter')" title="Double-click to open full label tree" />
+          </div>
+          <!-- Autocomplete suggestions dropdown -->
+          <div id="tag-filter-autocomplete-dropdown"
+            class="hidden absolute left-0 right-0 mt-1 max-h-40 overflow-y-auto bg-white border border-slate-200 rounded-xl shadow-lg z-50">
+          </div>
         </div>
       </div>
-    </div>
 
-    <!-- Transactions List -->
-    <div class="space-y-3">
-      <h3 class="text-md font-bold text-gray-800">Transaction History</h3>
-      <div id="transactions-list" class="space-y-2">
-        <p class="text-sm text-gray-500">Loading transactions...</p>
+      <!-- Transactions List (space-y-4 guarantees equal 16px gaps below and above "Transaction History" header) -->
+      <div class="space-y-1">
+        <h3 class="text-md font-bold text-gray-800">Transaction History</h3>
+        <div id="transactions-list" class="space-y-2">
+          <p class="text-sm text-gray-500">Loading transactions...</p>
+        </div>
       </div>
-    </div>
-  </div>
+
+    </div> <!-- Closes max-w-md mx-auto p-4 space-y-4 -->
+  </div> <!-- Closes transactions-view -->
 
   <!-- Add/Edit Account Modal -->
   <div id="account-modal"
@@ -933,11 +991,23 @@
 
     // --- Label Picker Edit Mode Logic ---
     let pickerEditMode = false;
+    let labelTree = {};
+    let labelNatures = {};
+    let activeTxLabels = [];
+    let activeTagFilters = []; // Tracks the multi-select labels active in detailed filter view
+    let globalActiveTagFilters = []; // Tracks the multi-select labels active in the global Transactions tab
+    let activeTagFiltersMatchAll = false; // Account Details Filter Match Mode (false = ANY/OR, true = ALL/AND)
+    let globalActiveTagFiltersMatchAll = false; // Global Transactions Filter Match Mode
+    let tempSelectedLabels = new Set();
+    let pickerExpandedNodes = new Set(["Expenses", "Goals", "Income", "Other"]);
 
     // --- SPLIT TRANSACTION LABELS AUTOCOMPLETE & NAVIGATION ---
     let activeSplitDropdownIndex = -1;
     let activeSplitDropdownMatches = [];
     let activeSplitRowPickerIndex = null;
+    let activeFilterDropdownMatches = [];
+    let activeFilterDropdownIndex = -1;
+
 
     let transactions = [];
     let currentAccountTransactions = [];
@@ -958,12 +1028,6 @@
     let selectedSummaryTransactionType = null;
     let selectedAccountTypeFilter = 'all';
     let filteredTransactionsLookup = {};
-    let labelTree = {};
-    let labelNatures = {};
-    let activeTxLabels = [];
-    let activeTagFilters = []; // Tracks the multi-select labels active in detailed filter view
-    let tempSelectedLabels = new Set();
-    let pickerExpandedNodes = new Set(["Expenses", "Goals", "Income", "Other"]);
 
     // Phase 1: Core Utilities & State Management Functions
 
@@ -1877,6 +1941,7 @@
 
     // Phase 3: UI Rendering & Component Builders
     function showHomeAccounts() {
+      globalActiveTagFilters = []; // 🧹 Clear global tag filters on tab switch
       const accountsList = document.getElementById('accounts-list');
       const allTransactionsList = document.getElementById('all-transactions-list');
       const accountsTab = document.getElementById('home-accounts-tab');
@@ -1905,6 +1970,7 @@
 
     function showAllTransactions(type = null) {
       selectedSummaryTransactionType = type ?? null;
+      globalActiveTagFilters = []; // 🧹 Clear global tag filters on tab switch
       renderAllTransactions();
 
       const accountsList = document.getElementById('accounts-list');
@@ -2044,8 +2110,23 @@
       const query = searchInput ? searchInput.value.trim() : '';
 
       renderMonthlySummary();
+      renderGlobalTagFilterSection(); // 🚀 Refresh the active tag filter pill row!
 
       let baseTransactions = Array.isArray(transactions) ? transactions : [];
+
+      // 🚀 FILTER TRANSACTIONS DYNAMICALLY BY ACTIVE GLOBAL LABELS!
+      if (globalActiveTagFilters && globalActiveTagFilters.length > 0) {
+        baseTransactions = baseTransactions.filter(tx => {
+          const txTags = getTransactionTags(tx).map(t => parseLabelString(t).rawPath);
+          if (globalActiveTagFiltersMatchAll) {
+            // AND Match Mode: Transaction tags MUST match EVERY selected global filter tag
+            return globalActiveTagFilters.every(f => txTags.includes(parseLabelString(f).rawPath));
+          } else {
+            // OR Match Mode (Default): Transaction tags can match ANY selected global filter tag
+            return globalActiveTagFilters.some(f => txTags.includes(parseLabelString(f).rawPath));
+          }
+        });
+      }
 
       if (selectedSummaryTransactionType === 'income') {
         baseTransactions = baseTransactions.filter(tx => parseFloat(tx.amount || 0) > 0 && !isTransferPartnerTransaction(tx));
@@ -2438,8 +2519,18 @@
     }
 
     // --- AUTOCOMPLETE & KEYBOARD NAVIGATION FOR FILTER INPUT ---
-    let activeFilterDropdownMatches = [];
-    let activeFilterDropdownIndex = -1;
+
+    function toggleTagFilterMatchMode() {
+      const chk = document.getElementById('tag-filter-match-all');
+      activeTagFiltersMatchAll = chk ? chk.checked : false;
+      renderTransactions();
+    }
+
+    function toggleGlobalTagFilterMatchMode() {
+      const chk = document.getElementById('global-tag-filter-match-all');
+      globalActiveTagFiltersMatchAll = chk ? chk.checked : false;
+      renderAllTransactions();
+    }
 
     function handleTagFilterSearchTyping(query) {
       const dropdown = document.getElementById("tag-filter-autocomplete-dropdown");
@@ -2589,6 +2680,191 @@
       renderTransactions();
     }
 
+    // --- GLOBAL MULTI-SELECT FILTER ENGINE ---
+
+    function renderGlobalTagFilterSection() {
+      const filterContainer = document.getElementById('global-tag-filter-container');
+      const previewContainer = document.getElementById('global-tag-filter-preview');
+      const searchInput = document.getElementById('global-tag-filter-search-input');
+      if (!filterContainer || !previewContainer) return;
+
+      // Render color-coded pills for active filters
+      if (globalActiveTagFilters.length === 0) {
+        previewContainer.innerHTML = '';
+        if (searchInput) {
+          searchInput.placeholder = "Type to filter...";
+          searchInput.value = '';
+        }
+      } else {
+        if (searchInput) {
+          searchInput.placeholder = '';
+          searchInput.value = '';
+        }
+        previewContainer.innerHTML = globalActiveTagFilters.map((t, idx) => {
+          const displayName = getLabelDisplayName(t);
+          const displayPath = getLabelDisplayPath(t);
+          const colorClass = getLabelColorStyle(t);
+          return `
+        <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-lg text-[10px] font-bold shadow-sm transition ${colorClass}" title="${displayPath}">
+          ${displayName}
+          <button type="button" onclick="removeGlobalTagFilter(${idx})"
+            class="text-xs font-semibold opacity-70 hover:opacity-100 focus:outline-none">&times;</button>
+        </span>
+      `;
+        }).join('');
+      }
+    }
+
+    function removeGlobalTagFilter(index) {
+      globalActiveTagFilters.splice(index, 1);
+      renderGlobalTagFilterSection();
+      renderAllTransactions();
+    }
+
+    // --- AUTOCOMPLETE & KEYBOARD NAVIGATION FOR GLOBAL FILTER INPUT ---
+
+    let activeGlobalFilterDropdownMatches = [];
+    let activeGlobalFilterDropdownIndex = -1;
+
+    function handleGlobalTagFilterSearchTyping(query) {
+      const dropdown = document.getElementById("global-tag-filter-autocomplete-dropdown");
+      if (!dropdown) return;
+      const cleanQuery = query.trim().toLowerCase();
+      if (!cleanQuery) {
+        dropdown.classList.add("hidden");
+        activeGlobalFilterDropdownMatches = [];
+        activeGlobalFilterDropdownIndex = -1;
+        return;
+      }
+
+      const allPaths = getAllLabelPaths(labelTree);
+
+      // Find only the tags that exist across ANY transaction in the system
+      const allTxTags = new Set();
+      (Array.isArray(transactions) ? transactions : []).forEach(tx => {
+        getTransactionTags(tx).forEach(tag => allTxTags.add(tag));
+      });
+
+      const currentActiveRawPaths = globalActiveTagFilters.map(f => parseLabelString(f).rawPath);
+
+      // Filter recommendations matching query, present in system transactions, and not already selected
+      activeGlobalFilterDropdownMatches = allPaths.filter(pathArray => {
+        const pathStr = pathArray.join("-");
+        if (currentActiveRawPaths.includes(pathStr)) return false;
+
+        // Must be actively utilized in at least one transaction
+        const isUsed = Array.from(allTxTags).some(tag => parseLabelString(tag).rawPath === pathStr);
+        if (!isUsed) return false;
+
+        const leaf = pathArray[pathArray.length - 1].toLowerCase();
+        const fullPath = pathStr.toLowerCase();
+        return leaf.includes(cleanQuery) || fullPath.includes(cleanQuery);
+      });
+
+      if (activeGlobalFilterDropdownMatches.length === 0) {
+        dropdown.innerHTML = '<div class="p-2.5 text-[11px] text-slate-400 italic text-center">No matching account labels</div>';
+        dropdown.classList.remove("hidden");
+        activeGlobalFilterDropdownIndex = -1;
+        return;
+      }
+
+      activeGlobalFilterDropdownIndex = 0;
+      renderGlobalTagFilterSearchAutocomplete();
+    }
+
+    function renderGlobalTagFilterSearchAutocomplete() {
+      const dropdown = document.getElementById("global-tag-filter-autocomplete-dropdown");
+      if (!dropdown) return;
+      dropdown.innerHTML = activeGlobalFilterDropdownMatches.map((pathArray, idx) => {
+        const pathStr = pathArray.join("-");
+        const displayName = pathArray[pathArray.length - 1];
+        const displayPath = pathArray.join(" ➔ ");
+        const isHighlighted = idx === activeGlobalFilterDropdownIndex;
+        const highlightClass = isHighlighted
+          ? "bg-blue-50 text-blue-700 font-bold"
+          : "text-slate-700 hover:bg-slate-50";
+
+        return `
+      <div onclick="selectGlobalTagFilterDropdownLabel('${pathStr}')"
+        class="px-3 py-2 text-[11px] cursor-pointer flex flex-col gap-0.5 transition-colors ${highlightClass}">
+        <span class="font-semibold text-slate-800">${displayName}</span>
+        <span class="text-[9px] text-slate-400 font-medium">${displayPath}</span>
+      </div>
+    `;
+      }).join("");
+      dropdown.classList.remove("hidden");
+    }
+
+    function selectGlobalTagFilterDropdownLabel(serializedPath) {
+      const dropdown = document.getElementById("global-tag-filter-autocomplete-dropdown");
+      const input = document.getElementById("global-tag-filter-search-input");
+      if (!input) return;
+
+      const pathArray = serializedPath.split("-");
+      const defaultNature = getDefaultNatureForPath(pathArray);
+      const resolvedStr = pathToLabelString(pathArray, defaultNature);
+
+      if (!globalActiveTagFilters.includes(resolvedStr)) {
+        globalActiveTagFilters.push(resolvedStr);
+      }
+
+      input.value = "";
+      if (dropdown) dropdown.classList.add("hidden");
+      activeGlobalFilterDropdownMatches = [];
+      activeGlobalFilterDropdownIndex = -1;
+
+      renderGlobalTagFilterSection();
+      renderAllTransactions();
+      input.focus();
+    }
+
+    function handleGlobalTagFilterSearchKeydown(e) {
+      const input = document.getElementById("global-tag-filter-search-input");
+      const dropdown = document.getElementById("global-tag-filter-autocomplete-dropdown");
+      if (!dropdown) return;
+
+      // Backspace on empty input removes the most recently added filter pill
+      if (e.key === "Backspace" && input && input.value === "") {
+        if (globalActiveTagFilters.length > 0) {
+          globalActiveTagFilters.pop();
+          renderGlobalTagFilterSection();
+          renderAllTransactions();
+          e.preventDefault();
+        }
+        return;
+      }
+
+      if (activeGlobalFilterDropdownMatches.length === 0) return;
+
+      if (e.key === "ArrowDown") {
+        activeGlobalFilterDropdownIndex = (activeGlobalFilterDropdownIndex + 1) % activeGlobalFilterDropdownMatches.length;
+        renderGlobalTagFilterSearchAutocomplete();
+        e.preventDefault();
+        const activeItem = dropdown.children[activeGlobalFilterDropdownIndex];
+        activeItem?.scrollIntoView({ block: "nearest" });
+      } else if (e.key === "ArrowUp") {
+        activeGlobalFilterDropdownIndex = (activeGlobalFilterDropdownIndex - 1 + activeGlobalFilterDropdownMatches.length) % activeGlobalFilterDropdownMatches.length;
+        renderGlobalTagFilterSearchAutocomplete();
+        e.preventDefault();
+        const activeItem = dropdown.children[activeGlobalFilterDropdownIndex];
+        activeItem?.scrollIntoView({ block: "nearest" });
+      } else if (e.key === "Enter" || e.key === "Tab") {
+        if (activeGlobalFilterDropdownIndex === -1 && activeGlobalFilterDropdownMatches.length > 0) {
+          activeGlobalFilterDropdownIndex = 0;
+        }
+        if (activeGlobalFilterDropdownIndex > -1 && activeGlobalFilterDropdownIndex < activeGlobalFilterDropdownMatches.length) {
+          const selectedPathArray = activeGlobalFilterDropdownMatches[activeGlobalFilterDropdownIndex];
+          selectGlobalTagFilterDropdownLabel(selectedPathArray.join("-"));
+          e.preventDefault();
+        }
+      } else if (e.key === "Escape") {
+        dropdown.classList.add("hidden");
+        activeGlobalFilterDropdownMatches = [];
+        activeGlobalFilterDropdownIndex = -1;
+        e.preventDefault();
+      }
+    }
+
     function renderTransactions() {
       const list = document.getElementById('transactions-list');
       let filteredTx = currentAccountTransactions;
@@ -2597,27 +2873,27 @@
       if (activeTagFilters && activeTagFilters.length > 0) {
         filteredTx = currentAccountTransactions.filter(tx => {
           const txTags = getTransactionTags(tx).map(t => parseLabelString(t).rawPath);
-          return activeTagFilters.some(f => txTags.includes(parseLabelString(f).rawPath));
+          if (activeTagFiltersMatchAll) {
+            // AND Match Mode: Transaction tags MUST match EVERY selected filter tag
+            return activeTagFilters.every(f => txTags.includes(parseLabelString(f).rawPath));
+          } else {
+            // OR Match Mode (Default): Transaction tags can match ANY selected filter tag
+            return activeTagFilters.some(f => txTags.includes(parseLabelString(f).rawPath));
+          }
         });
       }
 
-      const addButton = `
-        <button onclick="openTxModal()" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 rounded-xl transition-colors flex items-center justify-center gap-2 mb-2">
-          <span class="text-lg">+</span> Add Transaction
-        </button>
-      `;
-
       if (filteredTx.length === 0) {
-        list.innerHTML = addButton + `
-          <div class="bg-white p-6 rounded-xl border border-gray-200 text-center space-y-2">
-            <p class="text-gray-600 font-medium">${selectedTagFilter ? 'No transactions with this tag.' : 'No transactions yet.'}</p>
-            <p class="text-xs text-gray-400">${selectedTagFilter ? 'Try picking a different tag filter above.' : 'Tap the button above to log a deposit or spending.'}</p>
-          </div>
-        `;
+        list.innerHTML = `
+      <div class="bg-white p-6 rounded-xl border border-gray-200 text-center space-y-2">
+        <p class="text-gray-600 font-medium">${selectedTagFilter ? 'No transactions with this tag.' : 'No transactions yet.'}</p>
+        <p class="text-xs text-gray-400">${selectedTagFilter ? 'Try picking a different tag filter above.' : 'Tap the "+ Add Transaction" button above to log a deposit or spending.'}</p>
+      </div>
+    `;
         return;
       }
 
-      list.innerHTML = addButton + filteredTx.map(tx => {
+      list.innerHTML = filteredTx.map(tx => {
         const amt = parseFloat(tx.amount || 0);
         const isPositive = amt >= 0;
         const status = tx.status || 'pending';
@@ -3929,7 +4205,9 @@
       // Safe State Initialization Router
       if (activeSplitRowPickerIndex === 'filter') {
         tempSelectedLabels = new Set(activeTagFilters);
-      } else if (activeSplitRowPickerIndex !== null && activeSplitRowPickerIndex !== 'filter') {
+      } else if (activeSplitRowPickerIndex === 'global-filter') { // 🚀 ROUTE FROM GLOBAL TRANSACTIONS VIEW
+        tempSelectedLabels = new Set(globalActiveTagFilters);
+      } else if (activeSplitRowPickerIndex !== null && activeSplitRowPickerIndex !== 'filter' && activeSplitRowPickerIndex !== 'global-filter') {
         const splitRows = document.querySelectorAll('#txSplitRows > div');
         const splitInput = splitRows[activeSplitRowPickerIndex]?.querySelector('[data-split-tags]');
         const splitTags = splitInput ? parseTagInput(splitInput.value) : [];
@@ -4127,6 +4405,11 @@
         activeTagFilters = Array.from(tempSelectedLabels);
         renderTagFilterSection();
         renderTransactions();
+        activeSplitRowPickerIndex = null;
+      } else if (activeSplitRowPickerIndex === 'global-filter') { // 🚀 APPLY TO GLOBAL FILTER LIST
+        globalActiveTagFilters = Array.from(tempSelectedLabels);
+        renderGlobalTagFilterSection();
+        renderAllTransactions();
         activeSplitRowPickerIndex = null;
       } else if (activeSplitRowPickerIndex !== null) {
         // Apply back to specific split row
@@ -5484,6 +5767,22 @@ This action can be undone by cancelling your edits.`,
         filterDropdown.classList.add("hidden");
         activeFilterDropdownMatches = [];
         activeFilterDropdownIndex = -1;
+      }
+
+      // Auto-collapse dynamic tag filter autocomplete when clicking elsewhere
+      if (filterDropdown && filterContainer && !filterContainer.contains(e.target)) {
+        filterDropdown.classList.add("hidden");
+        activeFilterDropdownMatches = [];
+        activeFilterDropdownIndex = -1;
+      }
+
+      // 🚀 ALSO DISMISS GLOBAL AUTOCOMPLETE WHEN CLICKING ELSEWHERE
+      const globalFilterDropdown = document.getElementById("global-tag-filter-autocomplete-dropdown");
+      const globalFilterContainer = document.getElementById("global-tag-filter-container");
+      if (globalFilterDropdown && globalFilterContainer && !globalFilterContainer.contains(e.target)) {
+        globalFilterDropdown.classList.add("hidden");
+        activeGlobalFilterDropdownMatches = [];
+        activeGlobalFilterDropdownIndex = -1;
       }
     });
 

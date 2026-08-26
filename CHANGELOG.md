@@ -4,19 +4,20 @@ All notable changes to this project will be documented in this file.
 
 ## [unreleased]
 
-## [1.4.3-dev] - 2026-08-26
+## [1.4.3] - 2026-08-26
 
 ### Added
 
-- **Forced Inline Display Overrides:** Injected explicit inline layout overrides (`display: flex !important` and `display: none !important`) on label picker modal open/close actions, permanently bypassing compiled Tailwind stylesheet and layout caching conflicts [2, 3].
+- **AND/OR Match Mode Toggle:** Added a "Match All (AND)" interactive checkbox to both the Account Details and Global Transactions label filter containers. Users can now seamlessly toggle between finding transactions matching *any* selected label (OR matching) or only transactions that contain *every* selected label (AND matching).
+- **Global Transactions Label Filtering:** Ported the hierarchical multi-select label filter to the global Transactions view page, positioned beautifully above the primary search input box. Includes dedicated auto-complete typing suggestions, arrow keyboard navigation, and click-away auto-dismiss overrides.
+- **Symmetric Spacing Polish:** Balanced vertical margin gutters across both views. Fixed mobile overlapping issues by introducing a collapsible bottom margin (`mb-4 lg:mb-0`) on the Monthly Summary card and aligning the static "+ Add Transaction" button within the main page wrapper.
 
 ### Fixed
 
-- **Modal Stacking & View Nesting Leak:** Resolved a critical structural bug by sealing an unclosed `</div>` tag inside the receipt attachments preview container (`#receiptPreview`) [4]. This successfully unnested the subsequent Image Cropper and hierarchical Label Picker modals from `#tx-modal` [2, 5], restoring perfect modal visibility and layout rendering across all active app views.
-
-- **Split Array Suffix Trimming Crash:** Patched `resolveShortLabelToSerialized` to safely grab the string segment from split arrays prior to applying `.trim()` [6], preventing a silent `TypeError` thread crash during automated tag resolutions and split transaction typing.
-
-- **Root-Directory Folder Comparison:** Corrected the dynamic Expense branch evaluator inside `renderLabelNode` [7] by changing the strict array-to-string equality check (`currentPathArray === "Expenses"`) to target the root string index cleanly [8], stabilizing the display of "Must / Need / Want" nature selectors [7-9].
+- **Modal Stacking & View Nesting Leak:** Sealed a structural unclosed `</div>` leak in the receipt preview container (`#receiptPreview`). This successfully unnested subsequent modals (Image Cropper and Label Picker) from `#tx-modal`, restoring correct visual rendering and click interactions across the Account detail views.
+- **Forced Inline Display Overrides:** Injected explicit inline layout overrides (`display: flex !important` and `display: none !important`) on label picker modal open/close actions, permanently bypassing compiled Tailwind stylesheet and layout caching conflicts.
+- **Split Array Suffix Trimming Crash:** Patched `resolveShortLabelToSerialized` to safely grab string segments from split arrays prior to applying `.trim()`, preventing a silent crash on tag resolutions.
+- **Root-Directory Folder Comparison:** Corrected the Expense branch evaluator inside `renderLabelNode` from a strict array comparison (`currentPathArray === "Expenses"`) to an index tracker (`currentPathArray.indexOf("Expenses") === 0`), stabilizing the "Must / Need / Want" nature selectors.
 
 ## 1.4.2 - 2026-08-25
 
