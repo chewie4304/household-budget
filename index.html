@@ -266,7 +266,6 @@
       </div>
     </div>
   </div>
-  </div>
 
   <!-- Add/Edit Account Modal -->
   <div id="account-modal"
@@ -1227,38 +1226,12 @@
       const clean = String(labelStr || '').trim();
       if (!clean) return '';
 
-      if (clean.includes('-')) {
-        return clean;
-      }
-
-      let nameOnly = clean.split('|').trim();
-      nameOnly = nameOnly.replace(/\s*\([^)]+\)$/, '').trim();
-
-      const allPaths = getAllLabelPaths(labelTree);
-      const match = allPaths.find(pathArray => {
-        const leaf = pathArray[pathArray.length - 1];
-        return leaf.toLowerCase() === nameOnly.toLowerCase();
-      });
-
-      if (match) {
-        const serializedPath = match.join('-');
-        const currentNature = labelNatures[serializedPath] || getDefaultNatureForPath(match);
-        return pathToLabelString(match, currentNature);
-      }
-
-      return clean;
-    }
-
-    function resolveShortLabelToSerialized(labelStr) {
-      const clean = String(labelStr || '').trim();
-      if (!clean) return '';
-
       // If it already looks like a serialized path (contains '-'), keep it
       if (clean.includes('-')) {
         return clean;
       }
 
-      // Parse out any explicit nature suffix if they typed it, e.g., "Groceries|Need" or "Groceries (Need)"
+      // Parse out any explicit nature suffix if typed, e.g., "Groceries|Need"
       let nameOnly = clean.split('|').trim();
       nameOnly = nameOnly.replace(/\s*\([^)]+\)$/, '').trim(); // Remove trailing "(Need)" if present
 
@@ -2428,14 +2401,8 @@
       const searchInput = document.getElementById('tag-filter-search-input');
       if (!filterContainer || !previewContainer) return;
 
-      // Gather all unique tags present in the current account's transaction list
-      const allAccountTags = new Set();
-      currentAccountTransactions.forEach(tx => {
-        getTransactionTags(tx).forEach(tag => allAccountTags.add(tag));
-      });
-
-      // If there are no tags on any transaction and no filters are active, hide the filter box
-      if (allAccountTags.size === 0 && activeTagFilters.length === 0) {
+      // Only hide the filter box when the account has no transactions to filter at all
+      if (currentAccountTransactions.length === 0) {
         filterContainer.classList.add('hidden');
         return;
       }
@@ -4281,7 +4248,7 @@
            </div>
            
            <!-- Show dynamic nature toggles inline if selected (transaction override) OR if we are in Edit Mode (master default config) -->
-          ${((!pickerEditMode && isChecked) || pickerEditMode) && currentPathArray.at(0) === "Expenses"
+          ${((!pickerEditMode && isChecked) || pickerEditMode) && currentPathArray === "Expenses"
           ? renderNatureToggleRow(pathId, currentNature, pickerEditMode)
           : ""}
          </div>
