@@ -303,10 +303,12 @@
             <div id="tag-filter-preview" class="contents"></div>
             <!-- Typable tag filter search input -->
             <input type="text" id="tag-filter-search-input" placeholder="Type to filter..."
+              ontouchstart="handleLabelTouchStart(event, 'tag-filter-search-input', 'filter')"
               class="flex-1 min-w-[8px] text-xs font-semibold bg-transparent border-0 p-0 focus:ring-0 focus:outline-none text-slate-800"
               oninput="handleTagFilterSearchTyping(this.value)" onkeydown="handleTagFilterSearchKeydown(event)"
               ondblclick="openLabelPicker('filter')" title="Double-click to open full label tree" />
           </div>
+          
           <!-- Autocomplete suggestions dropdown -->
           <div id="tag-filter-autocomplete-dropdown"
             class="hidden absolute left-0 right-0 mt-1 max-h-40 overflow-y-auto bg-white border border-slate-200 rounded-xl shadow-lg z-50">
@@ -805,6 +807,7 @@
               <div id="selected-labels-preview" class="contents"></div>
               <!-- Typable search input -->
               <input type="text" id="tx-labels-text-input" placeholder="Type label..."
+                ontouchstart="handleLabelTouchStart(event, 'tx-labels-text-input')"
                 class="flex-1 min-w-[8px] text-xs font-semibold bg-transparent border-0 p-0 focus:ring-0 focus:outline-none text-slate-800"
                 oninput="handleLabelSearchTyping(this.value)" onkeydown="handleLabelSearchKeydown(event)"
                 ondblclick="openLabelPicker()" title="Double-click to open full label tree" />
@@ -1007,6 +1010,8 @@
     let activeFilterDropdownMatches = [];
     let activeFilterDropdownIndex = -1;
 
+    // --- DOUBLE-TAP LABEL SELECTION DETECTION ---
+    let lastLabelTapTime = 0;
 
     let transactions = [];
     let currentAccountTransactions = [];
@@ -4184,6 +4189,25 @@
         await action();
       }
     });
+
+    // --- SNAP-DISMISS KEYBOARD ON TOUCH DOUBLE-TAP ---
+    function handleLabelTouchStart(e, inputId, splitRowIndex = null) {
+      const now = Date.now();
+      const timespan = now - lastLabelTapTime;
+
+      if (timespan < 300 && timespan > 0) {
+        // 📱 Second touch registered within 300ms: Double-tap confirmed!
+        e.preventDefault(); // Block the second focus and click cycle completely
+
+        const input = document.getElementById(inputId);
+        if (input) input.blur();
+        if (document.activeElement) document.activeElement.blur();
+
+        // Open the category tree instantly
+        openLabelPicker(splitRowIndex);
+      }
+      lastLabelTapTime = now;
+    }
 
     // --- OPEN & CLOSE CONTROLS ---
     function openLabelPicker(splitRowIndex = null) {
