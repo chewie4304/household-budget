@@ -4,14 +4,23 @@ All notable changes to this project will be documented in this file.
 
 ## [unreleased]
 
-## [1.4.4-dev] - 2026-08-26
+## [1.4.4] - 2026-08-26
+
+### Added
+
+- **Unified Clear Buttons (×):** Deployed dedicated, absolute-positioned inline clearing buttons across 14 typable inputs. Users can instantly clear searches, transaction descriptions, payees, account configurations, and split details with a single click.
+- **Math Character Typing Restrictor:** Added real-time character-filtering (`restrictToMathInput`) that strips out alphabetical characters on-the-fly while typing in financial fields, allowing only digits, decimals, and math operators.
+- **Visual Validation Highlights:** Configured financial inputs to dynamically highlight their borders in red if a mathematical expression fails to evaluate, supported by active submit guards that block saving until expressions are corrected. Tapping into a red input instantly resets its styling.
+
+### Changed
+
+- **Spinner-Free Financial Inputs:** Converted Initial Balance, Credit Limit, and alert thresholds from `number` to `text` inputs. This permanently removes ugly, native browser up/down penny arrows while preserving custom math evaluation and triggering decimal mobile keyboards via `inputmode="decimal"`.
 
 ### Fixed
 
-- **Ghost Wrap Prevention in Tag Inputs:** Shrank the minimum-width constraint of autocomplete-capable label search inputs down to `8px`. This prevents inputs from prematurely wrapping to a new line and creating empty vertical "ghost rows" when tag chips fill the horizontal space.
-- **Parent Container Click-to-Focus:** Integrated active click-to-focus triggers (`onclick`) and text-cursor pointer styles (`cursor-text`) across label input parent wrapper borders. This makes the entire container box a seamless click target that focuses the underlying cursor.
-- **Touchstart Virtual Keyboard Suppression:** Embedded a touch sequence debouncer (`handleLabelTouchStart`) tracking custom tap intervals. When a double-tap is registered on touch-screen devices, the event instantly blurs active document elements, seamlessly dismissing the mobile keyboard before the hierarchical label picker slides into view.
-
+- **Mobile Keyboard Suppression:** Moved touch sequence interception (`handleLabelTouchStart`) to the parent container wrappers of all tag inputs. Double-tapping anywhere near the label field now successfully dismisses the mobile keyboard before the hierarchical picker modal slides open.
+- **Ghost Wrap Input Line Bugs:** Shrank the minimum-width constraint of autocomplete label inputs to `8px`, allowing tags and search boxes to wrap naturally without creating empty trailing lines.
+- **Cleaned Legacy Elements:** Pruned redundant, overlapping clear-button evaluations inside the account modal initialization and deleted the dead `handleSmartLabelInputClick` function.
 
 ## [1.4.3] - 2026-08-26
 

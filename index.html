@@ -1541,23 +1541,37 @@
     // Format the field to a clean currency layout when the user clicks away
     function handleMathEvaluation(inputEl, onParsedCallback) {
       const rawValue = inputEl.value.trim();
-      if (!rawValue) return;
+      if (!rawValue) {
+        inputEl.classList.remove('border-red-500', 'focus:ring-red-200');
+        return;
+      }
 
-      // Check if the input contains any mathematical operators
+      let isValid = true;
+
       if (/[+\-*/()]/.test(rawValue)) {
         const evaluated = evaluateExpression(rawValue);
         if (evaluated !== null) {
           inputEl.value = roundCurrency(evaluated).toFixed(2);
         } else {
-          showAppMessage("Invalid mathematical expression. Check your syntax.");
+          isValid = false;
         }
       } else {
-        // Run normal decimal formatting for flat numbers
         const parsed = parseFloat(rawValue);
         if (Number.isFinite(parsed)) {
           inputEl.value = roundCurrency(parsed).toFixed(2);
+        } else {
+          isValid = false;
         }
       }
+
+      // Toggle visual error states based on evaluation success
+      if (!isValid) {
+        showAppMessage("Invalid mathematical expression. Check your syntax.");
+        inputEl.classList.add('border-red-500', 'focus:ring-red-200');
+      } else {
+        inputEl.classList.remove('border-red-500', 'focus:ring-red-200');
+      }
+
       if (typeof onParsedCallback === 'function') {
         onParsedCallback();
       }
@@ -5472,6 +5486,17 @@ This action can be undone by cancelling your edits.`,
 
     // Phase 5: Event Handlers & Core Submission Flows
     async function handleTxSubmit(e) {
+      // Block saving if any invalid inputs exist
+      if (e.target.querySelector('.border-red-500')) {
+        showAppMessage("Please resolve all invalid fields before saving.");
+        const submitBtn = document.getElementById(e.target.id === 'tx-form' ? 'txSubmitBtn' : 'submitBtn');
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.textContent = document.getElementById(e.target.id === 'tx-form' ? 'editingTxId' : 'editingAccId').value ? "Update" : "Save";
+        }
+        return;
+      }
+      // Disable the submit button to prevent double submissions
       e.preventDefault();
       const submitBtn = document.getElementById('txSubmitBtn');
       submitBtn.disabled = true;
@@ -5891,6 +5916,17 @@ This action can be undone by cancelling your edits.`,
     }
 
     async function handleAccountSubmit(e) {
+      // Block saving if any invalid inputs exist
+      if (e.target.querySelector('.border-red-500')) {
+        showAppMessage("Please resolve all invalid fields before saving.");
+        const submitBtn = document.getElementById(e.target.id === 'tx-form' ? 'txSubmitBtn' : 'submitBtn');
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.textContent = document.getElementById(e.target.id === 'tx-form' ? 'editingTxId' : 'editingAccId').value ? "Update" : "Save";
+        }
+        return;
+      }
+      // Prevent default form submission behavior
       e.preventDefault();
       const submitBtn = document.getElementById('submitBtn');
       submitBtn.disabled = true;
