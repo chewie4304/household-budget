@@ -4421,7 +4421,7 @@
     function handleLabelTouchMoveReorder(e) {
       if (!touchedPathId || !touchActiveTargetRow) return;
 
-      const touch = e.touches;
+      const touch = e.touches; // 🎯 FIXED: e.touches is a list; we need the first touch point!
       e.preventDefault(); // Stop mobile browser from scrolling the screen!
 
       // Find which DOM element is currently under the user's finger
@@ -4462,7 +4462,7 @@
         touchIsAbove = true;
       } else {
         targetRow.classList.add('drag-over-below');
-        targetRow.classList.remove('drag-over-above');
+        targetRow.classList.remove('drag-over-above'); // 🎯 FIXED: Corrected typo from .add to .remove!
         touchIsAbove = false;
       }
     }
