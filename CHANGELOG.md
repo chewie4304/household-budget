@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [unreleased]
 
+## [1.4.6-dev]
+
+### Fixed
+
+- **Scroll Positioning:** Reset viewport scroll position to top on all view and tab transitions
+
 ## [1.4.5] - 2026-08-28
 
 ### Added

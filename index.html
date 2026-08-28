@@ -2103,6 +2103,7 @@
 
       clearSearchForView('home-accounts');
       currentViewState = 'home-accounts';
+      window.scrollTo(0, 0); // 🌟 Reset the page scroll position to the top!
       accountsList.classList.remove('hidden');
       allTransactionsList.classList.add('hidden');
       accountSearchWrap.classList.remove('hidden');
@@ -2134,6 +2135,7 @@
 
       clearSearchForView('home-transactions');
       currentViewState = 'home-transactions';
+      window.scrollTo(0, 0); // 🌟 Reset the page scroll position to the top!
       accountsList.classList.add('hidden');
       allTransactionsList.classList.remove('hidden');
       accountSearchWrap.classList.add('hidden');
@@ -2549,6 +2551,7 @@
     }
 
     async function showTransactionsView(accId) {
+      window.scrollTo(0, 0); // 🌟 Reset the page scroll position to the top!
       activeAccountId = accId; // Store active account globally
       activeTagFilters = []; // Reset dynamic search filters on view shift
       currentViewState = 'transactions-detail';
@@ -2609,6 +2612,7 @@
     }
 
     function showAccountsView() {
+      window.scrollTo(0, 0); // 🌟 Reset the page scroll position to the top!
       activeAccountId = null; // Clear active account
       activeTagFilters = []; // Reset dynamic search filters on view shift
       currentViewState = 'accounts-detail';
