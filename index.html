@@ -5612,6 +5612,7 @@ This action can be undone by cancelling your edits.`,
       }
 
       e.preventDefault();
+
       const submitBtn = document.getElementById('txSubmitBtn');
       submitBtn.disabled = true;
       submitBtn.textContent = "Saving...";
@@ -5627,6 +5628,7 @@ This action can be undone by cancelling your edits.`,
       const check_number = shouldStoreCheckNumber ? document.getElementById('txCheckNumber').value.trim() : '';
       const txType = document.getElementById('txType').value;
       const txAmountVal = document.getElementById('txAmount')?.value || '0';
+
       let amount = 0;
       if (/[+\-*/()]/.test(txAmountVal)) {
         const tempEval = evaluateExpression(txAmountVal);
@@ -5635,6 +5637,7 @@ This action can be undone by cancelling your edits.`,
         amount = parseFloat(txAmountVal) || 0;
       }
       amount = roundCurrency(Math.abs(amount));
+
       const date = document.getElementById('txDate').value;
       const status = document.getElementById('txStatus').value;
       const tags = [...activeTxLabels];
@@ -5651,17 +5654,6 @@ This action can be undone by cancelling your edits.`,
         }
       }
 
-      let uploadedReceiptUrls;
-      try {
-        uploadedReceiptUrls = await uploadReceiptFiles();
-      } catch (uploadError) {
-        showAppMessage(uploadError.message);
-        submitBtn.disabled = false;
-        submitBtn.textContent = editId ? "Update Transaction" : "Save Transaction";
-        return;
-      }
-      const finalReceiptUrls = [...activeReceiptUrls, ...uploadedReceiptUrls];
-
       // Validation for Transfers
       if (txType === 'transfer' && !editId) {
         if (!destinationAccountId || targetAccountId === destinationAccountId) {
@@ -5672,91 +5664,163 @@ This action can be undone by cancelling your edits.`,
         }
       }
 
-      const payload = {
-        account_id: targetAccountId,
-        description: description || '',
-        payee: savedPayee,
-        payment_method,
-        amount,
-        date,
-        status,
-        tags,
-        split_details: splitDetails.length > 0 ? splitDetails : null,
-        receipt_url: finalReceiptUrls.join(', ')
-      };
+      // --- ACTUALLY SAVE TRANSACTION FLOW ---
+      // Encapsulated to run directly or be deferred on duplicate warning acceptance
+      async function proceedWithSave() {
+        submitBtn.disabled = true;
+        submitBtn.textContent = "Saving...";
 
-      if (shouldStoreCheckNumber) {
-        payload.check_number = check_number;
-      }
+        let uploadedReceiptUrls;
+        try {
+          uploadedReceiptUrls = await uploadReceiptFiles();
+        } catch (uploadError) {
+          showAppMessage(uploadError.message);
+          submitBtn.disabled = false;
+          submitBtn.textContent = editId ? "Update Transaction" : "Save Transaction";
+          return;
+        }
 
-      let error;
+        const finalReceiptUrls = [...activeReceiptUrls, ...uploadedReceiptUrls];
 
-      if (editId) {
-        const adjustedPayload = {
-          ...payload,
-          amount: roundCurrency(txType === 'expense' ? -Math.abs(amount) : Math.abs(amount))
-        };
-        ({ error } = await sb.from('transactions').update(adjustedPayload).eq('id', editId));
-      } else if (txType === 'transfer') {
-        // Generate a unique link key for both ends of the transfer
-        const transferId = crypto.randomUUID();
-        const sourceAccount = accounts.find(a => a.id === targetAccountId);
-        const targetAccount = accounts.find(a => a.id === destinationAccountId);
-
-        // 1. Debit from source account (Transfer Out)
-        const sourcePayload = {
-          ...payload,
-          amount: roundCurrency(-Math.abs(amount)),
-          payee: targetAccount?.name || 'Transaction', // Force target account name
-          transfer_id: transferId
+        const payload = {
+          account_id: targetAccountId,
+          description: description || '',
+          payee: savedPayee,
+          payment_method,
+          amount,
+          date,
+          status,
+          tags,
+          split_details: splitDetails.length > 0 ? splitDetails : null,
+          receipt_url: finalReceiptUrls.join(', ')
         };
 
         if (shouldStoreCheckNumber) {
-          sourcePayload.check_number = check_number;
+          payload.check_number = check_number;
         }
 
-        // 2. Deposit into destination account (Transfer In)
-        const targetPayload = {
-          ...payload,
-          account_id: destinationAccountId,
-          amount: roundCurrency(Math.abs(amount)),
-          payee: sourceAccount?.name || 'Transaction', // Force source account name
-          transfer_id: transferId
-        };
+        let error;
+        if (editId) {
+          const adjustedPayload = {
+            ...payload,
+            amount: roundCurrency(txType === 'expense' ? -Math.abs(amount) : Math.abs(amount))
+          };
+          ({ error } = await sb.from('transactions').update(adjustedPayload).eq('id', editId));
+        } else if (txType === 'transfer') {
+          const transferId = crypto.randomUUID();
+          const sourceAccount = accounts.find(a => a.id === targetAccountId);
+          const targetAccount = accounts.find(a => a.id === destinationAccountId);
 
-        if (shouldStoreCheckNumber) {
-          targetPayload.check_number = check_number;
-        }
+          const sourcePayload = {
+            ...payload,
+            amount: roundCurrency(-Math.abs(amount)),
+            payee: targetAccount?.name || 'Transaction',
+            transfer_id: transferId
+          };
 
-        ({ error } = await sb.from('transactions').insert([sourcePayload, targetPayload]));
-      } else {
-        const adjustedPayload = {
-          ...payload,
-          amount: roundCurrency(txType === 'expense' ? -Math.abs(amount) : Math.abs(amount))
-        };
-        ({ error } = await sb.from('transactions').insert([adjustedPayload]));
-      }
+          if (shouldStoreCheckNumber) {
+            sourcePayload.check_number = check_number;
+          }
 
-      submitBtn.disabled = false;
-      submitBtn.textContent = "Save Transaction";
+          const targetPayload = {
+            ...payload,
+            account_id: destinationAccountId,
+            amount: roundCurrency(Math.abs(amount)),
+            payee: sourceAccount?.name || 'Transaction',
+            transfer_id: transferId
+          };
 
-      if (error) {
-        showAppMessage("Error saving transaction: " + error.message);
-      } else {
-        toggleTxModal(false);
+          if (shouldStoreCheckNumber) {
+            targetPayload.check_number = check_number;
+          }
 
-        await fetchData();
-        await fetchAccounts();
-        renderAllTransactions();
-
-        if (currentViewState === 'home-transactions') {
-          showAllTransactions();
-        } else if (activeAccountId) {
-          showTransactionsView(activeAccountId);
+          ({ error } = await sb.from('transactions').insert([sourcePayload, targetPayload]));
         } else {
-          showHomeAccounts();
+          const adjustedPayload = {
+            ...payload,
+            amount: roundCurrency(txType === 'expense' ? -Math.abs(amount) : Math.abs(amount))
+          };
+          ({ error } = await sb.from('transactions').insert([adjustedPayload]));
+        }
+
+        submitBtn.disabled = false;
+        submitBtn.textContent = editId ? "Update Transaction" : "Save Transaction";
+
+        if (error) {
+          showAppMessage("Error saving transaction: " + error.message);
+        } else {
+          toggleTxModal(false);
+          await fetchData();
+          await fetchAccounts();
+          renderAllTransactions();
+          if (currentViewState === 'home-transactions') {
+            showAllTransactions();
+          } else if (activeAccountId) {
+            showTransactionsView(activeAccountId);
+          } else {
+            showHomeAccounts();
+          }
         }
       }
+
+      // 🛡️ DUP-CHECK: SCAN EXISTING TRANSACTIONS WITHIN A WEEK WINDOW (Only for new creations)
+      if (!editId) {
+        const signedAmount = txType === 'expense' ? -Math.abs(amount) : Math.abs(amount);
+        const cleanNewPayee = savedPayee.trim().toLowerCase();
+
+        const potentialDuplicate = transactions.find(tx => {
+          // 1. Account must match
+          const sameAccount = tx.account_id === targetAccountId;
+
+          // 2. Signed amount must match (expenses are negative, income is positive)
+          const sameAmount = Math.abs(parseFloat(tx.amount || 0) - signedAmount) < 0.005;
+
+          // 3. Date must be within 7 days of the targeted transaction date
+          const newDateObj = new Date(`${date}T00:00:00`);
+          const txDateObj = new Date(`${tx.date}T00:00:00`);
+          const diffDays = Math.round(Math.abs(newDateObj - txDateObj) / (1000 * 60 * 60 * 24));
+          const withinWeek = diffDays <= 7;
+
+          // 4. Payee/Payer must match (Case-insensitive)
+          const samePayee = (tx.payee || '').trim().toLowerCase() === cleanNewPayee;
+
+          return sameAccount && sameAmount && withinWeek && samePayee;
+        });
+
+        if (potentialDuplicate) {
+          const activeAccName = accounts.find(a => a.id === targetAccountId)?.name || 'this account';
+          const formattedDate = new Date(`${potentialDuplicate.date}T00:00:00`).toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric'
+          });
+          const absAmount = Math.abs(parseFloat(potentialDuplicate.amount || 0)).toFixed(2);
+          const isExpense = parseFloat(potentialDuplicate.amount || 0) < 0;
+
+          // Intercept the submission and prompt the user for confirmation
+          openCustomConfirm({
+            title: 'Potential Duplicate Found',
+            message: `A similar ${isExpense ? 'expense' : 'income'} is already logged in this account within a week of your selected date:\n\n` +
+              `• Payee/Payer: ${potentialDuplicate.payee || 'Transaction'}\n` +
+              `• Amount: $${absAmount}\n` +
+              `• Date: ${formattedDate}\n` +
+              `• Account: ${activeAccName}\n\n` +
+              `Are you sure this is a different transaction and should be created?`,
+            confirmLabel: 'Yes, Save Anyway',
+            onConfirm: async () => {
+              await proceedWithSave();
+            }
+          });
+
+          // Restore form button state so users aren't stuck if they close the warning
+          submitBtn.disabled = false;
+          submitBtn.textContent = "Save Transaction";
+          return; // Freeze the rest of this submit event loop
+        }
+      }
+
+      // No duplicate found: safe to proceed immediately!
+      await proceedWithSave();
     }
 
     async function handleDeleteTxFromModal() {
