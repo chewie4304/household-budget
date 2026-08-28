@@ -6,7 +6,7 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
-- **Accidental Double-Logging Protection:** Integrated a real-time transaction scanner inside the save submission pipeline. When creating a new transaction, it scans local memory for existing matches within a 7-day window having the same account, payee/payer, and mathematical amount. Triggers a descriptive confirmation modal to prevent accidental double-logging.
+- **Accidental Double-Logging Protection:** Integrated a real-time transaction scanner inside the save submission pipeline. When creating or editing transactions, it scans local memory for existing matches within a 7-day window having the same account, payee/payer, and amount, safely excluding the transaction currently being edited from its own duplicates search. Triggers a descriptive confirmation modal to prevent accidental double-logging.
 - **Physics-Based Swipe Gestures:** Upgraded detailed transaction card navigation to use real-time coordinate tracking on horizontal drags. Delivers a premium native look and feel where card contents translate smoothly under-finger.
 - **Elastic Rebounds & Commit Thresholds:** Configured a smart 100px drag boundary. Swipes left-off below the threshold trigger elastic snapbacks to center, while dragging past the boundary slides the card completely off-screen and sweeps the new ledger card into view.
 - **Animated View Carousel swiping:** Embedded a hardware-accelerated "peek-and-slide" transition wrapper around the detailed transaction scrollable body. Swiping or arrowing across accounts slides the active card out, teleports the hidden framework to the opposite viewport boundary, and slides the next ledger cleanly into focus.
