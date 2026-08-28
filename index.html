@@ -1123,6 +1123,8 @@
     let touchActiveTargetRow = null;
     let touchCurrentOverRow = null;
     let touchIsAbove = false;
+    let draggedPathId = null;
+
 
     let transactions = [];
     let currentAccountTransactions = [];
@@ -1368,7 +1370,7 @@
         console.warn("Error loading configurations from Supabase, using local cache fallback:", err);
       }
     }
-    // --- Save Label Tree & Natures to Local Storage and Supabase ---
+
     async function saveLabelTree() {
       try {
         localStorage.setItem('household-budget-label-tree', JSON.stringify(labelTree));
@@ -1377,6 +1379,7 @@
         console.warn("Unable to save label tree configuration to storage:", err);
       }
     }
+
     async function saveLabelNatures() {
       try {
         localStorage.setItem('household-budget-label-natures', JSON.stringify(labelNatures));
@@ -5187,12 +5190,10 @@
       labelTreeBackup = null;
       labelNaturesBackup = null;
       activeTxLabelsBackup = null;
-      // Force exit edit mode back to standard selection view
       togglePickerEditMode(false);
       showAppMessage("Category changes saved and locked in!");
     }
 
-    // Discards all edits, additions, and deletions, restoring the previous state and exiting edit mode
     function cancelCategoryEdits() {
       if (labelTreeBackup && labelNaturesBackup && activeTxLabelsBackup) {
         labelTree = JSON.parse(JSON.stringify(labelTreeBackup));
@@ -5205,7 +5206,6 @@
       labelTreeBackup = null;
       labelNaturesBackup = null;
       activeTxLabelsBackup = null;
-      // Force exit edit mode back to standard selection view
       togglePickerEditMode(false);
       renderSelectedLabelsPreview();
       showAppMessage("Edits cancelled. All changes discarded.");
@@ -5326,7 +5326,85 @@
     // ==========================================
     // DRAG AND DROP REORDER ENGINE
     // ==========================================
-    let draggedPathId = null;
+    function handleLabelTouchStartReorder(e, pathId) {
+      if (!pickerEditMode) return;
+
+      const grabHandle = e.target.closest('.cursor-grab');
+      if (!grabHandle) return;
+
+      touchedPathId = pathId;
+      touchActiveTargetRow = e.currentTarget;
+      touchActiveTargetRow.classList.add('dragging');
+
+      document.body.classList.add('overflow-hidden');
+    }
+
+    function handleLabelTouchMoveReorder(e) {
+      if (!touchedPathId || !touchActiveTargetRow) return;
+
+      const touch = e.touches;
+      e.preventDefault();
+
+      const elementUnderFinger = document.elementFromPoint(touch.clientX, touch.clientY);
+      if (!elementUnderFinger) return;
+
+      const targetRow = elementUnderFinger.closest('.group');
+      if (!targetRow || targetRow === touchActiveTargetRow) {
+        document.querySelectorAll('.drag-over-above, .drag-over-below').forEach(el => {
+          el.classList.remove('drag-over-above', 'drag-over-below');
+        });
+        touchCurrentOverRow = null;
+        return;
+      }
+
+      const targetPathId = targetRow.getAttribute('data-path-id');
+      if (!targetPathId) return;
+
+      const draggedParent = touchedPathId.split("-").slice(0, -1).join("-");
+      const targetParent = targetPathId.split("-").slice(0, -1).join("-");
+      if (draggedParent !== targetParent) return;
+
+      touchCurrentOverRow = targetRow;
+
+      const rect = targetRow.getBoundingClientRect();
+      const midpoint = rect.top + rect.height / 2;
+
+      document.querySelectorAll('.drag-over-above, .drag-over-below').forEach(el => {
+        if (el !== targetRow) el.classList.remove('drag-over-above', 'drag-over-below');
+      });
+
+      if (touch.clientY < midpoint) {
+        targetRow.classList.add('drag-over-above');
+        targetRow.classList.remove('drag-over-below');
+        touchIsAbove = true;
+      } else {
+        targetRow.classList.add('drag-over-below');
+        targetRow.classList.add('drag-over-above');
+        touchIsAbove = false;
+      }
+    }
+
+    function handleLabelTouchEndReorder(e) {
+      if (!touchedPathId || !touchActiveTargetRow) return;
+
+      document.body.classList.remove('overflow-hidden');
+
+      if (touchCurrentOverRow) {
+        const targetPathId = touchCurrentOverRow.getAttribute('data-path-id');
+        if (targetPathId && targetPathId !== touchedPathId) {
+          executeReorderKeys(touchedPathId, targetPathId, touchIsAbove);
+        }
+      }
+
+      touchActiveTargetRow.classList.remove('dragging');
+      document.querySelectorAll('.drag-over-above, .drag-over-below').forEach(el => {
+        el.classList.remove('drag-over-above', 'drag-over-below');
+      });
+
+      touchedPathId = null;
+      touchActiveTargetRow = null;
+      touchCurrentOverRow = null;
+    }
 
     function handleLabelDragStart(e, pathId) {
       draggedPathId = pathId;
@@ -5384,28 +5462,24 @@
       const parentPath = pathArray.slice(0, -1);
       const targetName = targetPathId.split("-").pop();
 
-      // Navigate to the target parent node in labelTree
       let parentObj = labelTree;
       for (const segment of parentPath) {
         parentObj = parentObj[segment];
       }
 
-      // Reorder object keys preserving ES6 ordering rules
       const keys = Object.keys(parentObj);
       const draggedIdx = keys.indexOf(draggedName);
-      keys.splice(draggedIdx, 1); // Remove the dragged key
+      keys.splice(draggedIdx, 1);
 
       let targetIdx = keys.indexOf(targetName);
       const insertIdx = isAbove ? targetIdx : targetIdx + 1;
-      keys.splice(insertIdx, 0, draggedName); // Re-insert at the new index
+      keys.splice(insertIdx, 0, draggedName);
 
-      // Rebuild the parent folder object with the new sorted order
       const rebuiltParent = {};
       keys.forEach(k => {
         rebuiltParent[k] = parentObj[k];
       });
 
-      // Swap the reference in the master tree
       if (parentPath.length === 0) {
         labelTree = rebuiltParent;
       } else {
