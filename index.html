@@ -1323,17 +1323,16 @@
       }
       return node;
     }
-
-    function loadLabelTree() {
+    // --- Load Label Tree & Natures from Local Storage and Supabase ---
+    async function loadLabelTree() {
       try {
+        // 1. Instant load from local storage cache so UI is immediately responsive
         const storedTree = localStorage.getItem('household-budget-label-tree');
         if (storedTree) {
           const parsed = JSON.parse(storedTree);
           labelTree = migrateTreeRecursive(parsed);
-          saveLabelTree(); // Save the newly migrated schema format
         } else {
           labelTree = JSON.parse(JSON.stringify(DEFAULT_LABEL_TREE));
-          saveLabelTree();
         }
 
         const storedNatures = localStorage.getItem('household-budget-label-natures');
@@ -1341,31 +1340,45 @@
           labelNatures = JSON.parse(storedNatures);
         } else {
           labelNatures = { ...DEFAULT_LABEL_NATURES };
-          saveLabelNatures();
+        }
+
+        // 2. Fetch fresh, synchronized master copies from the shared Supabase database
+        const { data, error } = await sb.from('settings').select('*');
+        if (!error && data) {
+          const dbTree = data.find(r => r.key === 'household-budget-label-tree')?.value;
+          const dbNatures = data.find(r => r.key === 'household-budget-label-natures')?.value;
+
+          if (dbTree) {
+            labelTree = migrateTreeRecursive(dbTree);
+            localStorage.setItem('household-budget-label-tree', JSON.stringify(labelTree));
+          }
+          if (dbNatures) {
+            labelNatures = dbNatures;
+            localStorage.setItem('household-budget-label-natures', JSON.stringify(labelNatures));
+          }
         }
       } catch (err) {
-        console.warn("Error loading configurations, resetting to fallback models:", err);
-        labelTree = JSON.parse(JSON.stringify(DEFAULT_LABEL_TREE));
-        labelNatures = { ...DEFAULT_LABEL_NATURES };
+        console.warn("Error loading configurations from Supabase, using local cache fallback:", err);
       }
     }
-
-    function saveLabelTree() {
+    // --- Save Label Tree & Natures to Local Storage and Supabase ---
+    async function saveLabelTree() {
       try {
         localStorage.setItem('household-budget-label-tree', JSON.stringify(labelTree));
+        await sb.from('settings').upsert({ key: 'household-budget-label-tree', value: labelTree });
       } catch (err) {
         console.warn("Unable to save label tree configuration to storage:", err);
       }
     }
-
-    function saveLabelNatures() {
+    async function saveLabelNatures() {
       try {
         localStorage.setItem('household-budget-label-natures', JSON.stringify(labelNatures));
+        await sb.from('settings').upsert({ key: 'household-budget-label-natures', value: labelNatures });
       } catch (err) {
         console.warn("Unable to save label natures configuration to storage:", err);
       }
     }
-
+    // --- Label String Parsing & Serialization Utilities ---
     function parseLabelString(labelStr) {
       if (!labelStr) return { path: [], nature: 'N/A', rawPath: '' };
 
@@ -1378,18 +1391,16 @@
         rawPath: pathStr
       };
     }
-
     function pathToLabelString(pathArray, nature = 'N/A') {
       if (!Array.isArray(pathArray) || pathArray.length === 0) return '';
       const pathStr = pathArray.join('-');
       return (nature && nature !== 'N/A') ? `${pathStr}|${nature}` : pathStr;
     }
-
+    // --- Label Display Utilities ---
     function getLabelDisplayPath(labelStr) {
       const { path } = parseLabelString(labelStr);
       return path.join(' -> ');
     }
-
     function getLabelDisplayName(labelStr) {
       const { path } = parseLabelString(labelStr);
       return path[path.length - 1] || 'Unlabeled';
@@ -1826,7 +1837,8 @@
           console.warn("Failed to import configuration from URL:", err);
         }
       }
-      loadLabelTree();
+      // 🔄 Await the database synchronization!
+      await loadLabelTree();
       buildMonthOptions();
       restoreViewState();
       await detectCheckNumberColumn();
@@ -5063,37 +5075,31 @@
       renderLabelTreeUI();
     }
 
-    // Commits all edits/renames/adds to LocalStorage and returns cleanly to selection view
+    // Permanently saves all edits, additions, and deletions to localStorage and exits edit mode
     function saveCategoryEdits() {
-      localStorage.setItem('household-budget-label-tree', JSON.stringify(labelTree));
-      localStorage.setItem('household-budget-label-natures', JSON.stringify(labelNatures));
-
+      saveLabelTree();
+      saveLabelNatures();
       labelTreeBackup = null;
       labelNaturesBackup = null;
       activeTxLabelsBackup = null;
-
       // Force exit edit mode back to standard selection view
       togglePickerEditMode(false);
       showAppMessage("Category changes saved and locked in!");
     }
 
-    // Completely rolls back any edits, additions, or deletions and returns to selection view
+    // Discards all edits, additions, and deletions, restoring the previous state and exiting edit mode
     function cancelCategoryEdits() {
       if (labelTreeBackup && labelNaturesBackup && activeTxLabelsBackup) {
         labelTree = JSON.parse(JSON.stringify(labelTreeBackup));
         labelNatures = JSON.parse(JSON.stringify(labelNaturesBackup));
         activeTxLabels = [...activeTxLabelsBackup];
-
-        localStorage.setItem('household-budget-label-tree', JSON.stringify(labelTree));
-        localStorage.setItem('household-budget-label-natures', JSON.stringify(labelNatures));
-
+        saveLabelTree();
+        saveLabelNatures();
         tempSelectedLabels = new Set(activeTxLabels);
       }
-
       labelTreeBackup = null;
       labelNaturesBackup = null;
       activeTxLabelsBackup = null;
-
       // Force exit edit mode back to standard selection view
       togglePickerEditMode(false);
       renderSelectedLabelsPreview();
@@ -5486,17 +5492,17 @@ This action can be undone by cancelling your edits.`,
 
     // Phase 5: Event Handlers & Core Submission Flows
     async function handleTxSubmit(e) {
-      // Block saving if any invalid inputs exist
+      // 🚫 Block saving if any invalid inputs exist
       if (e.target.querySelector('.border-red-500')) {
         showAppMessage("Please resolve all invalid fields before saving.");
-        const submitBtn = document.getElementById(e.target.id === 'tx-form' ? 'txSubmitBtn' : 'submitBtn');
+        const submitBtn = document.getElementById('txSubmitBtn');
         if (submitBtn) {
           submitBtn.disabled = false;
-          submitBtn.textContent = document.getElementById(e.target.id === 'tx-form' ? 'editingTxId' : 'editingAccId').value ? "Update" : "Save";
+          submitBtn.textContent = document.getElementById('editingTxId').value ? "Update Transaction" : "Save Transaction";
         }
         return;
       }
-      // Disable the submit button to prevent double submissions
+
       e.preventDefault();
       const submitBtn = document.getElementById('txSubmitBtn');
       submitBtn.disabled = true;
@@ -5916,17 +5922,17 @@ This action can be undone by cancelling your edits.`,
     }
 
     async function handleAccountSubmit(e) {
-      // Block saving if any invalid inputs exist
+      // 🚫 Block saving if any invalid inputs exist
       if (e.target.querySelector('.border-red-500')) {
         showAppMessage("Please resolve all invalid fields before saving.");
-        const submitBtn = document.getElementById(e.target.id === 'tx-form' ? 'txSubmitBtn' : 'submitBtn');
+        const submitBtn = document.getElementById('submitBtn');
         if (submitBtn) {
           submitBtn.disabled = false;
-          submitBtn.textContent = document.getElementById(e.target.id === 'tx-form' ? 'editingTxId' : 'editingAccId').value ? "Update" : "Save";
+          submitBtn.textContent = document.getElementById('editingAccId').value ? "Update Account" : "Create Account";
         }
         return;
       }
-      // Prevent default form submission behavior
+
       e.preventDefault();
       const submitBtn = document.getElementById('submitBtn');
       submitBtn.disabled = true;

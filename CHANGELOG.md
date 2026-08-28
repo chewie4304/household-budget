@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 
 ## [unreleased]
 
+## [1.4.5] - 2026-08-27
+
+### Added
+
+- **Supabase Category & Nature Synchronization:** Integrated category loading (`loadLabelTree`) and saving (`saveLabelTree`) routines directly with a centralized, un-RLS settings database table in Supabase. Edits on one device are instantly pushed to the database and seamlessly populated across all connected household devices on startup.
+- **Form Submit Error Guards:** Hardwired active submission blocks inside both `handleTxSubmit` and `handleAccountSubmit` to prevent saving forms if any invalid red-highlighted inputs remain on-screen.
+
+### Fixed
+
+- **Persistent Category State Rollbacks:** Upgraded category save/cancel pipelines to execute database transactions as one unified, predictable batch operation.
+
 ## [1.4.4] - 2026-08-26
 
 ### Added
