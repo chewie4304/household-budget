@@ -4,18 +4,21 @@ All notable changes to this project will be documented in this file.
 
 ## [unreleased]
 
-## [1.4.5] - 2026-08-27
+## [1.4.5] - 2026-08-28
 
 ### Added
 
-- **Supabase Category & Nature Synchronization:** Connected category loading (`loadLabelTree`) and saving (`saveLabelTree`) routines directly with a centralized settings table in Supabase. Edits made on one device are automatically backed up to the database and seamlessly populated across all other connected household devices on startup.
-- **Mobile Touch Drag-and-Drop Reordering:** Engineered custom touch coordinate listeners (`handleLabelTouchStartReorder`, `handleLabelTouchMoveReorder`, `handleLabelTouchEndReorder`) to enable smooth category reordering via the grab handle (`⠿`) on touchscreens and tablets.
-- **Stable Scroll Containment:** Configured body overflow locking (`overflow-hidden`) and container scroll isolation (`overscroll-contain`) while the Label Picker is active to prevent background scrolling leaks on mobile viewports.
+- **Multi-Device Cloud Syncing:** Connected category configuration saving and loading directly to Supabase `settings`, establishing real-time synchronization of the master label tree and defaults across all desktop and mobile devices.
+- **Mobile Touch-Dragging Support:** Deployed comprehensive touch event wrappers (`touchstart`, `touchmove`, `touchend`) leveraging ES6 array destructuring for safe coordinate calculation, enabling premium drag-reordering feedback on all mobile touchscreens.
+- **On-the-Fly Alphabetical Sorting:** Configured root directories and child subcategories to sort purely alphabetically on rendering, bypassing Postgres JSONB binary storage sorting constraints to keep category layouts perfectly structured.
+- **Unified Confirmation Modal Pipeline:** Integrated all prompt and delete modals into a single, bulletproof queue using global callback parameters, preventing visual overlap bugs and duplicate execution of click listeners.
+- **Mobile Layout & Scroll Lock:** Added body freezes on modal opens and active dragging sessions to isolate touch overlays and prevent background page viewport scrolling.
 
 ### Fixed
 
-- **Prompt Modal Stacking Context:** Elevated both the Confirmation and Custom Prompt modals to an inline `z-index: 70` styling, resolving a layout conflict where input and confirmation cards rendered invisibly underneath the active label picker modal.
-- **Persistent Category State Rollbacks:** Upgraded category save and cancel handlers to process deep-snapshot backup rollbacks as clean, unified database operations.
+- **Tailwind Modal Stacking (z-index):** Swapped Tailwind's non-compiling `z-70` class for an explicit inline style `style="z-index: 80;"` on `#confirm-modal`, ensuring confirmation dialogs float cleanly over the label picker.
+- **Legacy Filtering Reference:** Replaced the dead `selectedTagFilter` check in the transaction empty-state with `activeTagFilters.length > 0`, ensuring accurate filtering feedback.
+- **Cleaned Legacy Elements:** Streamlined `deleteTx` UI calls by removing the redundant second argument from both render engines.
 
 ## [1.4.4] - 2026-08-26
 

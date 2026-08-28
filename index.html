@@ -585,7 +585,8 @@
 
   <!-- Custom Confirmation Modal -->
   <div id="confirm-modal"
-    class="fixed inset-0 bg-black/50 hidden flex items-end sm:items-center justify-center p-0 sm:p-4" style="z-index: 70;">
+    class="fixed inset-0 bg-black/50 hidden flex items-end sm:items-center justify-center p-0 sm:p-4"
+    style="z-index: 70;">
     <div class="bg-white w-full max-w-sm rounded-t-2xl sm:rounded-2xl p-5 space-y-4">
       <div class="flex justify-between items-center">
         <h3 id="confirm-modal-title" class="font-bold text-lg text-gray-800">Confirm</h3>
@@ -1129,7 +1130,6 @@
     let transactions = [];
     let currentAccountTransactions = [];
     let activeAccountId = null;
-    let selectedTagFilter = null;
     let activeReceiptFiles = [];
     let activeReceiptUrls = [];
     let accountAlertState = {};
@@ -2373,7 +2373,7 @@
                     class="px-2 py-0.5 text-xs font-bold rounded-full transition-colors ${isPending ? 'bg-amber-100 text-amber-700 hover:bg-amber-200' : 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200'}">
                     ${isPending ? 'P' : 'R'}
                   </button>
-                  <button onclick="event.stopPropagation(); deleteTx('${tx.id}', '${tx.payee || tx.description || 'transaction'}')" class="text-red-400 hover:text-red-600 text-base font-bold px-1">&times;</button>
+                  <button onclick="event.stopPropagation(); deleteTx('${tx.id}')" class="text-red-400 hover:text-red-600 text-base font-bold px-1">&times;</button>
                 </div>
               </div>
             </div>
@@ -3035,8 +3035,8 @@
       if (filteredTx.length === 0) {
         list.innerHTML = `
       <div class="bg-white p-6 rounded-xl border border-gray-200 text-center space-y-2">
-        <p class="text-gray-600 font-medium">${selectedTagFilter ? 'No transactions with this tag.' : 'No transactions yet.'}</p>
-        <p class="text-xs text-gray-400">${selectedTagFilter ? 'Try picking a different tag filter above.' : 'Tap the "+ Add Transaction" button above to log a deposit or spending.'}</p>
+        <p class="text-gray-600 font-medium">${activeTagFilters.length > 0 ? 'No transactions with this tag.' : 'No transactions yet.'}</p>
+        <p class="text-xs text-gray-400">${activeTagFilters.length > 0 ? 'Try picking a different tag filter above.' : 'Tap the "+ Add Transaction" button above to log a deposit or spending.'}</p>
       </div>
     `;
         return;
@@ -3113,12 +3113,10 @@
                     onclick="event.stopPropagation(); toggleTxStatus('${tx.id}', '${status}')" 
                     title="Status: ${status}. Click to toggle"
                     class="px-2 py-0.5 text-xs font-bold rounded-full transition-colors ${isPending
-            ? 'bg-amber-100 text-amber-700 hover:bg-amber-200'
-            : 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200'
-          }">
+            ? 'bg-amber-100 text-amber-700 hover:bg-amber-200' : 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200'}">
                     ${isPending ? 'P' : 'R'}
                   </button>
-                  <button onclick="event.stopPropagation(); deleteTx('${tx.id}', '${displayTitle}')" class="text-red-400 hover:text-red-600 text-base font-bold px-1">&times;</button>
+                  <button onclick="event.stopPropagation(); deleteTx('${tx.id}')" class="text-red-400 hover:text-red-600 text-base font-bold px-1">&times;</button>
                 </div>
               </div>
             </div>
@@ -4869,7 +4867,9 @@
       // Recursively paint child branches if folder is expanded
       if (isFolder && isExpanded) {
         let childrenHtml = "";
-        for (const [childName, childValue] of Object.entries(nodeValue)) {
+        // 🎯 Sorts all nested subcategories alphabetically A-Z, ignoring string length!
+        const sortedChildren = Object.entries(nodeValue).sort((a, b) => a[0].localeCompare(b[0]));
+        for (const [childName, childValue] of sortedChildren) {
           if (query === "" || nodeMatchesQuery(childName, childValue, query)) {
             childrenHtml += renderLabelNode(childName, childValue, currentPathArray, query);
           }
@@ -4890,7 +4890,9 @@
 
       const query = (document.getElementById("label-search-input")?.value || "").trim().toLowerCase();
       let html = "";
-      for (const [key, val] of Object.entries(labelTree)) {
+      // 🎯 Sorts root folders alphabetically (E -> G -> I -> O)
+      const sortedRoots = Object.entries(labelTree).sort((a, b) => a[0].localeCompare(b[0]));
+      for (const [key, val] of sortedRoots) {
         if (query === "" || nodeMatchesQuery(key, val, query)) {
           html += renderLabelNode(key, val, [], query);
         }
