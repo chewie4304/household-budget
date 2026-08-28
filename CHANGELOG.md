@@ -7,11 +7,11 @@ All notable changes to this project will be documented in this file.
 ### Added
 
 - **Sticky Top Navigation Banners:** Configured both the main accounts dashboard and detailed transaction headers with Tailwind's `sticky top-0 z-40` properties. This locks essential action buttons—like returning to accounts and logging new transactions—firmly to the top of the viewport during long scroll sessions.
+- **Global Smart Scroll-on-Focus:** Deployed a centralized `focusin` event delegation pipeline that automatically detects when a text input or textarea is selected. On mobile devices, it waits 180ms for the virtual keyboard to slide open and then smoothly scrolls the active field to the center of the visible screen, keeping the input completely visible.
 
 ### Fixed
 
 - **Scroll Positioning:** Reset viewport scroll position to top on all view and tab transitions.
-
 
 ## [1.4.5] - 2026-08-28
 

@@ -6125,6 +6125,29 @@ This action can be undone by cancelling your edits.`,
       }
     });
 
+    // --- AUTO-SCROLL TYPABLE FIELDS INTO VIEW ON FOCUS ---
+    document.addEventListener('focusin', (e) => {
+      const target = e.target;
+      if (!target) return;
+
+      const isInput = target.tagName === 'INPUT';
+      const isTextarea = target.tagName === 'TEXTAREA';
+
+      if (isInput || isTextarea) {
+        // Exclude non-typable input types like checkboxes, radios, dates, and buttons
+        if (isInput) {
+          const excludedTypes = ['checkbox', 'radio', 'hidden', 'button', 'submit', 'file', 'date', 'range', 'color'];
+          if (excludedTypes.includes(target.type)) return;
+        }
+
+        // Wait 180ms for virtual mobile keyboards to slide up and resize the viewport,
+        // then smoothly scroll the focused field to the center of the visible area.
+        setTimeout(() => {
+          target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 180);
+      }
+    });
+
     window.onload = init;
   </script>
 </body>
