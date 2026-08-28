@@ -6,6 +6,8 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
+- **Physics-Based Swipe Gestures:** Upgraded detailed transaction card navigation to use real-time coordinate tracking on horizontal drags. Delivers a premium native look and feel where card contents translate smoothly under-finger.
+- **Elastic Rebounds & Commit Thresholds:** Configured a smart 100px drag boundary. Swipes left-off below the threshold trigger elastic snapbacks to center, while dragging past the boundary slides the card completely off-screen and sweeps the new ledger card into view.
 - **Animated View Carousel swiping:** Embedded a hardware-accelerated "peek-and-slide" transition wrapper around the detailed transaction scrollable body. Swiping or arrowing across accounts slides the active card out, teleports the hidden framework to the opposite viewport boundary, and slides the next ledger cleanly into focus.
 - **Multi-Device Swipe & Arrow Key Cycling:** Programmed a horizontal navigation system for account details views. Desktop users can cycle accounts instantly using Arrow Left/Right keys, while mobile users can horizontally swipe across transaction feeds to transition smoothly from one active ledger to another.
 - **Sticky Top Navigation Banners:** Configured both the main accounts dashboard and detailed transaction headers with Tailwind's `sticky top-0 z-40` properties. This locks essential action buttons—like returning to accounts and logging new transactions—firmly to the top of the viewport during long scroll sessions.
