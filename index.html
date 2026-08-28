@@ -2340,22 +2340,35 @@
         const tags = Array.isArray(tx.tags) ? tx.tags : [];
         const isTransfer = !!tx.transfer_id;
         const tagsHtml = tags.length > 0 ? `
-          <div class="flex flex-wrap gap-1 mt-1">
-            ${tags.map(t => {
+        <div class="flex flex-wrap gap-1 mt-1">
+        ${tags.map(t => {
           const displayName = getLabelDisplayName(t);
           const colorClass = getLabelColorStyle(t);
           return `<span class="text-[10px] px-1.5 py-0.5 rounded font-semibold ${colorClass}">${displayName}</span>`;
         }).join('')}
-          </div>
+        </div>
         ` : '';
+
+        // 🎯 Calculate receipt button links for the card
+        const receiptUrls = tx.receipt_url ? tx.receipt_url.split(',').map(u => u.trim()).filter(Boolean) : [];
+        const receiptBtn = receiptUrls.length > 0 ? `
+          <div class="flex gap-1 flex-wrap mt-0.5">
+            ${receiptUrls.map((url, idx) => `
+            <a href="${url}" target="_blank" onclick="event.stopPropagation()" class="text-[11px] bg-gray-100 hover:bg-gray-200 text-gray-600 px-1.5 py-0.5 rounded flex items-center gap-1 font-medium border border-gray-200">
+            📎 Receipt ${receiptUrls.length > 1 ? idx + 1 : ''}
+            </a>
+            `).join('')}
+          </div>
+          ` : '';
 
         return `
           <div id="tx-row-${tx.id}" onclick="openTxModal('${tx.id}')" class="${isTransfer ? 'bg-purple-50 border border-purple-200 shadow-sm' : 'bg-white border border-slate-200 shadow-sm'} p-4 rounded-2xl cursor-pointer hover:border-blue-300 transition-all duration-150">
             <div class="flex justify-between items-start gap-3">
               <div class="min-w-0 flex-1 pr-2">
                 <div class="flex items-center gap-2">
-                  <p class="font-bold text-slate-900 text-base">${tx.payee || 'Transaction'}</p>
+                <p class="font-bold text-slate-900 text-base">${tx.payee || 'Transaction'}</p>
                 </div>
+                ${receiptBtn}
                 <p class="mt-1 text-[11px] text-slate-500 uppercase tracking-[0.14em]">${acc ? acc.name : 'Account'} • ${tx.date || 'No date'}</p>
                 ${tx.description && tx.description !== tx.payee ? `<p class="text-xs text-gray-500 mt-0.5">${tx.description}</p>` : ''}
                 ${tagsHtml}
