@@ -1126,6 +1126,9 @@
     let touchIsAbove = false;
     let draggedPathId = null;
 
+    // --- TOUCH-DRAG LABEL REORDERING POSITION TRACKING ---
+    let touchStartX = 0;
+    let touchStartY = 0;
 
     let transactions = [];
     let currentAccountTransactions = [];
@@ -6160,6 +6163,75 @@ This action can be undone by cancelling your edits.`,
         }, 180);
       }
     });
+
+    // --- AUTO-CYCLE ACCOUNTS (ARROW KEYS & MOBILE SWIPING) ---
+    
+    // 1. Desktop Arrow Key Listener
+    document.addEventListener('keydown', (e) => {
+      if (currentViewState !== 'transactions-detail') return;
+
+      // Do not switch accounts if typing inside an active text input or dropdown selector
+      const activeTag = document.activeElement ? document.activeElement.tagName : '';
+      if (activeTag === 'INPUT' || activeTag === 'TEXTAREA' || activeTag === 'SELECT') return;
+
+      if (e.key === 'ArrowRight') {
+        navigateAccounts('next');
+      } else if (e.key === 'ArrowLeft') {
+        navigateAccounts('prev');
+      }
+    });
+
+    // 2. Mobile Touch Event Listeners on Account Details view
+    const txViewContainer = document.getElementById('transactions-view');
+    if (txViewContainer) {
+      txViewContainer.addEventListener('touchstart', (e) => {
+        const [touch] = e.touches; // Safe bracket-free touch coordinate extraction
+        if (!touch) return;
+        touchStartX = touch.clientX;
+        touchStartY = touch.clientY;
+      }, { passive: true });
+
+      txViewContainer.addEventListener('touchend', (e) => {
+        const [touch] = e.changedTouches;
+        if (!touch) return;
+        const deltaX = touch.clientX - touchStartX;
+        const deltaY = touch.clientY - touchStartY;
+
+        // Minimum horizontal swipe distance of 75px. 
+        // deltaY constraint (< 50px) guarantees vertical scrolling doesn't trigger a switch!
+        if (Math.abs(deltaX) > 75 && Math.abs(deltaY) < 50) {
+          if (deltaX > 0) {
+            navigateAccounts('prev'); // Swipe Right -> Slides back to previous account
+          } else {
+            navigateAccounts('next'); // Swipe Left -> Slides forward to next account
+          }
+        }
+      }, { passive: true });
+    }
+
+    // 3. Centralized Navigation Handler
+    function navigateAccounts(direction) {
+      if (currentViewState !== 'transactions-detail' || !activeAccountId) return;
+
+      // Cycle strictly through active, non-archived accounts
+      const activeAccounts = accounts.filter(a => !a.is_archived);
+      if (activeAccounts.length <= 1) return;
+
+      const currentIndex = activeAccounts.findIndex(a => a.id === activeAccountId);
+      if (currentIndex === -1) return;
+
+      let nextIdx;
+      if (direction === 'next') {
+        nextIdx = (currentIndex + 1) % activeAccounts.length;
+      } else {
+        nextIdx = (currentIndex - 1 + activeAccounts.length) % activeAccounts.length;
+      }
+
+      const nextAcc = activeAccounts.at(nextIdx); // Bracket-free safe array accessor!
+      if (nextAcc) {
+        showTransactionsView(nextAcc.id);
+      }
+    }
 
     window.onload = init;
   </script>
