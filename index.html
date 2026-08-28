@@ -1039,7 +1039,8 @@
       </div>
 
       <!-- Scrollable Tree Container -->
-      <div id="label-tree-container" class="flex-1 overflow-y-auto pr-1 space-y-3 min-h-[200px] max-h-[45vh] text-sm">
+      <div id="label-tree-container"
+        class="flex-1 overflow-y-auto pr-1 space-y-3 min-h-[200px] max-h-[45vh] text-sm overscroll-contain">
         <!-- JS dynamically injects the interactive hierarchical checkboxes here -->
       </div>
 
@@ -1116,6 +1117,12 @@
 
     // --- DOUBLE-TAP LABEL SELECTION DETECTION ---
     let lastLabelTapTime = 0;
+
+    // --- TOUCH-DRAG LABEL REORDERING STATE ---
+    let touchedPathId = null;
+    let touchActiveTargetRow = null;
+    let touchCurrentOverRow = null;
+    let touchIsAbove = false;
 
     let transactions = [];
     let currentAccountTransactions = [];
@@ -4392,6 +4399,95 @@
       lastLabelTapTime = now;
     }
 
+    // --- MOBILE TOUCH DRAG-AND-DROP REORDER LOGIC ---
+    function handleLabelTouchStartReorder(e, pathId) {
+      if (!pickerEditMode) return;
+
+      // Only trigger drag if they explicitly touch the grab handle (⠿)
+      const grabHandle = e.target.closest('.cursor-grab');
+      if (!grabHandle) return;
+
+      touchedPathId = pathId;
+      touchActiveTargetRow = e.currentTarget; // The active row container (.group)
+      touchActiveTargetRow.classList.add('dragging');
+
+      // Lock document body from scrolling while actively reordering
+      document.body.classList.add('overflow-hidden');
+    }
+
+    function handleLabelTouchMoveReorder(e) {
+      if (!touchedPathId || !touchActiveTargetRow) return;
+
+      const touch = e.touches;
+      e.preventDefault(); // Stop mobile browser from scrolling the screen!
+
+      // Find which DOM element is currently under the user's finger
+      const elementUnderFinger = document.elementFromPoint(touch.clientX, touch.clientY);
+      if (!elementUnderFinger) return;
+
+      const targetRow = elementUnderFinger.closest('.group');
+      if (!targetRow || targetRow === touchActiveTargetRow) {
+        // Clear lines if hovering over empty space or self
+        document.querySelectorAll('.drag-over-above, .drag-over-below').forEach(el => {
+          el.classList.remove('drag-over-above', 'drag-over-below');
+        });
+        touchCurrentOverRow = null;
+        return;
+      }
+
+      // Verify target row is a sibling under the exact same parent branch
+      const targetPathId = targetRow.getAttribute('data-path-id');
+      if (!targetPathId) return;
+
+      const draggedParent = touchedPathId.split("-").slice(0, -1).join("-");
+      const targetParent = targetPathId.split("-").slice(0, -1).join("-");
+      if (draggedParent !== targetParent) return;
+
+      touchCurrentOverRow = targetRow;
+
+      // Determine if hovering over the top or bottom half of the target row
+      const rect = targetRow.getBoundingClientRect();
+      const midpoint = rect.top + rect.height / 2;
+
+      document.querySelectorAll('.drag-over-above, .drag-over-below').forEach(el => {
+        if (el !== targetRow) el.classList.remove('drag-over-above', 'drag-over-below');
+      });
+
+      if (touch.clientY < midpoint) {
+        targetRow.classList.add('drag-over-above');
+        targetRow.classList.remove('drag-over-below');
+        touchIsAbove = true;
+      } else {
+        targetRow.classList.add('drag-over-below');
+        targetRow.classList.remove('drag-over-above');
+        touchIsAbove = false;
+      }
+    }
+
+    function handleLabelTouchEndReorder(e) {
+      if (!touchedPathId || !touchActiveTargetRow) return;
+
+      // Restore viewport page scrolling
+      document.body.classList.remove('overflow-hidden');
+
+      if (touchCurrentOverRow) {
+        const targetPathId = touchCurrentOverRow.getAttribute('data-path-id');
+        if (targetPathId && targetPathId !== touchedPathId) {
+          executeReorderKeys(touchedPathId, targetPathId, touchIsAbove);
+        }
+      }
+
+      // Reset visual states
+      touchActiveTargetRow.classList.remove('dragging');
+      document.querySelectorAll('.drag-over-above, .drag-over-below').forEach(el => {
+        el.classList.remove('drag-over-above', 'drag-over-below');
+      });
+
+      touchedPathId = null;
+      touchActiveTargetRow = null;
+      touchCurrentOverRow = null;
+    }
+
     // --- DYNAMIC INPUT CLEAR CONTROLLERS ---
     function checkClearButtonVisibility(inputId, buttonId) {
       const input = document.getElementById(inputId);
@@ -4421,8 +4517,11 @@
       }
     }
 
-    // --- OPEN & CLOSE CONTROLS ---
+    // --- LABEL PICKER OPEN & CLOSE CONTROLS ---
     function openLabelPicker(splitRowIndex = null) {
+      // 📱 Lock the background page viewport
+      document.body.classList.add('overflow-hidden');
+
       activeSplitRowPickerIndex = splitRowIndex;
 
       // Reset edit mode states on open
@@ -4481,12 +4580,14 @@
       // Paint the dynamic tree
       renderLabelTreeUI();
     }
-
     function closeLabelPicker() {
+      // 📱 Unlock the background page viewport
+      document.body.classList.remove('overflow-hidden');
+
       const modal = document.getElementById("label-picker-modal");
       if (modal) {
         modal.classList.add("hidden");
-        modal.style.setProperty("display", "none", "important"); // 🚀 Forces browser collapse!
+        modal.style.setProperty("display", "none", "important");
       }
     }
 
@@ -4742,15 +4843,19 @@
     </div>
   `;
 
-      // Define drag attributes only if Edit Mode is active
+      // Define drag AND touch attributes only if Edit Mode is active
       const dragAttributes = pickerEditMode ? `
-    draggable="true"
-    ondragstart="handleLabelDragStart(event, '${pathId}')"
-    ondragend="handleLabelDragEnd(event)"
-    ondragover="handleLabelDragOver(event, '${pathId}')"
-    ondragleave="handleLabelDragLeave(event)"
-    ondrop="handleLabelDrop(event, '${pathId}')"
-  ` : "";
+      draggable="true"
+      data-path-id="${pathId}"
+      ondragstart="handleLabelDragStart(event, '${pathId}')"
+      ondragend="handleLabelDragEnd(event)"
+      ondragover="handleLabelDragOver(event, '${pathId}')"
+      ondragleave="handleLabelDragLeave(event)"
+      ondrop="handleLabelDrop(event, '${pathId}')"
+      ontouchstart="handleLabelTouchStartReorder(event, '${pathId}')"
+      ontouchmove="handleLabelTouchMoveReorder(event)"
+      ontouchend="handleLabelTouchEndReorder(event)"
+      ` : "";
 
       // Build Row HTML
       let nodeHtml = `
@@ -5272,18 +5377,9 @@
       }
     }
 
-    function handleLabelDrop(e, targetPathId) {
-      e.preventDefault();
-
-      const targetRow = e.target.closest('.group');
-      if (!targetRow || !draggedPathId || draggedPathId === targetPathId) return;
-
-      const isAbove = targetRow.classList.contains('drag-over-above');
-
-      // Clean up indicators
-      targetRow.classList.remove('drag-over-above', 'drag-over-below');
-
-      const pathArray = draggedPathId.split("-");
+    // Shared core function that reorders category keys in labelTree and saves the state
+    function executeReorderKeys(sourcePathId, targetPathId, isAbove) {
+      const pathArray = sourcePathId.split("-");
       const draggedName = pathArray[pathArray.length - 1];
       const parentPath = pathArray.slice(0, -1);
       const targetName = targetPathId.split("-").pop();
@@ -5294,7 +5390,7 @@
         parentObj = parentObj[segment];
       }
 
-      // Reorder object keys preserving modern ES6 ordering
+      // Reorder object keys preserving ES6 ordering rules
       const keys = Object.keys(parentObj);
       const draggedIdx = keys.indexOf(draggedName);
       keys.splice(draggedIdx, 1); // Remove the dragged key
@@ -5323,6 +5419,17 @@
       saveLabelTree();
       renderLabelTreeUI();
       showAppMessage("Category order updated!");
+    }
+
+    // Mouse-Drop Handler (Desktop/Laptop)
+    function handleLabelDrop(e, targetPathId) {
+      e.preventDefault();
+      const targetRow = e.target.closest('.group');
+      if (!targetRow || !draggedPathId || draggedPathId === targetPathId) return;
+      const isAbove = targetRow.classList.contains('drag-over-above');
+
+      targetRow.classList.remove('drag-over-above', 'drag-over-below');
+      executeReorderKeys(draggedPathId, targetPathId, isAbove);
     }
 
     // Triggered when clicking Rename (✏️) in Edit Mode

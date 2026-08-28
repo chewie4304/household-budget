@@ -8,12 +8,14 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
-- **Supabase Category & Nature Synchronization:** Integrated category loading (`loadLabelTree`) and saving (`saveLabelTree`) routines directly with a centralized, un-RLS settings database table in Supabase. Edits on one device are instantly pushed to the database and seamlessly populated across all connected household devices on startup.
-- **Form Submit Error Guards:** Hardwired active submission blocks inside both `handleTxSubmit` and `handleAccountSubmit` to prevent saving forms if any invalid red-highlighted inputs remain on-screen.
+- **Supabase Category & Nature Synchronization:** Connected category loading (`loadLabelTree`) and saving (`saveLabelTree`) routines directly with a centralized settings table in Supabase. Edits made on one device are automatically backed up to the database and seamlessly populated across all other connected household devices on startup.
+- **Mobile Touch Drag-and-Drop Reordering:** Engineered custom touch coordinate listeners (`handleLabelTouchStartReorder`, `handleLabelTouchMoveReorder`, `handleLabelTouchEndReorder`) to enable smooth category reordering via the grab handle (`⠿`) on touchscreens and tablets.
+- **Stable Scroll Containment:** Configured body overflow locking (`overflow-hidden`) and container scroll isolation (`overscroll-contain`) while the Label Picker is active to prevent background scrolling leaks on mobile viewports.
 
 ### Fixed
 
-- **Persistent Category State Rollbacks:** Upgraded category save/cancel pipelines to execute database transactions as one unified, predictable batch operation.
+- **Prompt Modal Stacking Context:** Elevated both the Confirmation and Custom Prompt modals to an inline `z-index: 70` styling, resolving a layout conflict where input and confirmation cards rendered invisibly underneath the active label picker modal.
+- **Persistent Category State Rollbacks:** Upgraded category save and cancel handlers to process deep-snapshot backup rollbacks as clean, unified database operations.
 
 ## [1.4.4] - 2026-08-26
 
