@@ -32,7 +32,7 @@
 <body class="bg-gray-100 text-gray-900 antialiased min-h-screen pb-10">
 
   <div id="app-message" role="alert"
-    class="fixed left-4 right-4 top-4 z-[100] hidden mx-auto max-w-md rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700 shadow-lg">
+    class="fixed left-4 right-4 top-4 z-100 hidden mx-auto max-w-md rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700 shadow-lg">
     <div class="flex items-start justify-between gap-3">
       <span id="app-message-text"></span>
       <button type="button" onclick="hideAppMessage()" aria-label="Dismiss message"
@@ -585,7 +585,7 @@
 
   <!-- Custom Confirmation Modal -->
   <div id="confirm-modal"
-    class="fixed inset-0 bg-black/50 hidden flex items-end sm:items-center justify-center p-0 sm:p-4 z-70">
+    class="fixed inset-0 bg-black/50 hidden flex items-end sm:items-center justify-center p-0 sm:p-4" style="z-index: 70;">
     <div class="bg-white w-full max-w-sm rounded-t-2xl sm:rounded-2xl p-5 space-y-4">
       <div class="flex justify-between items-center">
         <h3 id="confirm-modal-title" class="font-bold text-lg text-gray-800">Confirm</h3>
@@ -626,7 +626,7 @@
 
   <!-- Account Deletion Options Modal -->
   <div id="account-delete-options-modal"
-    class="fixed inset-0 bg-black/50 hidden flex items-end sm:items-center justify-center p-0 sm:p-4 z-[60]">
+    class="fixed inset-0 bg-black/50 hidden flex items-end sm:items-center justify-center p-0 sm:p-4 z-60">
     <div class="bg-white w-full max-w-md rounded-t-2xl sm:rounded-2xl p-5 space-y-4">
       <div class="flex justify-between items-center">
         <h3 class="font-bold text-lg text-gray-800">Account has transactions</h3>
@@ -651,7 +651,7 @@
 
   <!-- Bulk Account Transfer Modal -->
   <div id="bulk-transfer-modal"
-    class="fixed inset-0 bg-black/50 hidden flex items-end sm:items-center justify-center p-0 sm:p-4 z-[70]">
+    class="fixed inset-0 bg-black/50 hidden flex items-end sm:items-center justify-center p-0 sm:p-4 z-70">
     <div class="bg-white w-full max-w-md rounded-t-2xl sm:rounded-2xl p-5 space-y-4">
       <div class="flex justify-between items-center">
         <h3 class="font-bold text-lg text-gray-800">Transfer transactions</h3>
@@ -671,7 +671,7 @@
 
   <!-- Individual Account Transfer Modal -->
   <div id="individual-transfer-modal"
-    class="fixed inset-0 bg-black/50 hidden flex items-end sm:items-center justify-center p-0 sm:p-4 z-[70]">
+    class="fixed inset-0 bg-black/50 hidden flex items-end sm:items-center justify-center p-0 sm:p-4 z-70">
     <div class="bg-white w-full max-w-lg rounded-t-2xl sm:rounded-2xl p-5 space-y-4 max-h-[90vh] overflow-y-auto">
       <div class="flex justify-between items-center">
         <h3 class="font-bold text-lg text-gray-800">Assign transactions</h3>
@@ -691,7 +691,7 @@
 
   <!-- Edit Cleared Balance Modal -->
   <div id="cleared-balance-modal"
-    class="fixed inset-0 bg-black/50 hidden flex items-end sm:items-center justify-center p-0 sm:p-4 z-[60]">
+    class="fixed inset-0 bg-black/50 hidden flex items-end sm:items-center justify-center p-0 sm:p-4 z-60">
     <div class="bg-white w-full max-w-sm rounded-t-2xl sm:rounded-2xl p-5 space-y-4">
       <div class="flex justify-between items-center">
         <h3 class="font-bold text-lg text-gray-800">Edit Cleared Balance</h3>
@@ -713,7 +713,7 @@
 
   <!-- Cleared Balance Adjustment Choice Modal -->
   <div id="cleared-choice-modal"
-    class="fixed inset-0 bg-black/50 hidden flex items-end sm:items-center justify-center p-0 sm:p-4 z-[60]">
+    class="fixed inset-0 bg-black/50 hidden flex items-end sm:items-center justify-center p-0 sm:p-4 z-60">
     <div class="bg-white w-full max-w-sm rounded-t-2xl sm:rounded-2xl p-5 space-y-4">
       <div class="flex justify-between items-center">
         <h3 class="font-bold text-lg text-gray-800">Adjust Balance</h3>
@@ -3641,32 +3641,31 @@
       if (modal) modal.classList.add("hidden");
     }
 
-    // --- CUSTOM CONFIRM DIALOG MOTOR ---
-    function showCustomConfirm({ title, message, confirmLabel, onConfirm }) {
-      const modal = document.getElementById("confirm-modal");
-      const titleEl = document.getElementById("confirm-modal-title");
-      const msgEl = document.getElementById("confirm-modal-message");
-      const confirmBtn = document.getElementById("confirm-modal-confirm");
+    // --- UNIFIED CONFIRMATION MODAL PIPELINE ---
+    function openCustomConfirm({ title, message, confirmLabel = 'Delete', onConfirm }) {
+      const modal = document.getElementById('confirm-modal');
+      const titleEl = document.getElementById('confirm-modal-title');
+      const messageEl = document.getElementById('confirm-modal-message');
+      const confirmBtn = document.getElementById('confirm-modal-confirm');
 
-      if (!modal || !titleEl || !msgEl || !confirmBtn) return;
+      if (!modal || !titleEl || !messageEl || !confirmBtn) return;
 
-      titleEl.textContent = title || "Confirm";
-      msgEl.textContent = message || "Are you sure?";
-      confirmBtn.textContent = confirmLabel || "Confirm";
+      titleEl.textContent = title;
+      messageEl.textContent = message;
+      confirmBtn.textContent = confirmLabel;
 
-      confirmBtn.onclick = function () {
-        if (typeof onConfirm === "function") {
-          onConfirm();
-        }
-        closeCustomConfirm();
-      };
-
-      modal.classList.remove("hidden");
+      // Queue up the action safely without overwriting button click events directly
+      pendingConfirmAction = onConfirm || null;
+      modal.classList.remove('hidden');
     }
-
     function closeCustomConfirm() {
-      const modal = document.getElementById("confirm-modal");
-      if (modal) modal.classList.add("hidden");
+      const modal = document.getElementById('confirm-modal');
+      pendingConfirmAction = null;
+      if (modal) modal.classList.add('hidden');
+    }
+    // Safe legacy alias so older showCustomConfirm() calls don't break
+    function showCustomConfirm(params) {
+      openCustomConfirm(params);
     }
 
     function openClearedBalanceModal() {
@@ -4114,25 +4113,6 @@
       if (labelDropdown) labelDropdown.classList.add("hidden");
     }
 
-    function openCustomConfirm({ title, message, confirmLabel = 'Delete', onConfirm }) {
-      const modal = document.getElementById('confirm-modal');
-      const titleEl = document.getElementById('confirm-modal-title');
-      const messageEl = document.getElementById('confirm-modal-message');
-      const confirmBtn = document.getElementById('confirm-modal-confirm');
-
-      titleEl.textContent = title;
-      messageEl.textContent = message;
-      confirmBtn.textContent = confirmLabel;
-      pendingConfirmAction = onConfirm || null;
-      modal.classList.remove('hidden');
-    }
-
-    function closeCustomConfirm() {
-      const modal = document.getElementById('confirm-modal');
-      pendingConfirmAction = null;
-      modal.classList.add('hidden');
-    }
-
     function closeAccountDeleteOptions() {
       document.getElementById('account-delete-options-modal').classList.add('hidden');
       pendingAccountDeletion = null;
@@ -4421,7 +4401,7 @@
     function handleLabelTouchMoveReorder(e) {
       if (!touchedPathId || !touchActiveTargetRow) return;
 
-      const touch = e.touches; // 🎯 FIXED: e.touches is a list; we need the first touch point!
+      const touch = e.touches[0]; // 🎯 FIXED: e.touches is a list; we need the first touch point!
       e.preventDefault(); // Stop mobile browser from scrolling the screen!
 
       // Find which DOM element is currently under the user's finger
@@ -5326,86 +5306,6 @@
     // ==========================================
     // DRAG AND DROP REORDER ENGINE
     // ==========================================
-    function handleLabelTouchStartReorder(e, pathId) {
-      if (!pickerEditMode) return;
-
-      const grabHandle = e.target.closest('.cursor-grab');
-      if (!grabHandle) return;
-
-      touchedPathId = pathId;
-      touchActiveTargetRow = e.currentTarget;
-      touchActiveTargetRow.classList.add('dragging');
-
-      document.body.classList.add('overflow-hidden');
-    }
-
-    function handleLabelTouchMoveReorder(e) {
-      if (!touchedPathId || !touchActiveTargetRow) return;
-
-      const touch = e.touches;
-      e.preventDefault();
-
-      const elementUnderFinger = document.elementFromPoint(touch.clientX, touch.clientY);
-      if (!elementUnderFinger) return;
-
-      const targetRow = elementUnderFinger.closest('.group');
-      if (!targetRow || targetRow === touchActiveTargetRow) {
-        document.querySelectorAll('.drag-over-above, .drag-over-below').forEach(el => {
-          el.classList.remove('drag-over-above', 'drag-over-below');
-        });
-        touchCurrentOverRow = null;
-        return;
-      }
-
-      const targetPathId = targetRow.getAttribute('data-path-id');
-      if (!targetPathId) return;
-
-      const draggedParent = touchedPathId.split("-").slice(0, -1).join("-");
-      const targetParent = targetPathId.split("-").slice(0, -1).join("-");
-      if (draggedParent !== targetParent) return;
-
-      touchCurrentOverRow = targetRow;
-
-      const rect = targetRow.getBoundingClientRect();
-      const midpoint = rect.top + rect.height / 2;
-
-      document.querySelectorAll('.drag-over-above, .drag-over-below').forEach(el => {
-        if (el !== targetRow) el.classList.remove('drag-over-above', 'drag-over-below');
-      });
-
-      if (touch.clientY < midpoint) {
-        targetRow.classList.add('drag-over-above');
-        targetRow.classList.remove('drag-over-below');
-        touchIsAbove = true;
-      } else {
-        targetRow.classList.add('drag-over-below');
-        targetRow.classList.add('drag-over-above');
-        touchIsAbove = false;
-      }
-    }
-
-    function handleLabelTouchEndReorder(e) {
-      if (!touchedPathId || !touchActiveTargetRow) return;
-
-      document.body.classList.remove('overflow-hidden');
-
-      if (touchCurrentOverRow) {
-        const targetPathId = touchCurrentOverRow.getAttribute('data-path-id');
-        if (targetPathId && targetPathId !== touchedPathId) {
-          executeReorderKeys(touchedPathId, targetPathId, touchIsAbove);
-        }
-      }
-
-      touchActiveTargetRow.classList.remove('dragging');
-      document.querySelectorAll('.drag-over-above, .drag-over-below').forEach(el => {
-        el.classList.remove('drag-over-above', 'drag-over-below');
-      });
-
-      touchedPathId = null;
-      touchActiveTargetRow = null;
-      touchCurrentOverRow = null;
-    }
-
     function handleLabelDragStart(e, pathId) {
       draggedPathId = pathId;
       e.target.closest('.group').classList.add('dragging');
