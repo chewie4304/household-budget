@@ -231,7 +231,7 @@
     </div>
 
     <!-- Main Scrollable Wrapper with Uniform 16px Sibling Spacing -->
-    <div class="max-w-md mx-auto p-4 space-y-4">
+    <div id="tx-view-content" class="max-w-md mx-auto p-4 space-y-4 transition-all duration-200 ease-out transform">
 
       <!-- Account Overview Card -->
       <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 space-y-3">
@@ -6165,7 +6165,7 @@ This action can be undone by cancelling your edits.`,
     });
 
     // --- AUTO-CYCLE ACCOUNTS (ARROW KEYS & MOBILE SWIPING) ---
-    
+
     // 1. Desktop Arrow Key Listener
     document.addEventListener('keydown', (e) => {
       if (currentViewState !== 'transactions-detail') return;
@@ -6209,12 +6209,11 @@ This action can be undone by cancelling your edits.`,
       }, { passive: true });
     }
 
-    // 3. Centralized Navigation Handler
+    // 3. Centralized Navigation Handler with Peek-and-Slide Carousel Animation
     function navigateAccounts(direction) {
       if (currentViewState !== 'transactions-detail' || !activeAccountId) return;
 
-      // Cycle strictly through active, non-archived accounts
-      const activeAccounts = accounts.filter(a => !a.is_archived);
+      const activeAccounts = accounts.filter(a => !a.is_grayed_out && !a.is_archived);
       if (activeAccounts.length <= 1) return;
 
       const currentIndex = activeAccounts.findIndex(a => a.id === activeAccountId);
@@ -6227,8 +6226,37 @@ This action can be undone by cancelling your edits.`,
         nextIdx = (currentIndex - 1 + activeAccounts.length) % activeAccounts.length;
       }
 
-      const nextAcc = activeAccounts.at(nextIdx); // Bracket-free safe array accessor!
-      if (nextAcc) {
+      const nextAcc = activeAccounts.at(nextIdx); // 🎯 Safe bracket-free array accessor!
+      if (!nextAcc) return;
+
+      const contentEl = document.getElementById('tx-view-content');
+      if (contentEl) {
+        // Phase A: Slide out existing transactions and fade opacity
+        const slideOutClass = direction === 'next' ? '-translate-x-12' : 'translate-x-12';
+        contentEl.classList.add(slideOutClass, 'opacity-0');
+
+        // Phase B: Wait 200ms for slide-out animation to complete
+        setTimeout(() => {
+          // Paint the new account ledger data
+          showTransactionsView(nextAcc.id);
+
+          // Disable transitions instantly so we can teleport the layout without the user seeing
+          contentEl.classList.remove('duration-200', 'ease-out');
+          contentEl.classList.remove(slideOutClass);
+
+          // Position the new card hidden on the opposite side of the screen
+          const slideInClass = direction === 'next' ? 'translate-x-12' : '-translate-x-12';
+          contentEl.classList.add(slideInClass);
+
+          // Force a DOM reflow so the browser registers the instant offset teleportation
+          void contentEl.offsetWidth;
+
+          // Re-enable transitions and smoothly slide the new card into the center position
+          contentEl.classList.add('duration-200', 'ease-out');
+          contentEl.classList.remove(slideInClass, 'opacity-0');
+        }, 200);
+      } else {
+        // Fallback if the element isn't painted
         showTransactionsView(nextAcc.id);
       }
     }
