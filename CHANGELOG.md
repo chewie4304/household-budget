@@ -4,11 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ## [unreleased]
 
-## [1.4.6-dev]
+### Added
+
+- **Sticky Top Navigation Banners:** Configured both the main accounts dashboard and detailed transaction headers with Tailwind's `sticky top-0 z-40` properties. This locks essential action buttons—like returning to accounts and logging new transactions—firmly to the top of the viewport during long scroll sessions.
 
 ### Fixed
 
-- **Scroll Positioning:** Reset viewport scroll position to top on all view and tab transitions
+- **Scroll Positioning:** Reset viewport scroll position to top on all view and tab transitions.
+
 
 ## [1.4.5] - 2026-08-28
 
