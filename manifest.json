@@ -1,6 +1,6 @@
 {
-  "name": "Household Budget",
-  "short_name": "Budget",
+  "name": "Home Wealth",
+  "short_name": "Wealth",
   "description": "Premium household financial and wealth tracking app.",
   "start_url": "./index.html",
   "display": "standalone",
