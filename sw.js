@@ -32,33 +32,57 @@ self.addEventListener('activate', (e) => {
   );
 });
 
-// Fetch Event: Network-First strategy (Crucial for active development!)
+// Fetch Event: Cache-First for static images to prevent loading flashes, Network-First for core code
 self.addEventListener('fetch', (e) => {
   if (e.request.method !== 'GET' || !e.request.url.startsWith(self.location.origin)) {
     return;
   }
 
-  e.respondWith(
-    fetch(e.request)
-      .then((networkResponse) => {
-        if (networkResponse && networkResponse.status === 200) {
-          const cacheCopy = networkResponse.clone();
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(e.request, cacheCopy);
-          });
+  const url = new URL(e.request.url);
+  const isImage = url.pathname.endsWith('.png') || url.pathname.endsWith('.jpg') || url.pathname.endsWith('.jpeg') || url.pathname.endsWith('.ico');
+
+  if (isImage) {
+    // ⚡ IMAGE CACHE-FIRST: Instantly resolve local assets offline without waiting for server checks
+    e.respondWith(
+      caches.match(e.request).then((cachedResponse) => {
+        if (cachedResponse) {
+          return cachedResponse;
         }
-        return networkResponse;
-      })
-      .catch(() => {
-        return caches.match(e.request).then((cachedResponse) => {
-          if (cachedResponse) {
-            return cachedResponse;
+        return fetch(e.request).then((networkResponse) => {
+          if (networkResponse && networkResponse.status === 200) {
+            const cacheCopy = networkResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(e.request, cacheCopy);
+            });
           }
-          return new Response('Offline: Resource not cached.', {
-            status: 503,
-            statusText: 'Service Unavailable'
-          });
+          return networkResponse;
         });
       })
-  );
+    );
+  } else {
+    // 🌐 CODE NETWORK-FIRST: Ensure index.html and sw.js check the network first so updates push instantly
+    e.respondWith(
+      fetch(e.request)
+        .then((networkResponse) => {
+          if (networkResponse && networkResponse.status === 200) {
+            const cacheCopy = networkResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(e.request, cacheCopy);
+            });
+          }
+          return networkResponse;
+        })
+        .catch(() => {
+          return caches.match(e.request).then((cachedResponse) => {
+            if (cachedResponse) {
+              return cachedResponse;
+            }
+            return new Response('Offline: Resource not cached.', {
+              status: 503,
+              statusText: 'Service Unavailable'
+            });
+          });
+        })
+    );
+  }
 });

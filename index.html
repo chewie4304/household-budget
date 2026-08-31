@@ -7,7 +7,7 @@
   <link rel="preload" href="icon-512.png" as="image" fetchpriority="high" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <link rel="manifest" href="manifest.json" />
-  <meta name="theme-color" content="#2563eb" />
+  <meta name="theme-color" content="#020617" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <link rel="apple-touch-icon" href="icon-192.png" />
@@ -64,6 +64,17 @@
   <div id="brand-splash"
     style="position: fixed; inset: 0; z-index: 9999; background-color: #020617; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 1.2s ease-in-out;"
     class="transition-opacity duration-1000 ease-in-out">
+
+    <!-- SESSION REFRESH BYPASS SCRIPT -->
+    <script>
+      if (sessionStorage.getItem('home-wealth-splash-shown')) {
+        const splash = document.getElementById('brand-splash');
+        if (splash) {
+          splash.style.display = 'none';
+          splash.remove();
+        }
+      }
+    </script>
 
     <div style="display: flex; flex-direction: column; align-items: center; position: relative;">
 
@@ -1898,7 +1909,10 @@
         if (splash) {
           splash.style.opacity = '0';
           splash.style.pointerEvents = 'none';
-          // Wait exactly 1.2s for the cinematic fade-out transition to complete before removing from DOM
+
+          // Mark splash as shown for this tab session so refreshes bypass it
+          sessionStorage.setItem('home-wealth-splash-shown', 'true');
+
           setTimeout(() => splash.remove(), 1200);
         }
       }, 3000);
