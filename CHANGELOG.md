@@ -4,6 +4,21 @@ All notable changes to this project will be documented in this file.
 
 ## [unreleased]
 
+## [1.5.1] - 2026-08-30
+
+### Changed
+
+- **Home Wealth Rebrand:** Transitioned the application's global identity from "Household Budget" to "Home Wealth" across the document title, manifest naming, and workspace header fields.
+- **Royal Cobalt UI Theme:** Configured a custom Tailwind utility theme using cobalt blue hues (#2552d0) to skin the application's buttons, highlights, and headers.
+- **High-Fidelity Header Logo:** Swapped out the stock SVG house header outline for an inline rendering of the custom `icon-192.png` brand emblem.
+- **Bespoke PWA Splash Screen:** Built a dark midnight-slate (`#020617`) initial brand presentation card with a centered `icon-512.png` emblem, glowing radial background, and stylized typography.
+
+### Fixed
+
+- **Visual Rendering Optimization:** Configured the launch image to pre-load at maximum priority in the document head and enforced synchronous image decoding (`decoding="sync"`) to render the layout elements together and reduce early page-load flickering.
+- **Header Layer Bleed-Through:** Applied an absolute high stacking priority (`z-index: 9999`) to the brand splash container, completely masking the sticky navigation header and accounts dashboard during the introductory timer.
+- **Cinematic Transition:** Extended the splash screen exit animation to a smooth `1.2s` cross-fade sweep, giving a polished transition straight into the financial ledger view.
+
 ## [1.5.0] - 2026-08-30
 
 ### Added
