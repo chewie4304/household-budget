@@ -62,16 +62,18 @@
   <div id="brand-splash"
     style="position: fixed; inset: 0; z-index: 9999; background-color: #020617; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 1.2s ease-in-out;"
     class="transition-opacity duration-1000 ease-in-out">
-    <div class="relative flex flex-col items-center text-center"
-      style="display: flex; flex-direction: column; align-items: center;">
+
+    <!-- Content Wrapper (Hidden by default, fades in smoothly as one unit once image is decoded) -->
+    <div id="splash-content"
+      style="display: flex; flex-direction: column; align-items: center; opacity: 0; transition: opacity 0.6s ease-in-out; position: relative;">
 
       <!-- Expanded Radial blue/green glow behind your emblem -->
       <div
         style="position: absolute; width: 400px; height: 400px; background: radial-gradient(circle, rgba(37, 99, 235, 0.25) 0%, rgba(16, 185, 129, 0.2) 100%); filter: blur(50px); border-radius: 9999px; pointer-events: none;"
         class="opacity-80"></div>
 
-      <!-- Centered high-fidelity icon (Sized larger to 224px, styled inline to prevent raw flash) -->
-      <img src="icon-512.png" alt="Home Wealth"
+      <!-- Centered high-fidelity icon (Sized larger, triggers the content fade-in upon fully loading) -->
+      <img src="icon-512.png" alt="Home Wealth" onload="document.getElementById('splash-content').style.opacity='1';"
         style="width: 224px; height: 224px; object-fit: contain; border-radius: 36px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6); position: relative;" />
 
       <!-- Brand Typography (100% Inline-Styled to permanently prevent FOUC / text delay) -->
