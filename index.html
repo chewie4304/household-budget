@@ -60,20 +60,24 @@
 <body class="bg-gray-100 text-gray-900 antialiased min-h-screen pb-10">
   <!-- Premium Brand Splash Screen -->
   <div id="brand-splash"
-    class="fixed inset-0 z-[3] flex flex-col items-center justify-center bg-slate-950 transition-opacity duration-500 ease-in-out">
-    <div class="relative flex flex-col items-center gap-4 text-center">
+    style="position: fixed; inset: 0; z-index: 9999; background-color: #020617; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.5s ease-in-out;"
+    class="transition-opacity duration-500 ease-in-out">
+    <div class="relative flex flex-col items-center gap-6 text-center">
+
       <!-- Radial blue/green glow behind your emblem -->
       <div
-        class="absolute -inset-10 rounded-full bg-gradient-to-tr from-blue-600/30 to-emerald-500/30 blur-3xl opacity-60">
-      </div>
+        style="position: absolute; width: 320px; height: 320px; background: radial-gradient(circle, rgba(37, 99, 235, 0.25) 0%, rgba(16, 185, 129, 0.2) 100%); filter: blur(40px); border-radius: 9999px; pointer-events: none;"
+        class="opacity-80"></div>
 
-      <!-- Centered high-fidelity icon -->
+      <!-- Centered high-fidelity icon (Sized larger, styled inline to prevent raw flash) -->
       <img src="icon-512.png" alt="Home Wealth"
-        class="relative h-28 w-28 rounded-3xl object-contain shadow-2xl animate-pulse" />
+        style="width: 176px; height: 176px; object-fit: contain; border-radius: 28px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);"
+        class="relative rounded-3xl shadow-2xl" />
 
-      <div class="space-y-1">
-        <h1 class="text-2xl font-black tracking-tight text-white">Home Wealth</h1>
-        <p class="text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-400">Your money, in one place</p>
+      <!-- Brand Typography -->
+      <div class="space-y-1.5 mt-2">
+        <h1 class="text-3xl font-black tracking-tight text-white sm:text-4xl">Home Wealth</h1>
+        <p class="text-[12px] font-bold uppercase tracking-[0.22em] text-emerald-400">Your money in your place</p>
       </div>
     </div>
   </div>
@@ -1884,8 +1888,9 @@
       setTimeout(() => {
         const splash = document.getElementById('brand-splash');
         if (splash) {
-          splash.classList.add('opacity-0', 'pointer-events-none');
-          // Wait for the CSS opacity transition to complete before removing from DOM
+          splash.style.opacity = '0';
+          splash.style.pointerEvents = 'none';
+          // Wait for the smooth CSS opacity transition to complete before removing from DOM
           setTimeout(() => splash.remove(), 500);
         }
       }, 3000);
