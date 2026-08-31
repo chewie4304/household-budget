@@ -60,10 +60,10 @@ self.addEventListener('fetch', (e) => {
       })
     );
   } else {
-    // 🌐 CODE NETWORK-FIRST: Ensure index.html and sw.js check the network first so updates push instantly
+    // 🌐 CODE STALE-WHILE-REVALIDATE: Instantly return cached HTML to eliminate load gaps, update in background
     e.respondWith(
-      fetch(e.request)
-        .then((networkResponse) => {
+      caches.match(e.request).then((cachedResponse) => {
+        const networkFetch = fetch(e.request).then((networkResponse) => {
           if (networkResponse && networkResponse.status === 200) {
             const cacheCopy = networkResponse.clone();
             caches.open(CACHE_NAME).then((cache) => {
@@ -71,18 +71,19 @@ self.addEventListener('fetch', (e) => {
             });
           }
           return networkResponse;
-        })
-        .catch(() => {
-          return caches.match(e.request).then((cachedResponse) => {
-            if (cachedResponse) {
-              return cachedResponse;
-            }
-            return new Response('Offline: Resource not cached.', {
-              status: 503,
-              statusText: 'Service Unavailable'
-            });
+        });
+        return cachedResponse || networkFetch;
+      }).catch(() => {
+        return caches.match(e.request).then((cachedResponse) => {
+          if (cachedResponse) {
+            return cachedResponse;
+          }
+          return new Response('Offline: Resource not cached.', {
+            status: 503,
+            statusText: 'Service Unavailable'
           });
-        })
+        });
+      })
     );
   }
 });
