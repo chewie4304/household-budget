@@ -4,20 +4,21 @@ All notable changes to this project will be documented in this file.
 
 ## [unreleased]
 
-## [1.5.1] - 2026-08-30
+## [1.5.1] - 2026-08-31
 
 ### Changed
 
-- **Home Wealth Rebrand:** Transitioned the application's global identity from "Household Budget" to "Home Wealth" across the document title, manifest naming, and workspace header fields.
-- **Royal Cobalt UI Theme:** Configured a custom Tailwind utility theme using cobalt blue hues (#2552d0) to skin the application's buttons, highlights, and headers.
-- **High-Fidelity Header Logo:** Swapped out the stock SVG house header outline for an inline rendering of the custom `icon-192.png` brand emblem.
-- **Bespoke PWA Splash Screen:** Built a dark midnight-slate (`#020617`) initial brand presentation card with a centered `icon-512.png` emblem, glowing radial background, and stylized typography.
+- **Home Wealth Rebrand:** Transitioned the application's global identity from "Household Budget" to "Home Wealth" across the document title, manifest naming, and workspace header fields [5].
+- **Royal Cobalt UI Theme:** Configured a custom Tailwind utility theme using cobalt blue hues (#2552d0) to skin the application's buttons, highlights, and headers [5].
+- **High-Fidelity Header Logo:** Swapped out the stock SVG house header outline for an inline rendering of the custom `icon-192.png` brand emblem [5].
+- **Bespoke PWA Splash Screen:** Built a dark midnight-slate (`#020617`) initial brand presentation card with a centered `icon-192.png` emblem, glowing radial background, and stylized typography [6].
 
 ### Fixed
 
-- **Visual Rendering Optimization:** Configured the launch image to pre-load at maximum priority in the document head and enforced synchronous image decoding (`decoding="sync"`) to render the layout elements together and reduce early page-load flickering.
-- **Header Layer Bleed-Through:** Applied an absolute high stacking priority (`z-index: 9999`) to the brand splash container, completely masking the sticky navigation header and accounts dashboard during the introductory timer.
-- **Cinematic Transition:** Extended the splash screen exit animation to a smooth `1.2s` cross-fade sweep, giving a polished transition straight into the financial ledger view.
+- **OS-to-HTML Transition Sizing (Flicker Guard):** Sized the HTML brand icon to exactly `192px` to match native OS mobile launcher grids and boot frames. Added a dynamic opacity blossom script to hold visual rendering until local cache decoding completes, eliminating cold-launch handoff blinks [6].
+- **Header Layer Bleed-Through:** Applied an absolute high stacking priority (`z-index: 9999`) to the brand splash container, completely masking the sticky navigation header and accounts dashboard during the introductory timer [6].
+- **Instant Refresh Protection:** Migrated the `sessionStorage` bypass state validation to trigger instantly upon document initialization, guaranteeing subsequent page reloads bypass the intro sequence [6].
+- **Cinematic Transition:** Extended the splash screen exit animation to a smooth `1.2s` cross-fade sweep, giving a polished transition straight into the financial ledger view [3].
 
 ## [1.5.0] - 2026-08-30
 
