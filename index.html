@@ -1012,11 +1012,11 @@
           <label class="text-xs font-semibold text-gray-600 block mb-1">Attach Receipts / Screenshots</label>
 
           <div class="grid grid-cols-2 gap-2 mt-1">
-            <!-- Choose an existing image without forcing the camera picker. -->
+            <!-- Choose one or more existing images without forcing the camera picker. Multiple screenshots get stitched into one tall image. -->
             <label
               class="flex items-center justify-center gap-1.5 bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-700 text-xs font-semibold py-2 px-3 rounded-lg cursor-pointer text-center">
-              <span>📁 Choose File</span>
-              <input type="file" id="txReceiptFile" accept="*/*" class="hidden" onchange="handleImageInput(this)" />
+              <span>📁 Choose File(s)</span>
+              <input type="file" id="txReceiptFile" accept="*/*" multiple class="hidden" onchange="handleImageInput(this)" />
             </label>
 
             <!-- Explicit camera action for mobile devices. -->
@@ -1062,6 +1062,12 @@
       </div>
       <div class="max-h-[60vh] overflow-hidden flex justify-center bg-gray-100 rounded-lg">
         <img id="imageToCrop" src="" alt="Source" class="max-w-full block">
+      </div>
+      <div class="flex justify-center gap-2">
+        <button type="button" onclick="rotateCropImage(-90)"
+          class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold">⟲ Rotate Left</button>
+        <button type="button" onclick="rotateCropImage(90)"
+          class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold">⟳ Rotate Right</button>
       </div>
       <div class="flex justify-end gap-2 pt-2">
         <button type="button" onclick="cancelCrop()"
@@ -3680,28 +3686,40 @@
       activeReceiptUrls.forEach((url, idx) => {
         html += `
           <div class="flex items-center justify-between bg-gray-50 border border-gray-200 p-2 rounded-lg text-xs">
-            <a href="${url}" target="_blank" class="text-blue-600 font-semibold underline truncate max-w-[200px]">
+            <a href="${url}" target="_blank" class="text-blue-600 font-semibold underline truncate max-w-[140px]">
               Receipt URL ${activeReceiptUrls.length > 1 ? idx + 1 : ''}
             </a>
-            <button type="button" onclick="removeExistingReceipt(${idx})" class="bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 text-[11px] font-semibold px-2 py-0.5 rounded transition-colors">
-              Remove
-            </button>
+            <div class="flex items-center gap-1 shrink-0">
+              <button type="button" onclick="rotateExistingReceipt(${idx})" class="bg-slate-100 hover:bg-slate-200 text-slate-600 border border-slate-200 text-[11px] font-semibold px-2 py-0.5 rounded transition-colors">
+                ⟳ Rotate
+              </button>
+              <button type="button" onclick="removeExistingReceipt(${idx})" class="bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 text-[11px] font-semibold px-2 py-0.5 rounded transition-colors">
+                Remove
+              </button>
+            </div>
           </div>
         `;
       });
 
       activeReceiptFiles.forEach((file, idx) => {
-        const fileLabel = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')
+        const isPdfFile = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
+        const fileLabel = isPdfFile
           ? `📄 PDF: ${file.name}`
           : `📷 Cropped: ${file.name}`;
         html += `
           <div class="flex items-center justify-between bg-blue-50 border border-blue-200 p-2 rounded-lg text-xs">
-            <span class="text-blue-700 font-semibold truncate max-w-[200px]">
+            <span class="text-blue-700 font-semibold truncate max-w-[140px]">
               ${fileLabel}
             </span>
-            <button type="button" onclick="removeNewReceipt(${idx})" class="bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 text-[11px] font-semibold px-2 py-0.5 rounded transition-colors">
-              Remove
-            </button>
+            <div class="flex items-center gap-1 shrink-0">
+              ${isPdfFile ? '' : `
+              <button type="button" onclick="rotateNewReceipt(${idx})" class="bg-slate-100 hover:bg-slate-200 text-slate-600 border border-slate-200 text-[11px] font-semibold px-2 py-0.5 rounded transition-colors">
+                ⟳ Rotate
+              </button>`}
+              <button type="button" onclick="removeNewReceipt(${idx})" class="bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 text-[11px] font-semibold px-2 py-0.5 rounded transition-colors">
+                Remove
+              </button>
+            </div>
           </div>
         `;
       });
@@ -3936,44 +3954,91 @@
     }
 
     // --- Image Cropper Integration Logic ---
-    function handleImageInput(input) {
-      const file = input.files && input.files[0];
-      if (!file) return;
+    // Stitches multiple screenshots into one tall image, useful when a receipt is longer than one screen capture.
+    async function stitchImagesVertically(files) {
+      const images = await Promise.all(files.map(file => new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => resolve(img);
+        img.onerror = reject;
+        img.src = URL.createObjectURL(file);
+      })));
 
-      const isImage = file.type && file.type.startsWith('image/');
-      const isPdf = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
+      const width = Math.max(...images.map(img => img.width));
+      const totalHeight = images.reduce((sum, img) => sum + img.height * (width / img.width), 0);
 
-      if (!isImage && !isPdf) {
-        showAppMessage('Please choose an image or PDF file for the receipt.');
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = Math.round(totalHeight);
+      const ctx = canvas.getContext('2d');
+
+      let yOffset = 0;
+      images.forEach(img => {
+        const scaledHeight = img.height * (width / img.width);
+        ctx.drawImage(img, 0, yOffset, width, scaledHeight);
+        yOffset += scaledHeight;
+      });
+
+      images.forEach(img => URL.revokeObjectURL(img.src));
+
+      return new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.92));
+    }
+
+    async function handleImageInput(input) {
+      const files = Array.from(input.files || []);
+      if (files.length === 0) return;
+
+      const pdfFiles = files.filter(f => f.type === 'application/pdf' || f.name.toLowerCase().endsWith('.pdf'));
+      const imageFiles = files.filter(f => f.type && f.type.startsWith('image/'));
+
+      if (pdfFiles.length + imageFiles.length !== files.length) {
+        showAppMessage('Please choose image or PDF files for the receipt.');
         input.value = '';
         return;
       }
 
-      if (isPdf) {
-        activeReceiptFiles.push(file);
-        input.value = '';
+      if (pdfFiles.length > 0) {
+        activeReceiptFiles.push(...pdfFiles);
         renderModalReceiptList();
         revealTransactionSaveButton();
+      }
+
+      if (imageFiles.length === 0) {
+        input.value = '';
         return;
       }
 
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const imageToCrop = document.getElementById('imageToCrop');
-        imageToCrop.src = e.target.result;
-        document.getElementById('cropModal').classList.remove('hidden');
+      try {
+        const sourceBlob = imageFiles.length > 1 ? await stitchImagesVertically(imageFiles) : imageFiles[0];
 
-        if (cropper) {
-          cropper.destroy();
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const imageToCrop = document.getElementById('imageToCrop');
+          imageToCrop.src = e.target.result;
+          document.getElementById('cropModal').classList.remove('hidden');
+
+          if (cropper) {
+            cropper.destroy();
+          }
+
+          cropper = new Cropper(imageToCrop, {
+            aspectRatio: NaN,
+            viewMode: 1,
+          });
+        };
+        reader.readAsDataURL(sourceBlob);
+
+        if (imageFiles.length > 1) {
+          showAppMessage(`Combined ${imageFiles.length} screenshots into one image. Crop and add when ready.`);
         }
+      } catch (err) {
+        showAppMessage('Error preparing image(s): ' + (err.message || err));
+      }
 
-        cropper = new Cropper(imageToCrop, {
-          aspectRatio: NaN,
-          viewMode: 1,
-        });
-      };
-      reader.readAsDataURL(file);
       input.value = '';
+    }
+
+    function rotateCropImage(degrees) {
+      if (cropper) cropper.rotate(degrees);
     }
 
     function cancelCrop() {
@@ -3988,8 +4053,8 @@
       if (!cropper) return;
 
       const canvas = cropper.getCroppedCanvas({
-        maxWidth: 1200,
-        maxHeight: 1200,
+        maxWidth: 1600,
+        maxHeight: 3200,
         imageSmoothingQuality: 'high',
       });
 
@@ -4011,6 +4076,81 @@
     function removeNewReceipt(index) {
       activeReceiptFiles.splice(index, 1);
       renderModalReceiptList();
+    }
+
+    // Rotates a blob 90° clockwise via an offscreen canvas
+    async function rotateImageBlob(blob) {
+      const img = await new Promise((resolve, reject) => {
+        const image = new Image();
+        image.onload = () => resolve(image);
+        image.onerror = reject;
+        image.src = URL.createObjectURL(blob);
+      });
+
+      const canvas = document.createElement('canvas');
+      canvas.width = img.height;
+      canvas.height = img.width;
+      const ctx = canvas.getContext('2d');
+      ctx.translate(canvas.width / 2, canvas.height / 2);
+      ctx.rotate(Math.PI / 2);
+      ctx.drawImage(img, -img.width / 2, -img.height / 2);
+      URL.revokeObjectURL(img.src);
+
+      return new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.9));
+    }
+
+    function getStoragePathFromPublicUrl(url) {
+      const marker = `/object/public/${RECEIPTS_BUCKET}/`;
+      const idx = url.indexOf(marker);
+      if (idx === -1) return null;
+      return decodeURIComponent(url.slice(idx + marker.length));
+    }
+
+    // Rotates a not-yet-uploaded receipt file in place (no network calls needed)
+    async function rotateNewReceipt(index) {
+      const file = activeReceiptFiles[index];
+      if (!file || !(file.type && file.type.startsWith('image/'))) return;
+
+      try {
+        const rotatedBlob = await rotateImageBlob(file);
+        activeReceiptFiles[index] = new File([rotatedBlob], file.name, { type: 'image/jpeg' });
+        renderModalReceiptList();
+      } catch (err) {
+        showAppMessage('Error rotating image: ' + (err.message || err));
+      }
+    }
+
+    // Rotates an already-uploaded receipt by re-uploading a rotated copy and swapping the URL
+    async function rotateExistingReceipt(index) {
+      const url = activeReceiptUrls[index];
+      if (!url) return;
+
+      try {
+        showAppMessage('Rotating image...');
+        const response = await fetch(url);
+        const originalBlob = await response.blob();
+        const rotatedBlob = await rotateImageBlob(originalBlob);
+
+        const path = `${crypto.randomUUID()}-rotated.jpg`;
+        const { error: uploadError } = await sb.storage
+          .from(RECEIPTS_BUCKET)
+          .upload(path, rotatedBlob, { contentType: 'image/jpeg', upsert: false });
+        if (uploadError) throw uploadError;
+
+        const { data } = sb.storage.from(RECEIPTS_BUCKET).getPublicUrl(path);
+        if (!data?.publicUrl) throw new Error('Could not create a URL for the rotated image.');
+
+        const oldPath = getStoragePathFromPublicUrl(url);
+        activeReceiptUrls[index] = data.publicUrl;
+        renderModalReceiptList();
+        showAppMessage('Image rotated! Save the transaction to keep this change.');
+
+        if (oldPath) {
+          sb.storage.from(RECEIPTS_BUCKET).remove([oldPath]).catch(() => {});
+        }
+      } catch (err) {
+        showAppMessage('Error rotating image: ' + (err.message || err));
+      }
     }
     // --- Payment Method Logic ---
     function toggleCheckNumberField() {
