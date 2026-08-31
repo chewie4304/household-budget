@@ -4,6 +4,20 @@ All notable changes to this project will be documented in this file.
 
 ## [unreleased]
 
+## [1.5.2-dev] - 2026-08-31
+
+### Added
+
+- **Auto-Scroll on Receipt Attachment:** Configured the transaction modal to smoothly scroll immediately after a receipt image or PDF is attached, keeping the primary "Save Transaction" actions visible.
+
+### Changed
+
+- **High-Contrast Input Fields:** Overhauled the visual states of all typable fields and form checkboxes from a dark grey theme to high-contrast white to maximize legibility and visual aesthetic.
+
+### Fixed
+
+- **Account Modal Structure:** Removed a stray premature closing `</div>` right after the credit-limit field in the Add/Edit Account Modal template. This resolves the structural layout breakage and pulls the remaining form sections—including the alert toggles, bank fields, and primary submit buttons—cleanly back into the modal container.
+
 ## [1.5.1] - 2026-08-31
 
 ### Changed
