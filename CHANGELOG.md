@@ -4,8 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [unreleased]
 
+## [1.5.0] - 2026-08-30
+
 ### Added
 
+- **Progressive Web App (PWA) Framework:** Fully deployed `manifest.json` launch vectors to enable fullscreen standalone launching on mobile homescreens.
+- **Smart Network-First Service Worker:** Built a background `sw.js` network interception layer. Employs a network-first falling back to cache strategy, ensuring local offline availability while allowing live developer deployments to load immediately upon device sync.
 - **Accidental Double-Logging Protection:** Integrated a real-time transaction scanner inside the save submission pipeline. When creating or editing transactions, it scans local memory for existing matches within a 7-day window having the same account, payee/payer, and amount, safely excluding the transaction currently being edited from its own duplicates search. Triggers a descriptive confirmation modal to prevent accidental double-logging.
 - **Physics-Based Swipe Gestures:** Upgraded detailed transaction card navigation to use real-time coordinate tracking on horizontal drags. Delivers a premium native look and feel where card contents translate smoothly under-finger.
 - **Elastic Rebounds & Commit Thresholds:** Configured a smart 100px drag boundary. Swipes left-off below the threshold trigger elastic snapbacks to center, while dragging past the boundary slides the card completely off-screen and sweeps the new ledger card into view.
