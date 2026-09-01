@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 
 ## [unreleased]
 
+## [1.5.3-dev] - 2026-08-31
+
+### Removed
+
+- **Unused Icon Utility Snippets:** Pruned the legacy, unused `PWA_SERVICE_WORKER_SNIPPET` string block from `make_icons.py` to streamline the asset pipeline and eliminate syntax/parsing errors during local compilation.
+
+### Refactoring & Architecture
+
+- **Global State Hoisting:** Centralized state tracking by hoisting four floating autocomplete and keyboard navigation variables (`activeGlobalFilterDropdownMatches`, `activeGlobalFilterDropdownIndex`, `selectedDropdownIndex`, and `activeDropdownMatches`) from deep within the UI blocks up to the top of Phase 1 (Core Utilities & State Management) in `index.html`.
+- **Database Helper Realignment:** Migrated core localStorage and Supabase data synchronization functions (`loadLabelTree()`, `saveLabelTree()`, and `saveLabelNatures()`) out of Phase 1 and down into Phase 2 (Data & API Layer) to respect the application's clean, five-phase architecture.
+
 ## [1.5.2] - 2026-08-31
 
 ### Added

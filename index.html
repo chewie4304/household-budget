@@ -50,7 +50,7 @@
       display: flex !important;
       opacity: 1 !important;
     }
-    
+
     input:not([type="hidden"]):not([type="file"]),
     select,
     textarea {
@@ -133,8 +133,8 @@
       <div class="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-4 sm:px-6 sm:py-3">
         <div class="flex min-w-0 items-center gap-3">
           <!-- High-Fidelity Emblem Icon -->
-          <img src="icon-192.png" alt="Home Wealth Logo" class="h-14 w-14 shrink-0 rounded-xl object-contain shadow-md sm:h-10 sm:w-10"
-            aria-hidden="true" />
+          <img src="icon-192.png" alt="Home Wealth Logo"
+            class="h-14 w-14 shrink-0 rounded-xl object-contain shadow-md sm:h-10 sm:w-10" aria-hidden="true" />
 
           <div class="min-w-0">
             <p class="truncate text-xl font-extrabold tracking-tight text-slate-900 sm:text-lg">Home Wealth</p>
@@ -497,144 +497,147 @@
           oninput="restrictToMathInput(this); checkClearButtonVisibility('accCreditLimit', 'clear-accCreditLimit')"
           onfocus="this.classList.remove('border-red-500', 'focus:ring-red-200')" onblur="handleMathEvaluation(this)"
           class="w-full border pl-2 pr-8 py-2 rounded-lg font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-300" />
-    <div class="space-y-2 pt-1">
-      <div class="flex items-center justify-between gap-2">
-        <label class="text-xs font-semibold text-gray-600">Alert when below minimum</label>
-        <input type="checkbox" id="accMinAlertEnabled" onchange="toggleAccountAlertControls()"
-          class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
-      </div>
-      <!-- Minimum Balance Alert Input Field (conditionally shown) -->
-      <div id="accMinAlertField" class="hidden">
-        <div class="relative mt-1">
-          <input type="text" id="accMinBalance" placeholder="Minimum balance" inputmode="decimal"
-            oninput="restrictToMathInput(this); checkClearButtonVisibility('accMinBalance', 'clear-accMinBalance')"
-            onfocus="this.classList.remove('border-red-500', 'focus:ring-red-200')" onblur="handleMathEvaluation(this)"
-            class="w-full border pl-2 pr-8 py-2 rounded-lg font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-300" />
-          <button type="button" id="clear-accMinBalance"
-            onclick="clearAndFocusInput('accMinBalance', 'clear-accMinBalance')"
-            class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 w-5 h-5 items-center justify-center text-lg leading-none text-slate-400 hover:text-slate-600 transition-colors"
-            aria-label="Clear minimum balance">&times;</button>
+        <div class="space-y-2 pt-1">
+          <div class="flex items-center justify-between gap-2">
+            <label class="text-xs font-semibold text-gray-600">Alert when below minimum</label>
+            <input type="checkbox" id="accMinAlertEnabled" onchange="toggleAccountAlertControls()"
+              class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
+          </div>
+          <!-- Minimum Balance Alert Input Field (conditionally shown) -->
+          <div id="accMinAlertField" class="hidden">
+            <div class="relative mt-1">
+              <input type="text" id="accMinBalance" placeholder="Minimum balance" inputmode="decimal"
+                oninput="restrictToMathInput(this); checkClearButtonVisibility('accMinBalance', 'clear-accMinBalance')"
+                onfocus="this.classList.remove('border-red-500', 'focus:ring-red-200')"
+                onblur="handleMathEvaluation(this)"
+                class="w-full border pl-2 pr-8 py-2 rounded-lg font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-300" />
+              <button type="button" id="clear-accMinBalance"
+                onclick="clearAndFocusInput('accMinBalance', 'clear-accMinBalance')"
+                class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 w-5 h-5 items-center justify-center text-lg leading-none text-slate-400 hover:text-slate-600 transition-colors"
+                aria-label="Clear minimum balance">&times;</button>
+            </div>
+          </div>
         </div>
-      </div>
-    </div>
 
-    <div class="space-y-2 pt-1">
-      <div class="flex items-center justify-between gap-2">
-        <label class="text-xs font-semibold text-gray-600">Alert when above maximum</label>
-        <input type="checkbox" id="accMaxAlertEnabled" onchange="toggleAccountAlertControls()"
-          class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
-      </div>
-      <!-- Maximum Balance Alert Input Field (conditionally shown) -->
-      <div id="accMaxAlertField" class="hidden">
-        <div class="relative mt-1">
-          <input type="text" id="accMaxBalance" placeholder="Maximum balance" inputmode="decimal"
-            oninput="restrictToMathInput(this); checkClearButtonVisibility('accMaxBalance', 'clear-accMaxBalance')"
-            onfocus="this.classList.remove('border-red-500', 'focus:ring-red-200')" onblur="handleMathEvaluation(this)"
-            class="w-full border pl-2 pr-8 py-2 rounded-lg font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-300" />
-          <button type="button" id="clear-accMaxBalance"
-            onclick="clearAndFocusInput('accMaxBalance', 'clear-accMaxBalance')"
-            class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 w-5 h-5 items-center justify-center text-lg leading-none text-slate-400 hover:text-slate-600 transition-colors"
-            aria-label="Clear maximum balance">&times;</button>
+        <div class="space-y-2 pt-1">
+          <div class="flex items-center justify-between gap-2">
+            <label class="text-xs font-semibold text-gray-600">Alert when above maximum</label>
+            <input type="checkbox" id="accMaxAlertEnabled" onchange="toggleAccountAlertControls()"
+              class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
+          </div>
+          <!-- Maximum Balance Alert Input Field (conditionally shown) -->
+          <div id="accMaxAlertField" class="hidden">
+            <div class="relative mt-1">
+              <input type="text" id="accMaxBalance" placeholder="Maximum balance" inputmode="decimal"
+                oninput="restrictToMathInput(this); checkClearButtonVisibility('accMaxBalance', 'clear-accMaxBalance')"
+                onfocus="this.classList.remove('border-red-500', 'focus:ring-red-200')"
+                onblur="handleMathEvaluation(this)"
+                class="w-full border pl-2 pr-8 py-2 rounded-lg font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-300" />
+              <button type="button" id="clear-accMaxBalance"
+                onclick="clearAndFocusInput('accMaxBalance', 'clear-accMaxBalance')"
+                class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 w-5 h-5 items-center justify-center text-lg leading-none text-slate-400 hover:text-slate-600 transition-colors"
+                aria-label="Clear maximum balance">&times;</button>
+            </div>
+          </div>
         </div>
-      </div>
+        <!-- Institution / Bank Input with Clear Button -->
+        <div>
+          <label class="text-xs font-semibold text-gray-600">Institution / Bank</label>
+          <div class="relative mt-1">
+            <input type="text" id="accInstitution" placeholder="e.g., Chase, Wells Fargo, Local CU"
+              oninput="checkClearButtonVisibility('accInstitution', 'clear-accInstitution')"
+              class="w-full border pl-2 pr-8 py-2 rounded-lg font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-300" />
+            <button type="button" id="clear-accInstitution"
+              onclick="clearAndFocusInput('accInstitution', 'clear-accInstitution')"
+              class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 w-5 h-5 items-center justify-center text-lg leading-none text-slate-400 hover:text-slate-600 transition-colors"
+              aria-label="Clear institution">&times;</button>
+          </div>
+        </div>
+        <!-- Account Number Input with Clear Button -->
+        <div>
+          <label class="text-xs font-semibold text-gray-600">Account Number (or Last 4 Digits)</label>
+          <div class="relative mt-1">
+            <input type="text" id="accNumber" placeholder="e.g., ****1234"
+              oninput="checkClearButtonVisibility('accNumber', 'clear-accNumber')"
+              class="w-full border pl-2 pr-8 py-2 rounded-lg font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-300" />
+            <button type="button" id="clear-accNumber" onclick="clearAndFocusInput('accNumber', 'clear-accNumber')"
+              class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 w-5 h-5 items-center justify-center text-lg leading-none text-slate-400 hover:text-slate-600 transition-colors"
+              aria-label="Clear account number">&times;</button>
+          </div>
+        </div>
+        <!-- Quick Connect App Selector -->
+        <div>
+          <label class="text-xs font-semibold text-gray-600">Quick Connect App Preset</label>
+          <select id="accAppPreset" onchange="applyAppPreset()"
+            class="w-full border p-2 rounded-lg mt-1 bg-white font-medium text-gray-800">
+            <option value="">-- Custom Web URL / Other App --</option>
+            <option value="https://www.ally.com">Ally Bank</option>
+            <option value="https://play.google.com/store/apps/details?id=com.syf.amazonstorecard">Amazon Store Card
+            </option>
+            <option value="https://www.americanexpress.com">American Express</option>
+            <option value="https://www.barclaysus.com">Barclays</option>
+            <option value="https://www.bankofamerica.com">Bank of America</option>
+            <option value="https://www.capitalone.com">Capital One</option>
+            <option value="https://www.schwab.com">Charles Schwab</option>
+            <option value="https://www.chase.com">Chase Mobile</option>
+            <option value="https://play.google.com/store/apps/details?id=com.citi.citimobile&hl=en_US">Citibank
+            </option>
+            <option value="https://www.discover.com">Discover Card</option>
+            <option value="https://www.fidelity.com">Fidelity</option>
+            <option value="https://play.google.com/store/apps/details?id=com.landmarkcu.landmarkcu">Landmark Credit
+              Union</option>
+            <option value="https://play.google.com/store/apps/details?id=com.syf.mysynchrony">MyWalgreens</option>
+            <option value="https://play.google.com/store/apps/details?id=com.northshorebank.northshorebank&hl=en_US">
+              North Shore Bank</option>
+            <option value="https://play.google.com/store/apps/details?id=com.ollocard.mobile">Ollo</option>
+            <option value="paypal://">PayPal</option>
+            <option value="https://www.pnc.com">PNC Bank</option>
+            <option value="https://robinhood.com">Robinhood</option>
+            <option value="https://www.sofi.com">SoFi</option>
+            <option value="https://www.suntrust.com">SunTrust</option>
+            <option value="https://www.synchrony.com/banking">Synchrony Bank</option>
+            <option value="https://www.tdameritrade.com">TD Ameritrade</option>
+            <option value="https://www.td.com/us/en/personal-banking">TD Bank</option>
+            <option value="https://play.google.com/store/apps/details?id=com.ifs.banking.fiid1582">Thrivent Bank
+            </option>
+            <option value="https://www.usaa.com">USAA</option>
+            <option value="https://www.usbank.com">U.S. Bank</option>
+            <option value="https://www.vanguard.com">Vanguard</option>
+            <option value="https://www.venmo.com">Venmo</option>
+            <option value="https://play.google.com/store/apps/details?id=com.verizon.fintech.isaac&hl=en_US">Verizon
+              Visa</option>
+            <option value="https://www.wellsfargo.com">Wells Fargo</option>
+          </select>
+        </div>
+        <!-- Connected Website or App URL Input with Clear Button -->
+        <div>
+          <label class="text-xs font-semibold text-gray-600">Connected Website or App URL</label>
+          <div class="relative mt-1">
+            <input type="url" id="accExternalLink" placeholder="e.g., https://www.chase.com"
+              oninput="checkClearButtonVisibility('accExternalLink', 'clear-accExternalLink')"
+              class="w-full border pl-2 pr-8 py-2 rounded-lg font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-300" />
+            <button type="button" id="clear-accExternalLink"
+              onclick="clearAndFocusInput('accExternalLink', 'clear-accExternalLink')"
+              class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 w-5 h-5 items-center justify-center text-lg leading-none text-slate-400 hover:text-slate-600 transition-colors"
+              aria-label="Clear link">&times;</button>
+          </div>
+        </div>
+        <div class="pt-2 space-y-2">
+          <button type="submit" id="submitBtn"
+            class="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold shadow">
+            Create Account
+          </button>
+          <button type="button" id="deleteBtn" onclick="handleDeleteFromModal()"
+            class="w-full bg-red-50 text-red-600 border border-red-200 py-2 rounded-lg font-semibold shadow-sm hidden">
+            Delete Account
+          </button>
+          <button type="button" id="unarchiveBtn" onclick="handleUnarchiveFromModal()"
+            class="w-full bg-emerald-50 text-emerald-700 border border-emerald-200 py-2 rounded-lg font-semibold shadow-sm hidden">
+            Unarchive Account
+          </button>
+        </div>
+      </form>
     </div>
-    <!-- Institution / Bank Input with Clear Button -->
-    <div>
-      <label class="text-xs font-semibold text-gray-600">Institution / Bank</label>
-      <div class="relative mt-1">
-        <input type="text" id="accInstitution" placeholder="e.g., Chase, Wells Fargo, Local CU"
-          oninput="checkClearButtonVisibility('accInstitution', 'clear-accInstitution')"
-          class="w-full border pl-2 pr-8 py-2 rounded-lg font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-300" />
-        <button type="button" id="clear-accInstitution"
-          onclick="clearAndFocusInput('accInstitution', 'clear-accInstitution')"
-          class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 w-5 h-5 items-center justify-center text-lg leading-none text-slate-400 hover:text-slate-600 transition-colors"
-          aria-label="Clear institution">&times;</button>
-      </div>
-    </div>
-    <!-- Account Number Input with Clear Button -->
-    <div>
-      <label class="text-xs font-semibold text-gray-600">Account Number (or Last 4 Digits)</label>
-      <div class="relative mt-1">
-        <input type="text" id="accNumber" placeholder="e.g., ****1234"
-          oninput="checkClearButtonVisibility('accNumber', 'clear-accNumber')"
-          class="w-full border pl-2 pr-8 py-2 rounded-lg font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-300" />
-        <button type="button" id="clear-accNumber" onclick="clearAndFocusInput('accNumber', 'clear-accNumber')"
-          class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 w-5 h-5 items-center justify-center text-lg leading-none text-slate-400 hover:text-slate-600 transition-colors"
-          aria-label="Clear account number">&times;</button>
-      </div>
-    </div>
-    <!-- Quick Connect App Selector -->
-    <div>
-      <label class="text-xs font-semibold text-gray-600">Quick Connect App Preset</label>
-      <select id="accAppPreset" onchange="applyAppPreset()"
-        class="w-full border p-2 rounded-lg mt-1 bg-white font-medium text-gray-800">
-        <option value="">-- Custom Web URL / Other App --</option>
-        <option value="https://www.ally.com">Ally Bank</option>
-        <option value="https://play.google.com/store/apps/details?id=com.syf.amazonstorecard">Amazon Store Card
-        </option>
-        <option value="https://www.americanexpress.com">American Express</option>
-        <option value="https://www.barclaysus.com">Barclays</option>
-        <option value="https://www.bankofamerica.com">Bank of America</option>
-        <option value="https://www.capitalone.com">Capital One</option>
-        <option value="https://www.schwab.com">Charles Schwab</option>
-        <option value="https://www.chase.com">Chase Mobile</option>
-        <option value="https://play.google.com/store/apps/details?id=com.citi.citimobile&hl=en_US">Citibank
-        </option>
-        <option value="https://www.discover.com">Discover Card</option>
-        <option value="https://www.fidelity.com">Fidelity</option>
-        <option value="https://play.google.com/store/apps/details?id=com.landmarkcu.landmarkcu">Landmark Credit
-          Union</option>
-        <option value="https://play.google.com/store/apps/details?id=com.syf.mysynchrony">MyWalgreens</option>
-        <option value="https://play.google.com/store/apps/details?id=com.northshorebank.northshorebank&hl=en_US">
-          North Shore Bank</option>
-        <option value="https://play.google.com/store/apps/details?id=com.ollocard.mobile">Ollo</option>
-        <option value="paypal://">PayPal</option>
-        <option value="https://www.pnc.com">PNC Bank</option>
-        <option value="https://robinhood.com">Robinhood</option>
-        <option value="https://www.sofi.com">SoFi</option>
-        <option value="https://www.suntrust.com">SunTrust</option>
-        <option value="https://www.synchrony.com/banking">Synchrony Bank</option>
-        <option value="https://www.tdameritrade.com">TD Ameritrade</option>
-        <option value="https://www.td.com/us/en/personal-banking">TD Bank</option>
-        <option value="https://play.google.com/store/apps/details?id=com.ifs.banking.fiid1582">Thrivent Bank
-        </option>
-        <option value="https://www.usaa.com">USAA</option>
-        <option value="https://www.usbank.com">U.S. Bank</option>
-        <option value="https://www.vanguard.com">Vanguard</option>
-        <option value="https://www.venmo.com">Venmo</option>
-        <option value="https://play.google.com/store/apps/details?id=com.verizon.fintech.isaac&hl=en_US">Verizon
-          Visa</option>
-        <option value="https://www.wellsfargo.com">Wells Fargo</option>
-      </select>
-    </div>
-    <!-- Connected Website or App URL Input with Clear Button -->
-    <div>
-      <label class="text-xs font-semibold text-gray-600">Connected Website or App URL</label>
-      <div class="relative mt-1">
-        <input type="url" id="accExternalLink" placeholder="e.g., https://www.chase.com"
-          oninput="checkClearButtonVisibility('accExternalLink', 'clear-accExternalLink')"
-          class="w-full border pl-2 pr-8 py-2 rounded-lg font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-300" />
-        <button type="button" id="clear-accExternalLink"
-          onclick="clearAndFocusInput('accExternalLink', 'clear-accExternalLink')"
-          class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 w-5 h-5 items-center justify-center text-lg leading-none text-slate-400 hover:text-slate-600 transition-colors"
-          aria-label="Clear link">&times;</button>
-      </div>
-    </div>
-    <div class="pt-2 space-y-2">
-      <button type="submit" id="submitBtn" class="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold shadow">
-        Create Account
-      </button>
-      <button type="button" id="deleteBtn" onclick="handleDeleteFromModal()"
-        class="w-full bg-red-50 text-red-600 border border-red-200 py-2 rounded-lg font-semibold shadow-sm hidden">
-        Delete Account
-      </button>
-      <button type="button" id="unarchiveBtn" onclick="handleUnarchiveFromModal()"
-        class="w-full bg-emerald-50 text-emerald-700 border border-emerald-200 py-2 rounded-lg font-semibold shadow-sm hidden">
-        Unarchive Account
-      </button>
-    </div>
-    </form>
-  </div>
   </div>
 
   <!-- Due Date Calendar Selection Modal -->
@@ -1016,7 +1019,8 @@
             <label
               class="flex items-center justify-center gap-1.5 bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-700 text-xs font-semibold py-2 px-3 rounded-lg cursor-pointer text-center">
               <span>📁 Choose File(s)</span>
-              <input type="file" id="txReceiptFile" accept="*/*" multiple class="hidden" onchange="handleImageInput(this)" />
+              <input type="file" id="txReceiptFile" accept="*/*" multiple class="hidden"
+                onchange="handleImageInput(this)" />
             </label>
 
             <!-- Explicit camera action for mobile devices. -->
@@ -1065,9 +1069,11 @@
       </div>
       <div class="flex justify-center gap-2">
         <button type="button" onclick="rotateCropImage(-90)"
-          class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold">⟲ Rotate Left</button>
+          class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold">⟲ Rotate
+          Left</button>
         <button type="button" onclick="rotateCropImage(90)"
-          class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold">⟳ Rotate Right</button>
+          class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold">⟳ Rotate
+          Right</button>
       </div>
       <div class="flex justify-end gap-2 pt-2">
         <button type="button" onclick="cancelCrop()"
@@ -1202,6 +1208,10 @@
     let activeSplitRowPickerIndex = null;
     let activeFilterDropdownMatches = [];
     let activeFilterDropdownIndex = -1;
+    let activeGlobalFilterDropdownMatches = [];
+    let activeGlobalFilterDropdownIndex = -1;
+    let selectedDropdownIndex = -1;
+    let activeDropdownMatches = [];
 
     // --- DOUBLE-TAP LABEL SELECTION DETECTION ---
     let lastLabelTapTime = 0;
@@ -1426,62 +1436,7 @@
       }
       return node;
     }
-    // --- Load Label Tree & Natures from Local Storage and Supabase ---
-    async function loadLabelTree() {
-      try {
-        // 1. Instant load from local storage cache so UI is immediately responsive
-        const storedTree = localStorage.getItem('household-budget-label-tree');
-        if (storedTree) {
-          const parsed = JSON.parse(storedTree);
-          labelTree = migrateTreeRecursive(parsed);
-        } else {
-          labelTree = JSON.parse(JSON.stringify(DEFAULT_LABEL_TREE));
-        }
 
-        const storedNatures = localStorage.getItem('household-budget-label-natures');
-        if (storedNatures) {
-          labelNatures = JSON.parse(storedNatures);
-        } else {
-          labelNatures = { ...DEFAULT_LABEL_NATURES };
-        }
-
-        // 2. Fetch fresh, synchronized master copies from the shared Supabase database
-        const { data, error } = await sb.from('settings').select('*');
-        if (!error && data) {
-          const dbTree = data.find(r => r.key === 'household-budget-label-tree')?.value;
-          const dbNatures = data.find(r => r.key === 'household-budget-label-natures')?.value;
-
-          if (dbTree) {
-            labelTree = migrateTreeRecursive(dbTree);
-            localStorage.setItem('household-budget-label-tree', JSON.stringify(labelTree));
-          }
-          if (dbNatures) {
-            labelNatures = dbNatures;
-            localStorage.setItem('household-budget-label-natures', JSON.stringify(labelNatures));
-          }
-        }
-      } catch (err) {
-        console.warn("Error loading configurations from Supabase, using local cache fallback:", err);
-      }
-    }
-
-    async function saveLabelTree() {
-      try {
-        localStorage.setItem('household-budget-label-tree', JSON.stringify(labelTree));
-        await sb.from('settings').upsert({ key: 'household-budget-label-tree', value: labelTree });
-      } catch (err) {
-        console.warn("Unable to save label tree configuration to storage:", err);
-      }
-    }
-
-    async function saveLabelNatures() {
-      try {
-        localStorage.setItem('household-budget-label-natures', JSON.stringify(labelNatures));
-        await sb.from('settings').upsert({ key: 'household-budget-label-natures', value: labelNatures });
-      } catch (err) {
-        console.warn("Unable to save label natures configuration to storage:", err);
-      }
-    }
     // --- Label String Parsing & Serialization Utilities ---
     function parseLabelString(labelStr) {
       if (!labelStr) return { path: [], nature: 'N/A', rawPath: '' };
@@ -2180,6 +2135,63 @@
       }
 
       return uploadedUrls;
+    }
+
+    // --- Load Label Tree & Natures from Local Storage and Supabase ---
+    async function loadLabelTree() {
+      try {
+        // 1. Instant load from local storage cache so UI is immediately responsive
+        const storedTree = localStorage.getItem('household-budget-label-tree');
+        if (storedTree) {
+          const parsed = JSON.parse(storedTree);
+          labelTree = migrateTreeRecursive(parsed);
+        } else {
+          labelTree = JSON.parse(JSON.stringify(DEFAULT_LABEL_TREE));
+        }
+
+        const storedNatures = localStorage.getItem('household-budget-label-natures');
+        if (storedNatures) {
+          labelNatures = JSON.parse(storedNatures);
+        } else {
+          labelNatures = { ...DEFAULT_LABEL_NATURES };
+        }
+
+        // 2. Fetch fresh, synchronized master copies from the shared Supabase database
+        const { data, error } = await sb.from('settings').select('*');
+        if (!error && data) {
+          const dbTree = data.find(r => r.key === 'household-budget-label-tree')?.value;
+          const dbNatures = data.find(r => r.key === 'household-budget-label-natures')?.value;
+
+          if (dbTree) {
+            labelTree = migrateTreeRecursive(dbTree);
+            localStorage.setItem('household-budget-label-tree', JSON.stringify(labelTree));
+          }
+          if (dbNatures) {
+            labelNatures = dbNatures;
+            localStorage.setItem('household-budget-label-natures', JSON.stringify(labelNatures));
+          }
+        }
+      } catch (err) {
+        console.warn("Error loading configurations from Supabase, using local cache fallback:", err);
+      }
+    }
+
+    async function saveLabelTree() {
+      try {
+        localStorage.setItem('household-budget-label-tree', JSON.stringify(labelTree));
+        await sb.from('settings').upsert({ key: 'household-budget-label-tree', value: labelTree });
+      } catch (err) {
+        console.warn("Unable to save label tree configuration to storage:", err);
+      }
+    }
+
+    async function saveLabelNatures() {
+      try {
+        localStorage.setItem('household-budget-label-natures', JSON.stringify(labelNatures));
+        await sb.from('settings').upsert({ key: 'household-budget-label-natures', value: labelNatures });
+      } catch (err) {
+        console.warn("Unable to save label natures configuration to storage:", err);
+      }
     }
 
     async function toggleTxStatus(id, currentStatus) {
@@ -2996,9 +3008,6 @@
     }
 
     // --- AUTOCOMPLETE & KEYBOARD NAVIGATION FOR GLOBAL FILTER INPUT ---
-
-    let activeGlobalFilterDropdownMatches = [];
-    let activeGlobalFilterDropdownIndex = -1;
 
     function handleGlobalTagFilterSearchTyping(query) {
       const dropdown = document.getElementById("global-tag-filter-autocomplete-dropdown");
@@ -4146,7 +4155,7 @@
         showAppMessage('Image rotated! Save the transaction to keep this change.');
 
         if (oldPath) {
-          sb.storage.from(RECEIPTS_BUCKET).remove([oldPath]).catch(() => {});
+          sb.storage.from(RECEIPTS_BUCKET).remove([oldPath]).catch(() => { });
         }
       } catch (err) {
         showAppMessage('Error rotating image: ' + (err.message || err));
@@ -5195,8 +5204,6 @@
     }
 
     // --- LIVE LABELS AUTOCOMPLETE & KEYBOARD NAVIGATION ENGINE ---
-    let selectedDropdownIndex = -1;
-    let activeDropdownMatches = [];
 
     // Recursively flattens your nested category tree to search all paths instantly
     function getAllLabelPaths(tree, currentPath = []) {

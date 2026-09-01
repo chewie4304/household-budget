@@ -1,19 +1,9 @@
 import os
 from PIL import Image
 
-# --- PWA SERVICE WORKER REGISTRATION SNIPPET (Your saved snippet!) ---
-PWA_SERVICE_WORKER_SNIPPET = """
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js')
-      .then((reg) => console.log('[PWA] Service Worker registered with scope:', reg.scope))
-      .catch((err) => console.error('[PWA] Service Worker registration failed:', err));
-  });
-}
-"""
-
 # Identify the target source image
 src_name = "Home Wealth icon.jpg"
+
 if not os.path.exists(src_name):
     print(f"Error: Cannot find '{src_name}' in this directory.")
     print("Please make sure the file is named exactly 'Home Wealth icon.jpg' and is in your project root.")
