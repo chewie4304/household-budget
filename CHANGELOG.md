@@ -4,19 +4,25 @@ All notable changes to this project will be documented in this file.
 
 ## [unreleased]
 
-## [1.5.2-dev] - 2026-08-31
+## [1.5.2] - 2026-08-31
 
 ### Added
 
-- **Auto-Scroll on Receipt Attachment:** Configured the transaction modal to smoothly scroll immediately after a receipt image or PDF is attached, keeping the primary "Save Transaction" actions visible.
+- **Interactive Image Rotation:** Integrated 90-degree left (↺) and right (↻) rotation controls inside the receipt attachment Cropper modal. This allows mobile and desktop users to correct sideways photo orientations on-the-fly, modifying the output canvas pixel data before saving and uploading.
 
 ### Changed
 
-- **High-Contrast Input Fields:** Overhauled the visual states of all typable fields and form checkboxes from a dark grey theme to high-contrast white to maximize legibility and visual aesthetic.
-
-### Fixed
-
-- **Account Modal Structure:** Removed a stray premature closing `</div>` right after the credit-limit field in the Add/Edit Account Modal template. This resolves the structural layout breakage and pulls the remaining form sections—including the alert toggles, bank fields, and primary submit buttons—cleanly back into the modal container.
+- **Transaction Modal Field Reordering:** Restructured the Add/Edit Transaction modal's form layout to follow a highly logical and intuitive data-entry flow:
+  1. *Type & Amount* (including inline Split toggles and formula evaluations)
+  2. *Account Selection* (including dynamic Transfer target fields)
+  3. *Payment Type* (including Check number triggers)
+  4. *Date & Status*
+  5. *Payer / Payee*
+  6. *Labels* (multi-select list with dynamic suggestions)
+  7. *Description* (optional notes)
+  8. *Attachments* (Receipt/Camera upload files)
+- **Mobile Header Banner Scaling:** Increased the overall size, vertical padding, and height of the top navigation header banner on mobile devices to establish a more prominent, spacious, and readable interface presence.
+- **Tagline Wording Refinement:** Updated the global tagline across both the dark splash screen and header components to **"Your Money. Your Way."**, replacing legacy "Your money, in one place" or "Your money in your place" subtitles.
 
 ## [1.5.1] - 2026-08-31
 
