@@ -2011,7 +2011,7 @@
 
       // Re-render active view
       if (activeAccountId) {
-        showTransactionsView(activeAccountId);
+        showTransactionsView(activeAccountId, true); // ⚡ Preserve scroll during background data updates
       } else {
         renderAccounts();
       }
@@ -2039,7 +2039,9 @@
         checkAccountBalanceAlerts();
 
         const clearedTxSum = currentAccountTransactions.reduce((sum, tx) => {
-          return tx.status === 'reconciled' ? sum + parseFloat(tx.amount || 0) : sum;
+          const status = String(tx.status || '').trim().toLowerCase();
+          const isCleared = status === 'reconciled' || status === 'cleared';
+          return isCleared ? sum + parseFloat(tx.amount || 0) : sum;
         }, 0);
         document.getElementById('tx-acc-cleared').textContent = `$${roundCurrency(initialBal + clearedTxSum).toFixed(2)}`;
 
@@ -2195,17 +2197,36 @@
     }
 
     async function toggleTxStatus(id, currentStatus) {
-      const newStatus = currentStatus === 'pending' ? 'reconciled' : 'pending';
-      const { error } = await sb.from('transactions').update({ status: newStatus }).eq('id', id);
+      // Normalize status strings to lowercase and trim whitespace
+      const cleanStatus = String(currentStatus || '').trim().toLowerCase();
 
+      // Safe evaluation matching 'pending', 'p', or blank states
+      const isCurrentlyPending = cleanStatus === 'pending' || cleanStatus === 'p' || cleanStatus === '';
+
+      const newStatus = isCurrentlyPending ? 'cleared' : 'pending';
+
+      const { data: updatedTransaction, error } = await sb.from('transactions')
+        .update({ status: newStatus })
+        .eq('id', id)
+        .select('id, status')
+        .single();
       if (error) {
         showAppMessage("Error updating status: " + error.message);
         return;
       }
 
-      // FIX: Fetch the updated global transactions/accounts arrays to sync both views
-      await fetchData();
-      await fetchAccounts();
+      const updatedStatus = updatedTransaction.status;
+      transactions = transactions.map(tx => tx.id === id ? { ...tx, status: updatedStatus } : tx);
+      currentAccountTransactions = currentAccountTransactions.map(tx => tx.id === id ? { ...tx, status: updatedStatus } : tx);
+
+      if (currentViewState === 'home-transactions') {
+        renderAllTransactions();
+        renderMonthlySummary();
+      } else if (activeAccountId) {
+        await fetchTransactions(activeAccountId);
+      } else {
+        renderAccounts();
+      }
     }
 
     // Phase 3: UI Rendering & Component Builders
@@ -2620,7 +2641,9 @@
         const totalTxSum = txList.reduce((sum, tx) => sum + parseFloat(tx.amount || 0), 0);
         const currentBal = roundCurrency(initialBal + totalTxSum);
         const clearedTxSum = txList.reduce((sum, tx) => {
-          return tx.status === 'reconciled' ? sum + parseFloat(tx.amount || 0) : sum;
+          const status = String(tx.status || '').trim().toLowerCase();
+          const isCleared = status === 'reconciled' || status === 'cleared';
+          return isCleared ? sum + parseFloat(tx.amount || 0) : sum;
         }, 0);
         const clearedBal = roundCurrency(initialBal + clearedTxSum);
 
@@ -2683,11 +2706,15 @@
       }).join('');
     }
 
-    async function showTransactionsView(accId) {
-      window.scrollTo(0, 0); // 🌟 Reset the page scroll position to the top!
+    // --- VIEW SWITCHING & STATE MANAGEMENT ---
+    async function showTransactionsView(accId, preserveScroll = false) {
+      if (!preserveScroll) {
+        window.scrollTo(0, 0); // 🌟 Reset the page scroll position to the top!
+      }
       activeAccountId = accId; // Store active account globally
       activeTagFilters = []; // Reset dynamic search filters on view shift
       currentViewState = 'transactions-detail';
+
       const acc = accounts.find(a => a.id === accId);
       if (!acc) return;
 
@@ -2759,8 +2786,11 @@
       const txList = (activeAccountId === account.id && Array.isArray(currentAccountTransactions))
         ? currentAccountTransactions
         : (Array.isArray(transactions) ? transactions.filter(tx => tx.account_id === account.id) : []);
-      const clearedSum = txList.reduce((sum, tx) => tx.status === 'reconciled' ? sum + parseFloat(tx.amount || 0) : sum, 0);
-      return roundCurrency(initialBal + clearedSum);
+      const clearedSum = txList.reduce((sum, tx) => {
+        const status = String(tx.status || '').trim().toLowerCase();
+        const isCleared = status === 'reconciled' || status === 'cleared';
+        return isCleared ? sum + parseFloat(tx.amount || 0) : sum;
+      }, 0); return roundCurrency(initialBal + clearedSum);
     }
 
     // --- MULTI-SELECT FILTER ENGINE ---
@@ -3247,7 +3277,7 @@
                     onclick="event.stopPropagation(); toggleTxStatus('${tx.id}', '${status}')"
                     title="Status: ${status === 'reconciled' ? 'cleared' : status}. Click to toggle"
                     class="px-2 py-0.5 text-xs font-bold rounded-full transition-colors ${isPending
-                    ? 'bg-amber-100 text-amber-700 hover:bg-amber-200' : 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200'}">
+            ? 'bg-amber-100 text-amber-700 hover:bg-amber-200' : 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200'}">
                     ${isPending ? 'P' : 'C'}
                   </button>
                   <button onclick="event.stopPropagation(); deleteTx('${tx.id}')" class="text-red-400 hover:text-red-600 text-base font-bold px-1">&times;</button>

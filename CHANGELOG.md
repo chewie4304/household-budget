@@ -4,21 +4,29 @@ All notable changes to this project will be documented in this file.
 
 ## [unreleased]
 
-## [1.5.3-dev] - 2026-08-31
+## [1.5.3] - 2026-08-31
+
+### Added
+
+- **Persistent Ledger Scrolling:** Configured the transaction detail view rendering pipeline with a scroll-preservation parameter. Background data updates (like toggling status or submitting minor edits) now lock your vertical scrolling position in place, ending disruptive page-jump resets.
 
 ### Changed
 
-- **Status Terminology Refinement:** Rebranded "Reconciled" status nomenclature to "Cleared" across modal selectors, transaction cards, and tooltips to establish a cohesive visual connection with account cleared-balance aggregates.
-- **P/C Status Toggle:** Shifted the transaction card action badges from "P/R" (Pending/Reconciled) to "P/C" (Pending/Cleared) for faster mobile readability while preserving backward-compatible database strings internally.
+- **Status Terminology Rebrand:** Shifted the application's vocabulary from "Reconciled" to "Cleared" across transaction status dropdowns, card states, and hover tooltips to mirror the cleared-balance aggregates on the dashboard.
+- **P/C Status Toggle:** Replaced transaction card action badges from "P/R" (Pending/Reconciled) to "P/C" (Pending/Cleared) for faster visual scanning.
+
+### Fixed
+
+- **P/C Toggling & Balance Sync:** Corrected the underlying transaction status toggle routine to smoothly transition status updates between Pending and Cleared, ensuring real-time in-app balances and database records remain in perfect harmony.
 
 ### Removed
 
-- **Unused Icon Utility Snippets:** Pruned the legacy, unused `PWA_SERVICE_WORKER_SNIPPET` string block from `make_icons.py` to streamline the asset pipeline and eliminate syntax/parsing errors during local compilation.
+- **Unused Icon Utility Snippets:** Pruned the legacy `PWA_SERVICE_WORKER_SNIPPET` string block from `make_icons.py` to streamline the asset pipeline and prevent local syntax compiling errors.
 
 ### Refactoring & Architecture
 
-- **Global State Hoisting:** Centralized state tracking by hoisting four floating autocomplete and keyboard navigation variables (`activeGlobalFilterDropdownMatches`, `activeGlobalFilterDropdownIndex`, `selectedDropdownIndex`, and `activeDropdownMatches`) from deep within the UI blocks up to the top of Phase 1 (Core Utilities & State Management) in `index.html`.
-- **Database Helper Realignment:** Migrated core localStorage and Supabase data synchronization functions (`loadLabelTree()`, `saveLabelTree()`, and `saveLabelNatures()`) out of Phase 1 and down into Phase 2 (Data & API Layer) to respect the application's clean, five-phase architecture.
+- **Global State Hoisting:** Hoisted four floating autocomplete and keyboard navigation state properties up to the top of Phase 1 (Core Utilities & State Management) in `index.html`.
+- **Database Helper Realignment:** Relocated localStorage and Supabase data synchronization functions (`loadLabelTree()`, `saveLabelTree()`, and `saveLabelNatures()`) out of utility blocks and down into Phase 2 (Data & API Layer).
 
 ## [1.5.2] - 2026-08-31
 
