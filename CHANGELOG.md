@@ -6,6 +6,11 @@ All notable changes to this project will be documented in this file.
 
 ## [1.5.3-dev] - 2026-08-31
 
+### Changed
+
+- **Status Terminology Refinement:** Rebranded "Reconciled" status nomenclature to "Cleared" across modal selectors, transaction cards, and tooltips to establish a cohesive visual connection with account cleared-balance aggregates.
+- **P/C Status Toggle:** Shifted the transaction card action badges from "P/R" (Pending/Reconciled) to "P/C" (Pending/Cleared) for faster mobile readability while preserving backward-compatible database strings internally.
+
 ### Removed
 
 - **Unused Icon Utility Snippets:** Pruned the legacy, unused `PWA_SERVICE_WORKER_SNIPPET` string block from `make_icons.py` to streamline the asset pipeline and eliminate syntax/parsing errors during local compilation.

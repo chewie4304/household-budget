@@ -937,7 +937,7 @@
             <label class="text-xs font-semibold text-gray-600">Status</label>
             <select id="txStatus" class="w-full border p-2 rounded-lg mt-1 bg-white">
               <option value="pending">Pending</option>
-              <option value="reconciled">Reconciled</option>
+              <option value="reconciled">Cleared</option>
             </select>
           </div>
         </div>
@@ -2502,11 +2502,11 @@
                 </div>
                 ${renderSplitButton(tx)}
                 <div class="flex items-center gap-2">
-                  <button 
-                    onclick="event.stopPropagation(); toggleTxStatus('${tx.id}', '${status}')" 
-                    title="Status: ${status}. Click to toggle"
+                  <button
+                    onclick="event.stopPropagation(); toggleTxStatus('${tx.id}', '${status}')"
+                    title="Status: ${status === 'reconciled' ? 'cleared' : status}. Click to toggle"
                     class="px-2 py-0.5 text-xs font-bold rounded-full transition-colors ${isPending ? 'bg-amber-100 text-amber-700 hover:bg-amber-200' : 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200'}">
-                    ${isPending ? 'P' : 'R'}
+                    ${isPending ? 'P' : 'C'}
                   </button>
                   <button onclick="event.stopPropagation(); deleteTx('${tx.id}')" class="text-red-400 hover:text-red-600 text-base font-bold px-1">&times;</button>
                 </div>
@@ -3243,12 +3243,12 @@
                   ${renderSplitButton(tx)}
                 </div>
                 <div class="flex items-center gap-2">
-                  <button 
-                    onclick="event.stopPropagation(); toggleTxStatus('${tx.id}', '${status}')" 
-                    title="Status: ${status}. Click to toggle"
+                  <button
+                    onclick="event.stopPropagation(); toggleTxStatus('${tx.id}', '${status}')"
+                    title="Status: ${status === 'reconciled' ? 'cleared' : status}. Click to toggle"
                     class="px-2 py-0.5 text-xs font-bold rounded-full transition-colors ${isPending
-            ? 'bg-amber-100 text-amber-700 hover:bg-amber-200' : 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200'}">
-                    ${isPending ? 'P' : 'R'}
+                    ? 'bg-amber-100 text-amber-700 hover:bg-amber-200' : 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200'}">
+                    ${isPending ? 'P' : 'C'}
                   </button>
                   <button onclick="event.stopPropagation(); deleteTx('${tx.id}')" class="text-red-400 hover:text-red-600 text-base font-bold px-1">&times;</button>
                 </div>
