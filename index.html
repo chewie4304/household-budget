@@ -195,7 +195,7 @@
 
           <!-- Widget 1: Monthly Summary (Spans full width of cockpit) -->
           <div id="monthly-summary"
-            class="hidden rounded-3xl border border-slate-200 bg-gradient-to-br from-slate-50 via-white to-blue-50 shadow-sm p-5 space-y-3">
+            class="hidden rounded-3xl border border-slate-200 bg-gradient-to-br from-slate-50 via-white to-blue-50 shadow-sm p-5 space-y-3 flex flex-col justify-between lg:h-[176px]">
             <!-- Summary Header -->
             <div class="flex items-center justify-between gap-2">
               <div>
@@ -264,14 +264,14 @@
               class="hidden lg:flex border-2 border-dashed border-slate-200 rounded-3xl items-center justify-center p-6 text-slate-400 text-xs font-bold bg-slate-50/20">
               Future Widget Slot
             </div>
-
           </div>
         </section>
 
-        <!-- RIGHT 1 COLUMN: Dynamic View Feed (Accounts list, Search, OR Selected Account Ledger) -->
-        <section class="flex flex-col gap-4">
+        <!-- Home Controls Container: Matches Monthly Summary Design and Height on Desktop -->
+        <div id="home-controls-container"
+          class="rounded-3xl border border-slate-200 bg-gradient-to-br from-slate-50 via-white to-blue-50 shadow-sm p-5 space-y-3 flex flex-col justify-between lg:h-[176px]">
 
-          <!-- Home View Header Title & New Account Button -->
+          <!-- Row 1: Title & New Account Button -->
           <div id="home-view-title-wrap" class="flex min-h-[38px] items-center justify-between gap-3">
             <h2 id="home-view-title" class="text-2xl font-extrabold tracking-tight text-slate-800">Your Accounts</h2>
             <button id="new-account-button" onclick="openAccountModal()"
@@ -281,235 +281,243 @@
             </button>
           </div>
 
-          <!-- Tab View Switcher (Accounts vs Transactions) -->
-          <div id="home-tabs-switcher" class="flex gap-2 rounded-2xl bg-slate-200 p-1 shadow-inner">
-            <button id="home-accounts-tab" onclick="showHomeAccounts()"
-              class="flex-1 bg-blue-600 text-white px-3 py-2 rounded-xl text-sm font-semibold shadow-sm">
-              Accounts
-            </button>
-            <button id="home-transactions-tab" onclick="showAllTransactions()"
-              class="flex-1 bg-transparent text-slate-700 px-3 py-2 rounded-xl text-sm font-semibold">
-              Transactions
-            </button>
-          </div>
+          <!-- Row 2: Grid Container for Switcher and Search Field (Adapts cleanly on view toggle) -->
+          <div class="flex flex-col sm:flex-row gap-3 items-center">
 
-          <!-- PANEL 1: Accounts Feed Panel (Shown when on Home -> Accounts) -->
-          <div id="accounts-feed-panel" class="space-y-3">
-            <div id="account-search-wrap" class="relative">
+            <!-- Accounts/Transactions View Switcher Toggle -->
+            <div id="home-tabs-switcher"
+              class="flex-1 w-full flex gap-2 rounded-2xl bg-slate-200 p-1 shadow-inner h-[42px] items-center">
+              <button id="home-accounts-tab" onclick="showHomeAccounts()"
+                class="flex-1 bg-blue-600 text-white px-3 py-1.5 rounded-xl text-sm font-semibold shadow-sm h-full transition-all">
+                Accounts
+              </button>
+              <button id="home-transactions-tab" onclick="showAllTransactions()"
+                class="flex-1 bg-transparent text-slate-700 px-3 py-1.5 rounded-xl text-sm font-semibold h-full transition-all">
+                Transactions
+              </button>
+            </div>
+
+            <!-- Search Accounts Input Field -->
+            <div id="account-search-wrap" class="flex-1 w-full relative">
               <input id="account-search" type="text"
                 oninput="renderAccounts(); checkClearButtonVisibility('account-search', 'clear-account-search')"
                 placeholder="Search accounts..."
-                class="w-full border border-slate-200 bg-white pl-3 pr-10 py-2.5 rounded-xl text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-200 shadow-sm" />
+                class="w-full border border-slate-200 bg-white pl-3 pr-10 py-2 rounded-xl text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-200 shadow-sm h-[42px]" />
               <button type="button" id="clear-account-search"
                 onclick="clearAndFocusInput('account-search', 'clear-account-search', () => renderAccounts())"
                 class="hidden absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 items-center justify-center text-lg leading-none text-slate-400 hover:text-slate-600 transition-colors">&times;</button>
             </div>
-            <div id="account-type-filter-bar" class="flex flex-wrap gap-2"></div>
-            <div id="accounts-list" class="space-y-3">
-              <p class="text-sm text-gray-500">Loading accounts...</p>
+          </div>
+        </div>
+
+        <!-- PANEL 1: Accounts Feed Panel (Shown when on Home -> Accounts) -->
+        <div id="accounts-feed-panel" class="space-y-3">
+          <div id="account-type-filter-bar" class="flex flex-wrap gap-2"></div>
+          <div id="accounts-list" class="space-y-3">
+            <p class="text-sm text-gray-500">Loading accounts...</p>
+          </div>
+        </div>
+
+        <!-- PANEL 2: All Transactions Feed Panel (Shown when on Home -> Transactions) -->
+        <div id="all-transactions-feed-panel" class="hidden space-y-3">
+          <!-- Global Label Filter Container -->
+          <div id="global-tag-filter-container"
+            class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm space-y-2">
+            <div class="flex items-center justify-between flex-wrap gap-2">
+              <div class="flex items-center gap-2.5">
+                <span class="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Filter by Labels</span>
+                <label
+                  class="inline-flex items-center gap-1 text-[10px] font-bold text-slate-500 cursor-pointer select-none">
+                  <input type="checkbox" id="global-tag-filter-match-all" onchange="toggleGlobalTagFilterMatchMode()"
+                    class="h-3.5 w-3.5 rounded border-slate-300 text-blue-600 focus:ring-blue-500" />
+                  <span>Match All (AND)</span>
+                </label>
+              </div>
+              <button type="button" onclick="openLabelPicker('global-filter')"
+                class="text-[10px] font-bold text-blue-600 hover:text-blue-700 transition">🏷️ Select</button>
+            </div>
+            <div class="relative">
+              <div onclick="document.getElementById('global-tag-filter-search-input').focus()"
+                class="flex flex-wrap items-center gap-1 min-h-[36px] p-1.5 rounded-xl border border-slate-200 bg-white cursor-text">
+                <div id="global-tag-filter-preview" class="contents"></div>
+                <input type="text" id="global-tag-filter-search-input" placeholder="Type to filter..."
+                  class="flex-1 min-w-[8px] text-xs font-semibold bg-transparent border-0 p-0 focus:ring-0 focus:outline-none text-slate-800"
+                  oninput="handleGlobalTagFilterSearchTyping(this.value)"
+                  onkeydown="handleGlobalTagFilterSearchKeydown(event)" />
+              </div>
+              <div id="global-tag-filter-autocomplete-dropdown"
+                class="hidden absolute left-0 right-0 mt-1 max-h-40 overflow-y-auto bg-white border border-slate-200 rounded-xl shadow-lg z-50">
+              </div>
             </div>
           </div>
 
-          <!-- PANEL 2: All Transactions Feed Panel (Shown when on Home -> Transactions) -->
-          <div id="all-transactions-feed-panel" class="hidden space-y-3">
-            <!-- Global Label Filter Container -->
-            <div id="global-tag-filter-container"
-              class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm space-y-2">
-              <div class="flex items-center justify-between flex-wrap gap-2">
-                <div class="flex items-center gap-2.5">
-                  <span class="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Filter by Labels</span>
-                  <label
-                    class="inline-flex items-center gap-1 text-[10px] font-bold text-slate-500 cursor-pointer select-none">
-                    <input type="checkbox" id="global-tag-filter-match-all" onchange="toggleGlobalTagFilterMatchMode()"
-                      class="h-3.5 w-3.5 rounded border-slate-300 text-blue-600 focus:ring-blue-500" />
-                    <span>Match All (AND)</span>
-                  </label>
+          <div id="transaction-search-wrap" class="relative">
+            <input id="transaction-search" type="text"
+              oninput="renderAllTransactions(); checkClearButtonVisibility('transaction-search', 'clear-transaction-search')"
+              placeholder="Search transactions..."
+              class="w-full border border-slate-200 bg-white pl-3 pr-10 py-2.5 rounded-xl text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-200 shadow-sm" />
+            <button type="button" id="clear-transaction-search"
+              onclick="clearAndFocusInput('transaction-search', 'clear-transaction-search', () => renderAllTransactions())"
+              class="hidden absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 items-center justify-center text-lg leading-none text-slate-400 hover:text-slate-600 transition-colors">&times;</button>
+          </div>
+
+          <div id="all-transactions-list" class="space-y-3">
+            <p class="text-sm text-gray-500">Loading transactions...</p>
+          </div>
+        </div>
+
+        <!-- PANEL 3: Individual Account Ledger Feed Panel (Shown when inside an Account details view) -->
+        <div id="ledger-feed-panel" class="hidden space-y-3">
+
+          <!-- Default home for the Account Summary card; relocated into the cockpit sidebar on desktop -->
+          <div id="ledger-account-summary-wrapper">
+
+            <!-- Account-Specific Monthly Summary Card -->
+            <div id="account-monthly-summary"
+              class="rounded-3xl border border-slate-200 bg-gradient-to-br from-slate-50 via-white to-blue-50 shadow-sm p-5 space-y-3 flex flex-col justify-between lg:h-[176px]">
+              <!-- Summary Header -->
+              <div class="flex items-center justify-between gap-2">
+                <div>
+                  <p class="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">Account Summary</p>
+                  <p id="account-summary-month-label" class="mt-1 text-base font-bold text-slate-800">This Month</p>
                 </div>
-                <button type="button" onclick="openLabelPicker('global-filter')"
-                  class="text-[10px] font-bold text-blue-600 hover:text-blue-700 transition">🏷️ Select</button>
+                <div class="flex items-center gap-2">
+                  <!-- Restored Live Badge -->
+                  <span id="account-summary-live-badge"
+                    class="hidden inline-flex items-center rounded-full border border-blue-200 bg-blue-100 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-blue-700">Live</span>
+                  <!-- Synced Dropdown Selector -->
+                  <select id="account-summary-month-select" onchange="setSelectedSummaryMonth(this.value)"
+                    class="rounded-xl border border-slate-200 bg-white px-2 py-1.5 pr-8 text-xs font-semibold text-slate-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-300">
+                  </select>
+                </div>
               </div>
-              <div class="relative">
-                <div onclick="document.getElementById('global-tag-filter-search-input').focus()"
-                  class="flex flex-wrap items-center gap-1 min-h-[36px] p-1.5 rounded-xl border border-slate-200 bg-white cursor-text">
-                  <div id="global-tag-filter-preview" class="contents"></div>
-                  <input type="text" id="global-tag-filter-search-input" placeholder="Type to filter..."
-                    class="flex-1 min-w-[8px] text-xs font-semibold bg-transparent border-0 p-0 focus:ring-0 focus:outline-none text-slate-800"
-                    oninput="handleGlobalTagFilterSearchTyping(this.value)"
-                    onkeydown="handleGlobalTagFilterSearchKeydown(event)" />
-                </div>
-                <div id="global-tag-filter-autocomplete-dropdown"
-                  class="hidden absolute left-0 right-0 mt-1 max-h-40 overflow-y-auto bg-white border border-slate-200 rounded-xl shadow-lg z-50">
-                </div>
+              <!-- Summary Totals Grid -->
+              <div class="grid grid-cols-3 gap-2 text-center">
+                <button type="button" id="account-income-card" onclick="setAccountSummaryTypeFilter('income')"
+                  class="rounded-2xl border border-emerald-200 bg-emerald-50 p-3 text-left transition hover:bg-emerald-100 hover:shadow-sm">
+                  <p class="text-[10px] font-bold uppercase tracking-[0.18em] text-emerald-700">Income</p>
+                  <p id="account-monthly-income"
+                    class="mt-2 text-right text-base font-extrabold text-emerald-700 sm:text-lg">$0.00</p>
+                </button>
+                <button type="button" id="account-expenses-card" onclick="setAccountSummaryTypeFilter('expense')"
+                  class="rounded-2xl border border-red-200 bg-red-50 p-3 text-left transition hover:bg-red-100 hover:shadow-sm">
+                  <p class="text-[10px] font-bold uppercase tracking-[0.18em] text-red-700">Expenses</p>
+                  <p id="account-monthly-expenses"
+                    class="mt-2 text-right text-base font-extrabold text-red-700 sm:text-lg">$0.00</p>
+                </button>
+                <button type="button" id="account-remaining-card" onclick="setAccountSummaryTypeFilter(null)"
+                  class="rounded-2xl border border-blue-200 bg-blue-50 p-3 text-left transition hover:bg-blue-100 hover:shadow-sm">
+                  <p class="text-[10px] font-bold uppercase tracking-[0.18em] text-blue-700">Remaining</p>
+                  <p id="account-monthly-remaining"
+                    class="mt-2 text-right text-base font-extrabold text-blue-700 sm:text-lg">$0.00</p>
+                </button>
               </div>
             </div>
 
-            <div id="transaction-search-wrap" class="relative">
-              <input id="transaction-search" type="text"
-                oninput="renderAllTransactions(); checkClearButtonVisibility('transaction-search', 'clear-transaction-search')"
-                placeholder="Search transactions..."
-                class="w-full border border-slate-200 bg-white pl-3 pr-10 py-2.5 rounded-xl text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-200 shadow-sm" />
-              <button type="button" id="clear-transaction-search"
-                onclick="clearAndFocusInput('transaction-search', 'clear-transaction-search', () => renderAllTransactions())"
-                class="hidden absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 items-center justify-center text-lg leading-none text-slate-400 hover:text-slate-600 transition-colors">&times;</button>
+          </div>
+
+          <!-- Quadrant Details Card: Launch Portal, Edit Account, Current & Cleared Balances -->
+          <div
+            class="bg-white p-4 rounded-3xl border border-slate-200 shadow-sm flex flex-col justify-between space-y-3">
+            <div class="grid grid-cols-2 gap-3">
+
+              <!-- Q1 (Upper Left): Launch Portal -->
+              <div class="flex items-center justify-start">
+                <a id="tx-acc-external-btn" href="#" target="_blank" rel="noopener noreferrer"
+                  class="hidden w-full text-center inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white py-2.5 text-[11px] font-bold text-slate-700 hover:bg-slate-50 transition shadow-sm">
+                  <span>🔗</span> Launch Portal
+                </a>
+                <div id="tx-acc-external-placeholder"
+                  class="w-full text-center py-2.5 text-[11px] font-bold text-slate-300 border border-dashed border-slate-200 rounded-xl select-none">
+                  No Portal Linked
+                </div>
+              </div>
+
+              <!-- Q2 (Upper Right): Current Balance (Larger Font Weight and Size) -->
+              <div class="text-right flex flex-col justify-center pr-1">
+                <div id="tx-acc-balance" class="text-lg font-black tracking-tight text-slate-900">$0.00</div>
+                <div class="text-[9px] text-slate-400 font-extrabold uppercase tracking-wider mt-0.5">Current
+                  Balance</div>
+              </div>
+
+              <!-- Q3 (Lower Left): Edit Account (Spelled out "Account") -->
+              <div class="flex items-center justify-start">
+                <button type="button" onclick="openAccountModal(activeAccountId)"
+                  class="w-full text-center inline-flex items-center justify-center gap-1.5 rounded-xl border border-blue-100 bg-blue-50 py-2.5 text-[11px] font-bold text-blue-700 hover:bg-blue-100 transition">
+                  <span>✎</span> Edit Account
+                </button>
+              </div>
+
+              <!-- Q4 (Lower Right): Cleared Balance (Larger Font Weight and Size) -->
+              <div class="text-right flex flex-col justify-center pr-1">
+                <div class="flex items-center justify-end gap-1">
+                  <div id="tx-acc-cleared" class="text-base font-black tracking-tight text-emerald-600">$0.00</div>
+                  <button type="button" onclick="openClearedBalanceModal()" title="Edit cleared balance"
+                    class="text-emerald-600 hover:text-emerald-800 text-xs">✎</button>
+                </div>
+                <div class="text-[9px] text-emerald-700 font-extrabold uppercase tracking-wider mt-0.5">Cleared
+                  Balance</div>
+              </div>
+
             </div>
 
-            <div id="all-transactions-list" class="space-y-3">
+            <!-- Credit Limit Container (Nested bottom card footer) -->
+            <div id="tx-acc-credit-limit-container" class="hidden border-t border-slate-100 pt-2 space-y-1 shrink-0">
+              <div class="flex justify-between text-[10px] font-semibold">
+                <span class="text-slate-400">Credit Remaining</span>
+                <span id="tx-acc-credit-remaining-label" class="text-slate-700"></span>
+              </div>
+              <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
+                <div id="tx-acc-credit-progress" class="h-full rounded-full transition-all duration-300"
+                  style="width: 0%;"></div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Static Add Transaction Button -->
+          <button onclick="openTxModal()"
+            class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition flex items-center justify-center gap-2 shadow-sm">
+            <span class="text-lg leading-none">+</span> Add Transaction
+          </button>
+
+          <!-- Account-specific tag filter container -->
+          <div id="tag-filter-container"
+            class="hidden bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm space-y-2">
+            <div class="flex items-center justify-between flex-wrap gap-2">
+              <div class="flex items-center gap-2.5">
+                <span class="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Filter by Labels</span>
+                <label
+                  class="inline-flex items-center gap-1 text-[10px] font-bold text-slate-500 cursor-pointer select-none">
+                  <input type="checkbox" id="tag-filter-match-all" onchange="toggleTagFilterMatchMode()"
+                    class="h-3.5 w-3.5 rounded border-slate-300 text-blue-600 focus:ring-blue-500" />
+                  <span>Match All (AND)</span>
+                </label>
+              </div>
+              <button type="button" onclick="openLabelPicker('filter')"
+                class="text-[10px] font-bold text-blue-600 hover:text-blue-700 transition">🏷️ Select</button>
+            </div>
+            <div class="relative">
+              <div onclick="document.getElementById('tag-filter-search-input').focus()"
+                class="flex flex-wrap items-center gap-1 min-h-[36px] p-1.5 rounded-xl border border-slate-200 bg-white cursor-text">
+                <div id="tag-filter-preview" class="contents"></div>
+                <input type="text" id="tag-filter-search-input" placeholder="Type to filter..."
+                  class="flex-1 min-w-[8px] text-xs font-semibold bg-transparent border-0 p-0 focus:ring-0 focus:outline-none text-slate-800"
+                  oninput="handleTagFilterSearchTyping(this.value)" onkeydown="handleTagFilterSearchKeydown(event)" />
+              </div>
+              <div id="tag-filter-autocomplete-dropdown"
+                class="hidden absolute left-0 right-0 mt-1 max-h-40 overflow-y-auto bg-white border border-slate-200 rounded-xl shadow-lg z-50">
+              </div>
+            </div>
+          </div>
+
+          <div class="space-y-1">
+            <h3 id="feed-heading-title" class="text-sm font-extrabold text-slate-800">Ledger</h3>
+            <div id="transactions-list" class="space-y-3">
               <p class="text-sm text-gray-500">Loading transactions...</p>
             </div>
           </div>
-
-          <!-- PANEL 3: Individual Account Ledger Feed Panel (Shown when inside an Account details view) -->
-          <div id="ledger-feed-panel" class="hidden space-y-3">
-
-            <!-- Default home for the Account Summary card; relocated into the cockpit sidebar on desktop -->
-            <div id="ledger-account-summary-wrapper">
-
-              <!-- Account-Specific Monthly Summary Card -->
-              <div id="account-monthly-summary"
-                class="rounded-3xl border border-slate-200 bg-gradient-to-br from-slate-50 via-white to-blue-50 shadow-sm p-5 space-y-3">
-                <!-- Summary Header -->
-                <div class="flex items-center justify-between gap-2">
-                  <div>
-                    <p class="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">Account Summary</p>
-                    <p id="account-summary-month-label" class="mt-1 text-base font-bold text-slate-800">This Month</p>
-                  </div>
-                  <div class="flex items-center gap-2">
-                    <!-- Restored Live Badge -->
-                    <span id="account-summary-live-badge"
-                      class="hidden inline-flex items-center rounded-full border border-blue-200 bg-blue-100 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-blue-700">Live</span>
-                    <!-- Synced Dropdown Selector -->
-                    <select id="account-summary-month-select" onchange="setSelectedSummaryMonth(this.value)"
-                      class="rounded-xl border border-slate-200 bg-white px-2 py-1.5 pr-8 text-xs font-semibold text-slate-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-300">
-                    </select>
-                  </div>
-                </div>
-                <!-- Summary Totals Grid -->
-                <div class="grid grid-cols-3 gap-2 text-center">
-                  <button type="button" id="account-income-card" onclick="setAccountSummaryTypeFilter('income')"
-                    class="rounded-2xl border border-emerald-200 bg-emerald-50 p-3 text-left transition hover:bg-emerald-100 hover:shadow-sm">
-                    <p class="text-[10px] font-bold uppercase tracking-[0.18em] text-emerald-700">Income</p>
-                    <p id="account-monthly-income"
-                      class="mt-2 text-right text-base font-extrabold text-emerald-700 sm:text-lg">$0.00</p>
-                  </button>
-                  <button type="button" id="account-expenses-card" onclick="setAccountSummaryTypeFilter('expense')"
-                    class="rounded-2xl border border-red-200 bg-red-50 p-3 text-left transition hover:bg-red-100 hover:shadow-sm">
-                    <p class="text-[10px] font-bold uppercase tracking-[0.18em] text-red-700">Expenses</p>
-                    <p id="account-monthly-expenses"
-                      class="mt-2 text-right text-base font-extrabold text-red-700 sm:text-lg">$0.00</p>
-                  </button>
-                  <button type="button" id="account-remaining-card" onclick="setAccountSummaryTypeFilter(null)"
-                    class="rounded-2xl border border-blue-200 bg-blue-50 p-3 text-left transition hover:bg-blue-100 hover:shadow-sm">
-                    <p class="text-[10px] font-bold uppercase tracking-[0.18em] text-blue-700">Remaining</p>
-                    <p id="account-monthly-remaining"
-                      class="mt-2 text-right text-base font-extrabold text-blue-700 sm:text-lg">$0.00</p>
-                  </button>
-                </div>
-              </div>
-
-            </div>
-
-            <!-- Quadrant Details Card: Launch Portal, Edit Account, Current & Cleared Balances -->
-            <div
-              class="bg-white p-4 rounded-3xl border border-slate-200 shadow-sm flex flex-col justify-between space-y-3">
-              <div class="grid grid-cols-2 gap-3">
-
-                <!-- Q1 (Upper Left): Launch Portal -->
-                <div class="flex items-center justify-start">
-                  <a id="tx-acc-external-btn" href="#" target="_blank" rel="noopener noreferrer"
-                    class="hidden w-full text-center inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white py-2.5 text-[11px] font-bold text-slate-700 hover:bg-slate-50 transition shadow-sm">
-                    <span>🔗</span> Launch Portal
-                  </a>
-                  <div id="tx-acc-external-placeholder"
-                    class="w-full text-center py-2.5 text-[11px] font-bold text-slate-300 border border-dashed border-slate-200 rounded-xl select-none">
-                    No Portal Linked
-                  </div>
-                </div>
-
-                <!-- Q2 (Upper Right): Current Balance (Larger Font Weight and Size) -->
-                <div class="text-right flex flex-col justify-center pr-1">
-                  <div id="tx-acc-balance" class="text-lg font-black tracking-tight text-slate-900">$0.00</div>
-                  <div class="text-[9px] text-slate-400 font-extrabold uppercase tracking-wider mt-0.5">Current
-                    Balance</div>
-                </div>
-
-                <!-- Q3 (Lower Left): Edit Account (Spelled out "Account") -->
-                <div class="flex items-center justify-start">
-                  <button type="button" onclick="openAccountModal(activeAccountId)"
-                    class="w-full text-center inline-flex items-center justify-center gap-1.5 rounded-xl border border-blue-100 bg-blue-50 py-2.5 text-[11px] font-bold text-blue-700 hover:bg-blue-100 transition">
-                    <span>✎</span> Edit Account
-                  </button>
-                </div>
-
-                <!-- Q4 (Lower Right): Cleared Balance (Larger Font Weight and Size) -->
-                <div class="text-right flex flex-col justify-center pr-1">
-                  <div class="flex items-center justify-end gap-1">
-                    <div id="tx-acc-cleared" class="text-base font-black tracking-tight text-emerald-600">$0.00</div>
-                    <button type="button" onclick="openClearedBalanceModal()" title="Edit cleared balance"
-                      class="text-emerald-600 hover:text-emerald-800 text-xs">✎</button>
-                  </div>
-                  <div class="text-[9px] text-emerald-700 font-extrabold uppercase tracking-wider mt-0.5">Cleared
-                    Balance</div>
-                </div>
-
-              </div>
-
-              <!-- Credit Limit Container (Nested bottom card footer) -->
-              <div id="tx-acc-credit-limit-container" class="hidden border-t border-slate-100 pt-2 space-y-1 shrink-0">
-                <div class="flex justify-between text-[10px] font-semibold">
-                  <span class="text-slate-400">Credit Remaining</span>
-                  <span id="tx-acc-credit-remaining-label" class="text-slate-700"></span>
-                </div>
-                <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
-                  <div id="tx-acc-credit-progress" class="h-full rounded-full transition-all duration-300"
-                    style="width: 0%;"></div>
-                </div>
-              </div>
-
-            </div>
-
-            <!-- Static Add Transaction Button -->
-            <button onclick="openTxModal()"
-              class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition flex items-center justify-center gap-2 shadow-sm">
-              <span class="text-lg leading-none">+</span> Add Transaction
-            </button>
-
-            <!-- Account-specific tag filter container -->
-            <div id="tag-filter-container"
-              class="hidden bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm space-y-2">
-              <div class="flex items-center justify-between flex-wrap gap-2">
-                <div class="flex items-center gap-2.5">
-                  <span class="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Filter by Labels</span>
-                  <label
-                    class="inline-flex items-center gap-1 text-[10px] font-bold text-slate-500 cursor-pointer select-none">
-                    <input type="checkbox" id="tag-filter-match-all" onchange="toggleTagFilterMatchMode()"
-                      class="h-3.5 w-3.5 rounded border-slate-300 text-blue-600 focus:ring-blue-500" />
-                    <span>Match All (AND)</span>
-                  </label>
-                </div>
-                <button type="button" onclick="openLabelPicker('filter')"
-                  class="text-[10px] font-bold text-blue-600 hover:text-blue-700 transition">🏷️ Select</button>
-              </div>
-              <div class="relative">
-                <div onclick="document.getElementById('tag-filter-search-input').focus()"
-                  class="flex flex-wrap items-center gap-1 min-h-[36px] p-1.5 rounded-xl border border-slate-200 bg-white cursor-text">
-                  <div id="tag-filter-preview" class="contents"></div>
-                  <input type="text" id="tag-filter-search-input" placeholder="Type to filter..."
-                    class="flex-1 min-w-[8px] text-xs font-semibold bg-transparent border-0 p-0 focus:ring-0 focus:outline-none text-slate-800"
-                    oninput="handleTagFilterSearchTyping(this.value)" onkeydown="handleTagFilterSearchKeydown(event)" />
-                </div>
-                <div id="tag-filter-autocomplete-dropdown"
-                  class="hidden absolute left-0 right-0 mt-1 max-h-40 overflow-y-auto bg-white border border-slate-200 rounded-xl shadow-lg z-50">
-                </div>
-              </div>
-            </div>
-
-            <div class="space-y-1">
-              <h3 id="feed-heading-title" class="text-sm font-extrabold text-slate-800">Ledger</h3>
-              <div id="transactions-list" class="space-y-3">
-                <p class="text-sm text-gray-500">Loading transactions...</p>
-              </div>
-            </div>
-          </div>
+        </div>
 
         </section>
 
@@ -2887,6 +2895,7 @@
         showHomeAccounts();
       }
 
+      // Show the home accounts view
       function showHomeAccounts() {
         globalActiveTagFilters = [];
 
@@ -2895,8 +2904,15 @@
         document.getElementById('ledger-feed-panel').classList.add('hidden');
         document.getElementById('home-tabs-switcher').classList.remove('hidden');
 
+        // Show unified controls card & search accounts bar
+        const controlsContainer = document.getElementById('home-controls-container');
+        if (controlsContainer) controlsContainer.classList.remove('hidden');
+
         const titleWrap = document.getElementById('home-view-title-wrap');
         if (titleWrap) titleWrap.classList.remove('hidden');
+
+        const accountSearchWrap = document.getElementById('account-search-wrap');
+        if (accountSearchWrap) accountSearchWrap.classList.remove('hidden');
 
         // Restore cockpit sidebar on mobile now that we've left the ledger detail view
         document.getElementById('cockpit-sidebar')?.classList.remove('hidden');
@@ -2905,18 +2921,17 @@
         const accountsTab = document.getElementById('home-accounts-tab');
         const transactionsTab = document.getElementById('home-transactions-tab');
         const title = document.getElementById('home-view-title');
-        const accountSearchWrap = document.getElementById('account-search-wrap');
         const accountTypeFilterBar = document.getElementById('account-type-filter-bar');
         const newAccountButton = document.getElementById('new-account-button');
 
         clearSearchForView('home-accounts');
         currentViewState = 'home-accounts';
         window.scrollTo(0, 0);
+
         renderMonthlySummary(); // Re-evaluate visibility in case we arrived here from a detail view
         relocateAccountSummaryCard(); // Return the Account Summary card to the ledger panel
 
         if (accountsList) accountsList.classList.remove('hidden');
-        if (accountSearchWrap) accountSearchWrap.classList.remove('hidden');
         if (accountTypeFilterBar) accountTypeFilterBar.classList.remove('hidden');
         if (newAccountButton) newAccountButton.classList.remove('hidden');
 
@@ -2938,6 +2953,7 @@
         saveViewState();
       }
 
+      // Show the transactions view for a specific account, optionally preserving scroll position
       async function showTransactionsView(accId, preserveScroll = false) {
         if (!preserveScroll) {
           window.scrollTo(0, 0);
@@ -2948,6 +2964,7 @@
         activeAccountId = accId;
         activeTagFilters = [];
         currentViewState = 'transactions-detail';
+
         renderMonthlySummary(); // Hide immediately instead of waiting for the next re-render
         relocateAccountSummaryCard(); // Move the Account Summary card into the cockpit sidebar on desktop
 
@@ -2959,6 +2976,10 @@
         document.getElementById('all-transactions-feed-panel').classList.add('hidden');
         document.getElementById('ledger-feed-panel').classList.remove('hidden');
         document.getElementById('home-tabs-switcher').classList.add('hidden');
+
+        // Hide unified home controls card completely inside individual account ledger views
+        const controlsContainer = document.getElementById('home-controls-container');
+        if (controlsContainer) controlsContainer.classList.add('hidden');
 
         const titleWrap = document.getElementById('home-view-title-wrap');
         if (titleWrap) titleWrap.classList.add('hidden');
@@ -2972,7 +2993,7 @@
         const numText = acc.account_number ? acc.account_number : '';
         document.getElementById('header-sub-title').textContent = `${acc.institution || acc.type} ${numText ? '• ' + numText : ''}`;
 
-        // Enable "To Accounts" routing inside drop menu
+        // Enable "To Accounts" routing inside dropdown menu
         document.getElementById('menu-to-accounts-btn').classList.remove('hidden');
 
         // Handle external portal routing & placeholder display
@@ -2996,6 +3017,7 @@
         saveViewState();
       }
 
+      // Show all transactions view, optionally filtered by type (income/expense)
       function showAllTransactions(type = null) {
         selectedSummaryTransactionType = type ?? null;
         globalActiveTagFilters = [];
@@ -3005,8 +3027,15 @@
         document.getElementById('ledger-feed-panel').classList.add('hidden');
         document.getElementById('home-tabs-switcher').classList.remove('hidden');
 
+        // Show unified controls container, but hide the accounts-specific search field
+        const controlsContainer = document.getElementById('home-controls-container');
+        if (controlsContainer) controlsContainer.classList.remove('hidden');
+
         const titleWrap = document.getElementById('home-view-title-wrap');
         if (titleWrap) titleWrap.classList.remove('hidden');
+
+        const accountSearchWrap = document.getElementById('account-search-wrap');
+        if (accountSearchWrap) accountSearchWrap.classList.add('hidden');
 
         // Restore cockpit sidebar on mobile now that we've left the ledger detail view
         document.getElementById('cockpit-sidebar')?.classList.remove('hidden');
@@ -3019,8 +3048,8 @@
         clearSearchForView('home-transactions');
         currentViewState = 'home-transactions';
         window.scrollTo(0, 0);
-        relocateAccountSummaryCard(); // Return the Account Summary card to the ledger panel
 
+        relocateAccountSummaryCard(); // Return the Account Summary card to the ledger panel
         if (newAccountButton) newAccountButton.classList.add('hidden');
 
         const monthLabel = selectedSummaryMonth
