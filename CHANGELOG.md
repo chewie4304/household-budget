@@ -13,6 +13,8 @@ All notable changes to this project will be documented in this file.
 - **Vertical Stack Controls Layout:** Repositioned the view switcher tabs and the active search input boxes to stack vertically on desktop screens, resolving layout squishing by allowing elements to expand to 100% card width.
 - **Search Fields Consolidation:** Relocated the "Search transactions" input box up into the main Controls Container card alongside the account search bar. The active search input now toggles dynamically based on your selected view tab while the card height remains completely static.
 - **Streamlined Transactions Headings:** Simplified the transaction history view titles by stripping out the dynamic month and year suffix labels (e.g., displaying as "Transactions", "Income", or "Expenses" instead of appending the month/year string).
+- **Balances & Quick Action Card Consolidation:** Relocated the "+ Add Transaction" button inside the primary account details balances card, group-unifying all ledger actions (Portal launching, Edit Account, Current & Cleared Balances, and Add Transaction) into a single, cohesive vertical container.
+- **Balances Card Desktop Height & Alignment:** Standardized the balances card to a matching `lg:h-[188px]` desktop height and appended `lg:!mt-0` to bypass empty-sibling parent margins, locking the card into a laser-straight horizontal alignment with the neighboring Account Summary card.
 - **Symmetrical Card Parity:** Standardized the heights of the global Monthly Summary card, the new Controls Container, and the account-specific Monthly Summary card to a matching `lg:h-[188px]` to ensure perfect horizontal alignment on desktop viewports with zero visual jumps.
 
 ### Fixed
