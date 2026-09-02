@@ -4,6 +4,23 @@ All notable changes to this project will be documented in this file.
 
 ## [unreleased]
 
+## [1.6.0] - 2026-09-01
+
+### Added
+- **Planned Transactions Widget Engine:** Deployed a brand-new planned/recurring transaction schedule system. Renders as a beautiful static sidebar card on desktop and triggers an elegant slide-up modal drawer on mobile viewports. Clicking a scheduled item instantly pre-fills the standard ledger form with type, amount, and payee details for rapid manual posting.
+- **Consolidated Navigation Menu (☰):** Added an absolute-positioned floating dropdown menu to standard headers, replacing the crowded mobile buttons. Dynamically displays viewport-specific links including "+ Add Transaction", "Return to Accounts," and "Planned Transactions."
+- **Interactive Account-Specific Monthly Summary:** Configured the Account Details monthly summary blocks to act as live, interactive sub-filters. Tapping **Income** filters the ledger to display only income transactions, tapping **Expenses** displays only expenses, and tapping **Remaining** clears the filter to repaint the entire ledger instantly.
+- **Context-Aware Month Selection:** Integrated a secondary, localized month-selection dropdown within the active account details panel, allowing users to browse historical ledger trends and account-specific metrics on the fly.
+
+### Changed
+- **Anti-Whiplash Dashboard Grid Layout:** Overhauled the desktop landing page into a unified, three-column CSS grid. The left two columns act as a permanent static financial cockpit (housing Monthly Summary and Widgets), while the right column acts as a dynamic action feed (Accounts, search, or detailed ledgers). toggling views on desktop no longer shifts or resizes columns.
+- **Dual-Column Account Details Header:** Restructured the top section of the Account Details view on desktop. The account-specific Monthly Summary takes up the left two columns, and the action buttons (Launch Portal, Edit Account) and bold, enlarged balances (Current and Cleared Balance) are grouped into a symmetrical 2x2 quadrant layout in the right column.
+- **Dynamic Header Text Synchronization:** Upgraded the sticky navigation header to display global branding ("Home Wealth" / "Your Money. Your Way.") on main menus, and dynamically transitions to present active bank, institution, and masked account number details when browsing individual ledgers.
+
+### Fixed
+- **Excess Vertical White Space:** Decreased the padding and vertical margins above the Account Summary card in the Account Details view to establish a tighter, flush, and cohesive visual hierarchy.
+- **Mobile Render Interceptions:** Patched navigation class transitions to auto-hide background layout columns on mobile devices, preventing vertical layout bleed-through and background scroll lockouts.
+
 ## [1.5.3] - 2026-08-31
 
 ### Added
