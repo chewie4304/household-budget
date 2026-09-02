@@ -203,14 +203,16 @@
                 <p id="monthly-summary-month" class="mt-1 text-base font-bold text-slate-800">This Month</p>
               </div>
               <div class="flex items-center gap-2">
+                <!-- Active Live Badge -->
                 <span id="summary-live-badge"
                   class="hidden inline-flex items-center rounded-full border border-blue-200 bg-blue-100 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-blue-700">Live</span>
+                <!-- Aligned Dropdown Selector -->
                 <select id="summary-month-select" onchange="setSelectedSummaryMonth(this.value)"
-                  class="rounded-xl border border-slate-200 bg-white px-2 py-1.5 pr-8 text-xs font-semibold text-slate-700 shadow-sm">
+                  class="rounded-xl border border-slate-200 bg-white px-2 py-1.5 pr-8 text-xs font-semibold text-slate-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-300">
                 </select>
               </div>
             </div>
-            <!-- Summary Totals -->
+            <!-- Summary Totals Grid -->
             <div class="grid grid-cols-3 gap-2 text-center">
               <button type="button" onclick="showAllTransactions('income')"
                 class="rounded-2xl border border-emerald-200 bg-emerald-50 p-3 text-left transition hover:bg-emerald-100 hover:shadow-sm">
@@ -224,11 +226,12 @@
                 <p id="monthly-expenses" class="mt-2 text-right text-base font-extrabold text-red-700 sm:text-lg">$0.00
                 </p>
               </button>
-              <div class="rounded-2xl border border-blue-200 bg-blue-50 p-3 text-left">
+              <button type="button" onclick="showAllTransactions(null)"
+                class="rounded-2xl border border-blue-200 bg-blue-50 p-3 text-left transition hover:bg-blue-100 hover:shadow-sm">
                 <p class="text-[10px] font-bold uppercase tracking-[0.18em] text-blue-700">Remaining</p>
                 <p id="monthly-remaining" class="mt-2 text-right text-base font-extrabold text-blue-700 sm:text-lg">
                   $0.00</p>
-              </div>
+              </button>
             </div>
           </div>
 
@@ -363,38 +366,42 @@
 
               <!-- Account-Specific Monthly Summary Card -->
               <div id="account-monthly-summary"
-                class="rounded-3xl border border-slate-200 bg-gradient-to-br from-slate-50 via-white to-blue-50 shadow-sm p-4 space-y-3 flex flex-col justify-between">
-                <div class="flex items-center justify-between">
+                class="rounded-3xl border border-slate-200 bg-gradient-to-br from-slate-50 via-white to-blue-50 shadow-sm p-5 space-y-3">
+                <!-- Summary Header -->
+                <div class="flex items-center justify-between gap-2">
                   <div>
                     <p class="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">Account Summary</p>
-                    <p id="account-summary-month-label" class="mt-1 text-sm font-bold text-slate-800">This Month</p>
+                    <p id="account-summary-month-label" class="mt-1 text-base font-bold text-slate-800">This Month</p>
                   </div>
-                  <!-- Interactive month selector inside the account summary -->
-                  <div class="flex items-center">
+                  <div class="flex items-center gap-2">
+                    <!-- Restored Live Badge -->
+                    <span id="account-summary-live-badge"
+                      class="hidden inline-flex items-center rounded-full border border-blue-200 bg-blue-100 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-blue-700">Live</span>
+                    <!-- Synced Dropdown Selector -->
                     <select id="account-summary-month-select" onchange="setSelectedSummaryMonth(this.value)"
-                      class="rounded-xl border border-slate-200 bg-white px-2 py-1 text-[11px] font-bold text-slate-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-300">
+                      class="rounded-xl border border-slate-200 bg-white px-2 py-1.5 pr-8 text-xs font-semibold text-slate-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-300">
                     </select>
                   </div>
                 </div>
-
-                <div class="grid grid-cols-3 gap-2 text-center items-center py-1">
+                <!-- Summary Totals Grid -->
+                <div class="grid grid-cols-3 gap-2 text-center">
                   <button type="button" id="account-income-card" onclick="setAccountSummaryTypeFilter('income')"
-                    class="rounded-2xl border border-emerald-200 bg-emerald-50 p-2 text-left transition hover:bg-emerald-100 hover:shadow-sm">
-                    <p class="text-[9px] font-bold uppercase tracking-[0.1em] text-emerald-700">Income</p>
+                    class="rounded-2xl border border-emerald-200 bg-emerald-50 p-3 text-left transition hover:bg-emerald-100 hover:shadow-sm">
+                    <p class="text-[10px] font-bold uppercase tracking-[0.18em] text-emerald-700">Income</p>
                     <p id="account-monthly-income"
-                      class="mt-1 text-right text-xs font-extrabold text-emerald-700 sm:text-sm">$0.00</p>
+                      class="mt-2 text-right text-base font-extrabold text-emerald-700 sm:text-lg">$0.00</p>
                   </button>
                   <button type="button" id="account-expenses-card" onclick="setAccountSummaryTypeFilter('expense')"
-                    class="rounded-2xl border border-red-200 bg-red-50 p-2 text-left transition hover:bg-red-100 hover:shadow-sm">
-                    <p class="text-[9px] font-bold uppercase tracking-[0.1em] text-red-700">Expenses</p>
+                    class="rounded-2xl border border-red-200 bg-red-50 p-3 text-left transition hover:bg-red-100 hover:shadow-sm">
+                    <p class="text-[10px] font-bold uppercase tracking-[0.18em] text-red-700">Expenses</p>
                     <p id="account-monthly-expenses"
-                      class="mt-1 text-right text-xs font-extrabold text-red-700 sm:text-sm">$0.00</p>
+                      class="mt-2 text-right text-base font-extrabold text-red-700 sm:text-lg">$0.00</p>
                   </button>
                   <button type="button" id="account-remaining-card" onclick="setAccountSummaryTypeFilter(null)"
-                    class="rounded-2xl border border-blue-200 bg-blue-50 p-2 text-left transition hover:bg-blue-100 hover:shadow-sm">
-                    <p class="text-[9px] font-bold uppercase tracking-[0.1em] text-blue-700">Remaining</p>
+                    class="rounded-2xl border border-blue-200 bg-blue-50 p-3 text-left transition hover:bg-blue-100 hover:shadow-sm">
+                    <p class="text-[10px] font-bold uppercase tracking-[0.18em] text-blue-700">Remaining</p>
                     <p id="account-monthly-remaining"
-                      class="mt-1 text-right text-xs font-extrabold text-blue-700 sm:text-sm">$0.00</p>
+                      class="mt-2 text-right text-base font-extrabold text-blue-700 sm:text-lg">$0.00</p>
                   </button>
                 </div>
               </div>
@@ -404,60 +411,59 @@
             <!-- Quadrant Details Card: Launch Portal, Edit Account, Current & Cleared Balances -->
             <div
               class="bg-white p-4 rounded-3xl border border-slate-200 shadow-sm flex flex-col justify-between space-y-3">
-                <div class="grid grid-cols-2 gap-3">
+              <div class="grid grid-cols-2 gap-3">
 
-                  <!-- Q1 (Upper Left): Launch Portal -->
-                  <div class="flex items-center justify-start">
-                    <a id="tx-acc-external-btn" href="#" target="_blank" rel="noopener noreferrer"
-                      class="hidden w-full text-center inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white py-2.5 text-[11px] font-bold text-slate-700 hover:bg-slate-50 transition shadow-sm">
-                      <span>🔗</span> Launch Portal
-                    </a>
-                    <div id="tx-acc-external-placeholder"
-                      class="w-full text-center py-2.5 text-[11px] font-bold text-slate-300 border border-dashed border-slate-200 rounded-xl select-none">
-                      No Portal Linked
-                    </div>
-                  </div>
-
-                  <!-- Q2 (Upper Right): Current Balance (Larger Font Weight and Size) -->
-                  <div class="text-right flex flex-col justify-center pr-1">
-                    <div id="tx-acc-balance" class="text-lg font-black tracking-tight text-slate-900">$0.00</div>
-                    <div class="text-[9px] text-slate-400 font-extrabold uppercase tracking-wider mt-0.5">Current
-                      Balance</div>
-                  </div>
-
-                  <!-- Q3 (Lower Left): Edit Account (Spelled out "Account") -->
-                  <div class="flex items-center justify-start">
-                    <button type="button" onclick="openAccountModal(activeAccountId)"
-                      class="w-full text-center inline-flex items-center justify-center gap-1.5 rounded-xl border border-blue-100 bg-blue-50 py-2.5 text-[11px] font-bold text-blue-700 hover:bg-blue-100 transition">
-                      <span>✎</span> Edit Account
-                    </button>
-                  </div>
-
-                  <!-- Q4 (Lower Right): Cleared Balance (Larger Font Weight and Size) -->
-                  <div class="text-right flex flex-col justify-center pr-1">
-                    <div class="flex items-center justify-end gap-1">
-                      <div id="tx-acc-cleared" class="text-base font-black tracking-tight text-emerald-600">$0.00</div>
-                      <button type="button" onclick="openClearedBalanceModal()" title="Edit cleared balance"
-                        class="text-emerald-600 hover:text-emerald-800 text-xs">✎</button>
-                    </div>
-                    <div class="text-[9px] text-emerald-700 font-extrabold uppercase tracking-wider mt-0.5">Cleared
-                      Balance</div>
-                  </div>
-
-                </div>
-
-                <!-- Credit Limit Container (Nested bottom card footer) -->
-                <div id="tx-acc-credit-limit-container"
-                  class="hidden border-t border-slate-100 pt-2 space-y-1 shrink-0">
-                  <div class="flex justify-between text-[10px] font-semibold">
-                    <span class="text-slate-400">Credit Remaining</span>
-                    <span id="tx-acc-credit-remaining-label" class="text-slate-700"></span>
-                  </div>
-                  <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
-                    <div id="tx-acc-credit-progress" class="h-full rounded-full transition-all duration-300"
-                      style="width: 0%;"></div>
+                <!-- Q1 (Upper Left): Launch Portal -->
+                <div class="flex items-center justify-start">
+                  <a id="tx-acc-external-btn" href="#" target="_blank" rel="noopener noreferrer"
+                    class="hidden w-full text-center inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white py-2.5 text-[11px] font-bold text-slate-700 hover:bg-slate-50 transition shadow-sm">
+                    <span>🔗</span> Launch Portal
+                  </a>
+                  <div id="tx-acc-external-placeholder"
+                    class="w-full text-center py-2.5 text-[11px] font-bold text-slate-300 border border-dashed border-slate-200 rounded-xl select-none">
+                    No Portal Linked
                   </div>
                 </div>
+
+                <!-- Q2 (Upper Right): Current Balance (Larger Font Weight and Size) -->
+                <div class="text-right flex flex-col justify-center pr-1">
+                  <div id="tx-acc-balance" class="text-lg font-black tracking-tight text-slate-900">$0.00</div>
+                  <div class="text-[9px] text-slate-400 font-extrabold uppercase tracking-wider mt-0.5">Current
+                    Balance</div>
+                </div>
+
+                <!-- Q3 (Lower Left): Edit Account (Spelled out "Account") -->
+                <div class="flex items-center justify-start">
+                  <button type="button" onclick="openAccountModal(activeAccountId)"
+                    class="w-full text-center inline-flex items-center justify-center gap-1.5 rounded-xl border border-blue-100 bg-blue-50 py-2.5 text-[11px] font-bold text-blue-700 hover:bg-blue-100 transition">
+                    <span>✎</span> Edit Account
+                  </button>
+                </div>
+
+                <!-- Q4 (Lower Right): Cleared Balance (Larger Font Weight and Size) -->
+                <div class="text-right flex flex-col justify-center pr-1">
+                  <div class="flex items-center justify-end gap-1">
+                    <div id="tx-acc-cleared" class="text-base font-black tracking-tight text-emerald-600">$0.00</div>
+                    <button type="button" onclick="openClearedBalanceModal()" title="Edit cleared balance"
+                      class="text-emerald-600 hover:text-emerald-800 text-xs">✎</button>
+                  </div>
+                  <div class="text-[9px] text-emerald-700 font-extrabold uppercase tracking-wider mt-0.5">Cleared
+                    Balance</div>
+                </div>
+
+              </div>
+
+              <!-- Credit Limit Container (Nested bottom card footer) -->
+              <div id="tx-acc-credit-limit-container" class="hidden border-t border-slate-100 pt-2 space-y-1 shrink-0">
+                <div class="flex justify-between text-[10px] font-semibold">
+                  <span class="text-slate-400">Credit Remaining</span>
+                  <span id="tx-acc-credit-remaining-label" class="text-slate-700"></span>
+                </div>
+                <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
+                  <div id="tx-acc-credit-progress" class="h-full rounded-full transition-all duration-300"
+                    style="width: 0%;"></div>
+                </div>
+              </div>
 
             </div>
 
@@ -2191,23 +2197,36 @@
           const accExpensesEl = document.getElementById('account-monthly-expenses');
           const accRemainingEl = document.getElementById('account-monthly-remaining');
           const accMonthLabel = document.getElementById('account-summary-month-label');
+          const accLiveBadge = document.getElementById('account-summary-live-badge'); // Target new badge element
 
+          // Standardize Month label string output
           if (accMonthLabel) {
             const monthName = new Date(year, month - 1, 1).toLocaleString('en-US', { month: 'long', year: 'numeric' });
             accMonthLabel.textContent = monthName;
           }
+
+          // Toggle localized Live Badge based on selection key
+          if (accLiveBadge) {
+            const now = new Date();
+            const currentMonthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+            const isCurrentMonth = selectedSummaryMonth === currentMonthKey;
+            accLiveBadge.classList.toggle('hidden', !isCurrentMonth);
+          }
+
           if (accIncomeEl) accIncomeEl.textContent = `$${accountIncome.toFixed(2)}`;
           if (accExpensesEl) accExpensesEl.textContent = `$${accountExpenses.toFixed(2)}`;
+
+          // Synced class manipulations for standard sizes and color transitions
           if (accRemainingEl) {
             accRemainingEl.textContent = `$${accountRemaining.toFixed(2)}`;
             const card = document.getElementById('account-remaining-card');
             if (card) {
               if (accountRemaining < 0) {
-                card.className = "rounded-2xl border border-red-200 bg-red-50 p-2 text-left transition hover:bg-red-100 hover:shadow-sm";
-                accRemainingEl.className = "mt-1 text-right text-xs font-extrabold text-red-700 sm:text-sm";
+                card.className = "rounded-2xl border border-red-200 bg-red-50 p-3 text-left transition hover:bg-red-100 hover:shadow-sm";
+                accRemainingEl.className = "mt-2 text-right text-base font-extrabold text-red-700 sm:text-lg";
               } else {
-                card.className = "rounded-2xl border border-blue-200 bg-blue-50 p-2 text-left transition hover:bg-blue-100 hover:shadow-sm";
-                accRemainingEl.className = "mt-1 text-right text-xs font-extrabold text-blue-700 sm:text-sm";
+                card.className = "rounded-2xl border border-blue-200 bg-blue-50 p-3 text-left transition hover:bg-blue-100 hover:shadow-sm";
+                accRemainingEl.className = "mt-2 text-right text-base font-extrabold text-blue-700 sm:text-lg";
               }
             }
           }

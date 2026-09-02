@@ -4,6 +4,19 @@ All notable changes to this project will be documented in this file.
 
 ## [unreleased]
 
+## [1.6.1] - 2026-09-01
+
+### Added
+- **Interactive Account Summary Sub-Filters:** Enabled full month-scoped transactional filtering on the ledger view. Clicking **Income** filters the list to show only income for the selected month, clicking **Expenses** isolates expenses, and clicking **Remaining** instantly resets the filter to display all transactions again.
+- **Account Live Badge:** Added a matching "Live" status badge inside the account-specific summary that automatically shines when browsing the current active month, ensuring perfect parity with the global landing view.
+
+### Changed
+- **Symmetrical Summary Card Overhaul:** Re-aligned every element of the **Monthly Summary** and **Account Summary** cards to be completely identical in padding (`p-5`), text sizes, spacing, and icon positions. Toggling between dashboard views now renders seamlessly with zero layout shifting or text jumps.
+- **Optimized Web View Layout:** Refactored the desktop grid inside the Account Details view so the newly standardized Account Summary card takes up the two left columns, while the action buttons (Launch Portal, Edit Account) and balances cleanly occupy the right column.
+
+### Fixed
+- **Tighter Ledger Top Spacing:** Decreased the vertical space above the Account Summary card in the Account Details ledger view to establish a cleaner, flush, and professional appearance.
+
 ## [1.6.0] - 2026-09-01
 
 ### Added
