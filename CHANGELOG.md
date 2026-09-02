@@ -4,10 +4,16 @@ All notable changes to this project will be documented in this file.
 
 ## [unreleased]
 
-## [1.6.2-dev] - 2026-09-02
+## [1.6.2] - 2026-09-02
+
+### Changed
+- **Unified Controls Panel:** Redesigned the right-column home dashboard header into a unified, card-styled Controls Container matching the soft gradient, visual padding, and height (`lg:h-[188px]`) of the global Monthly Summary card.
+- **Stacked Layout Architecture:** Reorganized the view switching tabs and the "Search accounts" input field to stack vertically rather than horizontally, maximizing search bar visibility and preventing cramped horizontal squishing on desktop screens.
 
 ### Fixed
-- **Account Ledger Transaction Sorting:** Aligned the transaction sorting pipeline inside individual Account Details views to match the main Transactions View. The ledger now runs your standard comparison sorting engine, correctly bubbling Pending transactions to the top of the card feed, followed by Cleared transactions ordered by date (newest first) and creation timestamp, instead of incorrectly grouping cleared items first regardless of date.
+- **Account Ledger Transaction Sorting:** Aligned the transaction sorting pipeline inside individual Account Details views to match the main Transactions View. The ledger now runs your standard comparison sorting engine, correctly bubbling Pending transactions to the top of the feed followed by Cleared transactions ordered by date (newest first) and creation timestamp.
+- **Column Grid Alignment Restoration:** Resolved a grid wrapping bug by establishing a dedicated right-column column-flex `<section>` wrapper, pulling the active accounts list and account filter bar back to the right column on desktop instead of wrapping underneath the cockpit sidebar.
+- **Summary Element ID and Visibility Restorations:** Resolved a critical layout ID overlap conflict and default hidden-class bug on the account Monthly Summary card, successfully restoring full layout symmetry and enabling the desktop cockpit card "teleportation" engine to lock back into place.
 
 ## [1.6.1] - 2026-09-01
 
