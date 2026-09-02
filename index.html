@@ -3497,6 +3497,9 @@
           });
         }
 
+        // 🌟 SORT THE DYNAMIC FEED TO ALIGN WITH TRANSACTION VIEW
+        filteredTx.sort(compareTransactions);
+
         if (filteredTx.length === 0) {
           const emptyMessage = activeTagFilters.length > 0
             ? 'No transactions with this tag.'
