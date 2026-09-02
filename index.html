@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" style="background-color: #020617;">
+<html lang="en" style="background-color: #020617; scrollbar-gutter: stable;">
 
 <head>
   <meta charset="UTF-8" />
@@ -188,52 +188,56 @@
 
     <!-- Unified Layout Grid Container -->
     <main class="max-w-6xl mx-auto p-4">
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 items-start">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-3 lg:gap-4 items-start">
+
 
         <!-- LEFT 2 COLUMNS: Static Financial Cockpit (Always visible on Desktop) -->
-        <section id="cockpit-sidebar" class="lg:col-span-2 flex flex-col gap-4 lg:flex">
+        <section id="cockpit-sidebar" class="lg:col-span-2 flex flex-col gap-0 lg:gap-4 lg:flex">
 
           <!-- Widget 1: Monthly Summary (Spans full width of cockpit) -->
           <div id="monthly-summary"
-            class="hidden rounded-3xl border border-slate-200 bg-gradient-to-br from-slate-50 via-white to-blue-50 shadow-sm p-5 space-y-3 flex flex-col justify-between lg:h-[176px]">
-            <!-- Summary Header -->
-            <div class="flex items-center justify-between gap-2">
-              <div>
+            class="hidden rounded-3xl border border-slate-200 bg-gradient-to-br from-slate-50 via-white to-blue-50 shadow-sm p-4 sm:p-5 space-y-2 sm:space-y-3 flex flex-col justify-between h-[188px]">
+
+            <!-- Summary Header (Stacked on mobile, row on desktop) -->
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 sm:gap-2 shrink-0">
+              <div class="flex flex-col leading-tight">
                 <p class="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">Monthly Summary</p>
-                <p id="monthly-summary-month" class="mt-1 text-base font-bold text-slate-800">This Month</p>
+                <p id="monthly-summary-month" class="text-sm sm:text-base font-bold text-slate-800 leading-tight">This
+                  Month</p>
               </div>
-              <div class="flex items-center gap-2">
-                <!-- Active Live Badge -->
-                <span id="summary-live-badge"
-                  class="hidden inline-flex items-center rounded-full border border-blue-200 bg-blue-100 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-blue-700">Live</span>
+              <div class="flex items-center gap-2 mt-0.5 sm:mt-0">
                 <!-- Aligned Dropdown Selector -->
                 <select id="summary-month-select" onchange="setSelectedSummaryMonth(this.value)"
-                  class="rounded-xl border border-slate-200 bg-white px-2 py-1.5 pr-8 text-xs font-semibold text-slate-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-300">
+                  class="rounded-xl border border-slate-200 bg-white px-2 py-1 pr-8 text-xs font-semibold text-slate-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-300">
                 </select>
               </div>
-            </div>
-            <!-- Summary Totals Grid -->
-            <div class="grid grid-cols-3 gap-2 text-center">
+            </div> <!-- End of Summary Header -->
+
+            <!-- Summary Totals Grid (Tighter padding & margins on mobile) -->
+            <div class="grid grid-cols-3 gap-2 text-center shrink-0">
               <button type="button" onclick="showAllTransactions('income')"
-                class="rounded-2xl border border-emerald-200 bg-emerald-50 p-3 text-left transition hover:bg-emerald-100 hover:shadow-sm">
+                class="rounded-2xl border border-emerald-200 bg-emerald-50 p-2 sm:p-3 text-left transition hover:bg-emerald-100 hover:shadow-sm">
                 <p class="text-[10px] font-bold uppercase tracking-[0.18em] text-emerald-700">Income</p>
-                <p id="monthly-income" class="mt-2 text-right text-base font-extrabold text-emerald-700 sm:text-lg">
+                <p id="monthly-income"
+                  class="mt-1 sm:mt-2 text-right text-sm sm:text-base font-extrabold text-emerald-700 sm:text-lg">
                   $0.00</p>
               </button>
               <button type="button" onclick="showAllTransactions('expense')"
-                class="rounded-2xl border border-red-200 bg-red-50 p-3 text-left transition hover:bg-red-100 hover:shadow-sm">
+                class="rounded-2xl border border-red-200 bg-red-50 p-2 sm:p-3 text-left transition hover:bg-red-100 hover:shadow-sm">
                 <p class="text-[10px] font-bold uppercase tracking-[0.18em] text-red-700">Expenses</p>
-                <p id="monthly-expenses" class="mt-2 text-right text-base font-extrabold text-red-700 sm:text-lg">$0.00
+                <p id="monthly-expenses"
+                  class="mt-1 sm:mt-2 text-right text-sm sm:text-base font-extrabold text-red-700 sm:text-lg">$0.00
                 </p>
               </button>
               <button type="button" onclick="showAllTransactions(null)"
-                class="rounded-2xl border border-blue-200 bg-blue-50 p-3 text-left transition hover:bg-blue-100 hover:shadow-sm">
+                class="rounded-2xl border border-blue-200 bg-blue-50 p-2 sm:p-3 text-left transition hover:bg-blue-100 hover:shadow-sm">
                 <p class="text-[10px] font-bold uppercase tracking-[0.18em] text-blue-700">Remaining</p>
-                <p id="monthly-remaining" class="mt-2 text-right text-base font-extrabold text-blue-700 sm:text-lg">
+                <p id="monthly-remaining"
+                  class="mt-1 sm:mt-2 text-right text-sm sm:text-base font-extrabold text-blue-700 sm:text-lg">
                   $0.00</p>
               </button>
-            </div>
-          </div>
+            </div> <!-- End of Monthly Summary Buttons Container -->
+          </div> <!-- End of Monthly Summary Section -->
 
           <!-- Slot the Account Summary card relocates into when viewing Account Details on desktop -->
           <div id="cockpit-account-summary-slot" class="hidden"></div>
@@ -265,14 +269,14 @@
               Future Widget Slot
             </div>
           </div>
-        </section> <!-- End of Planned Transactions Section -->
+        </section>
 
         <!-- RIGHT 1 COLUMN: Dynamic View Feed (Accounts list, Search, OR Selected Account Ledger) -->
         <section class="flex flex-col gap-4">
-
           <!-- Home Controls Container: Matches Monthly Summary Design and Height on Desktop -->
           <div id="home-controls-container"
-            class="rounded-3xl border border-slate-200 bg-gradient-to-br from-slate-50 via-white to-blue-50 shadow-sm p-5 flex flex-col justify-between lg:h-[188px] shrink-0">
+            class="rounded-3xl border border-slate-200 bg-gradient-to-br from-slate-50 via-white to-blue-50 shadow-sm p-5 space-y-3 flex flex-col justify-between h-[188px]">
+
             <!-- Row 1: Title & New Account Button -->
             <div id="home-view-title-wrap" class="flex min-h-[38px] items-center justify-between gap-3">
               <h2 id="home-view-title" class="text-2xl font-extrabold tracking-tight text-slate-800">Your Accounts</h2>
@@ -283,12 +287,12 @@
               </button>
             </div>
 
-            <!-- Row 2: Grid Container for Switcher and Search Field (Stacked Vertically) -->
+            <!-- Row 2: Grid Container for Switcher and Active Search Field (Stacked Vertically) -->
             <div class="flex flex-col gap-3">
 
               <!-- Accounts/Transactions View Switcher Toggle -->
               <div id="home-tabs-switcher"
-                class="w-full flex gap-2 rounded-2xl bg-slate-200 p-1 shadow-inner h-[40px] items-center shrink-0">
+                class="flex-1 w-full flex gap-2 rounded-2xl bg-slate-200 p-1 shadow-inner h-[42px] items-center shrink-0">
                 <button id="home-accounts-tab" onclick="showHomeAccounts()"
                   class="flex-1 bg-blue-600 text-white px-3 py-1.5 rounded-xl text-sm font-semibold shadow-sm h-full transition-all">
                   Accounts
@@ -300,17 +304,28 @@
               </div>
 
               <!-- Search Accounts Input Field -->
-              <div id="account-search-wrap" class="w-full relative shrink-0">
+              <div id="account-search-wrap" class="flex-1 w-full relative shrink-0">
                 <input id="account-search" type="text"
                   oninput="renderAccounts(); checkClearButtonVisibility('account-search', 'clear-account-search')"
                   placeholder="Search accounts..."
-                  class="w-full border border-slate-200 bg-white pl-3 pr-10 py-2 rounded-xl text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-200 shadow-sm h-[40px]" />
+                  class="w-full border border-slate-200 bg-white pl-3 pr-10 py-2 rounded-xl text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-200 shadow-sm h-[42px]" />
                 <button type="button" id="clear-account-search"
                   onclick="clearAndFocusInput('account-search', 'clear-account-search', () => renderAccounts())"
                   class="hidden absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 items-center justify-center text-lg leading-none text-slate-400 hover:text-slate-600 transition-colors">&times;</button>
               </div>
-            </div> <!-- Closes Home Controls Row 2 -->
-          </div> <!-- Closes home-controls-container -->
+
+              <!-- Search Transactions Input Field (Hidden by default on Accounts tab) -->
+              <div id="transaction-search-wrap" class="flex-1 w-full relative shrink-0 hidden">
+                <input id="transaction-search" type="text"
+                  oninput="renderAllTransactions(); checkClearButtonVisibility('transaction-search', 'clear-transaction-search')"
+                  placeholder="Search transactions..."
+                  class="w-full border border-slate-200 bg-white pl-3 pr-10 py-2 rounded-xl text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-200 shadow-sm h-[42px]" />
+                <button type="button" id="clear-transaction-search"
+                  onclick="clearAndFocusInput('transaction-search', 'clear-transaction-search', () => renderAllTransactions())"
+                  class="hidden absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 items-center justify-center text-lg leading-none text-slate-400 hover:text-slate-600 transition-colors">&times;</button>
+              </div>
+            </div> <!-- End of search input fields wrapper -->
+          </div>
 
           <!-- PANEL 1: Accounts Feed Panel (Shown when on Home -> Accounts) -->
           <div id="accounts-feed-panel" class="space-y-3">
@@ -350,18 +365,8 @@
                 <div id="global-tag-filter-autocomplete-dropdown"
                   class="hidden absolute left-0 right-0 mt-1 max-h-40 overflow-y-auto bg-white border border-slate-200 rounded-xl shadow-lg z-50">
                 </div>
-              </div>
-            </div>
-
-            <div id="transaction-search-wrap" class="relative">
-              <input id="transaction-search" type="text"
-                oninput="renderAllTransactions(); checkClearButtonVisibility('transaction-search', 'clear-transaction-search')"
-                placeholder="Search transactions..."
-                class="w-full border border-slate-200 bg-white pl-3 pr-10 py-2.5 rounded-xl text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-200 shadow-sm" />
-              <button type="button" id="clear-transaction-search"
-                onclick="clearAndFocusInput('transaction-search', 'clear-transaction-search', () => renderAllTransactions())"
-                class="hidden absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 items-center justify-center text-lg leading-none text-slate-400 hover:text-slate-600 transition-colors">&times;</button>
-            </div>
+              </div> <!-- End of global tag filter autocomplete dropdown wrapper -->
+            </div> <!-- End of global tag filter wrapper -->
 
             <div id="all-transactions-list" class="space-y-3">
               <p class="text-sm text-gray-500">Loading transactions...</p>
@@ -376,109 +381,122 @@
 
               <!-- Account-Specific Monthly Summary Card -->
               <div id="account-monthly-summary"
-                class="rounded-3xl border border-slate-200 bg-gradient-to-br from-slate-50 via-white to-blue-50 shadow-sm p-5 space-y-3 flex flex-col justify-between lg:h-[188px]">
-                <!-- Summary Header -->
-                <div class="flex items-center justify-between gap-2">
-                  <div>
-                    <p class="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">Account Summary</p>
-                    <p id="account-summary-month-label" class="mt-1 text-base font-bold text-slate-800">This Month</p>
+                class="rounded-3xl border border-slate-200 bg-gradient-to-br from-slate-50 via-white to-blue-50 shadow-sm p-4 sm:p-5 h-[188px] grid grid-cols-2 lg:grid-cols-[auto_1fr_auto] grid-rows-[auto_1fr_auto] lg:grid-rows-[auto_auto] items-end gap-x-3 gap-y-2 lg:gap-x-4 lg:gap-y-0">
+
+                <!-- 1. Left: Title & Month/Year Text -->
+                <div class="col-span-1 lg:col-start-1 lg:row-start-1 leading-tight min-w-0 self-end">
+                  <p class="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500 truncate">Account Summary
+                  </p>
+                  <p id="account-summary-month-label"
+                    class="text-sm sm:text-base font-bold text-slate-800 leading-tight truncate">This Month</p>
+                </div>
+
+                <!-- 2. Right: Synced Dropdown Selector (Aligned inline on Row 1 for both viewports) -->
+                <div class="col-span-1 lg:col-start-3 lg:row-start-1 flex items-center justify-end shrink-0 self-end">
+                  <select id="account-summary-month-select" onchange="setSelectedSummaryMonth(this.value)"
+                    class="rounded-xl border border-slate-200 bg-white px-2 py-1 pr-8 text-xs font-semibold text-slate-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-300">
+                  </select>
+                </div>
+
+                <!-- 3. Middle: Credit Limit Progress Container (Pushed to bottom of Row 2 on mobile, Col 2 Row 1 on desktop) -->
+                <div id="tx-acc-credit-limit-container"
+                  class="hidden col-span-2 lg:col-span-1 lg:col-start-2 lg:row-start-1 space-y-1 shrink-0 lg:mb-0.5 flex flex-col justify-end h-full lg:h-auto">
+                  <div class="flex justify-between text-[10px] font-semibold leading-none mb-0.5">
+                    <span class="text-slate-400">Credit Remaining</span>
+                    <span id="tx-acc-credit-remaining-label" class="text-slate-700 font-extrabold"></span>
                   </div>
-                  <div class="flex items-center gap-2">
-                    <!-- Restored Live Badge -->
-                    <span id="account-summary-live-badge"
-                      class="hidden inline-flex items-center rounded-full border border-blue-200 bg-blue-100 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-blue-700">Live</span>
-                    <!-- Synced Dropdown Selector -->
-                    <select id="account-summary-month-select" onchange="setSelectedSummaryMonth(this.value)"
-                      class="rounded-xl border border-slate-200 bg-white px-2 py-1.5 pr-8 text-xs font-semibold text-slate-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-300">
-                    </select>
+                  <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
+                    <div id="tx-acc-credit-progress" class="h-full rounded-full transition-all duration-300"
+                      style="width: 0%;"></div>
                   </div>
                 </div>
-                <!-- Summary Totals Grid -->
-                <div class="grid grid-cols-3 gap-2 text-center">
+
+                <!-- 4. Bottom: Totals Grid (Sits on Row 3 on mobile, wraps to Row 2 on desktop) -->
+                <div
+                  class="col-span-2 lg:col-span-3 lg:row-start-2 grid grid-cols-3 gap-2 text-center shrink-0 self-end">
                   <button type="button" id="account-income-card" onclick="setAccountSummaryTypeFilter('income')"
-                    class="rounded-2xl border border-emerald-200 bg-emerald-50 p-3 text-left transition hover:bg-emerald-100 hover:shadow-sm">
+                    class="rounded-2xl border border-emerald-200 bg-emerald-50 p-2 sm:p-3 text-left transition hover:bg-emerald-100 hover:shadow-sm">
                     <p class="text-[10px] font-bold uppercase tracking-[0.18em] text-emerald-700">Income</p>
                     <p id="account-monthly-income"
-                      class="mt-2 text-right text-base font-extrabold text-emerald-700 sm:text-lg">$0.00</p>
+                      class="mt-1 sm:mt-2 text-right text-sm sm:text-base font-extrabold text-emerald-700 sm:text-lg">
+                      $0.00</p>
                   </button>
                   <button type="button" id="account-expenses-card" onclick="setAccountSummaryTypeFilter('expense')"
-                    class="rounded-2xl border border-red-200 bg-red-50 p-3 text-left transition hover:bg-red-100 hover:shadow-sm">
+                    class="rounded-2xl border border-red-200 bg-red-50 p-2 sm:p-3 text-left transition hover:bg-red-100 hover:shadow-sm">
                     <p class="text-[10px] font-bold uppercase tracking-[0.18em] text-red-700">Expenses</p>
                     <p id="account-monthly-expenses"
-                      class="mt-2 text-right text-base font-extrabold text-red-700 sm:text-lg">$0.00</p>
+                      class="mt-1 sm:mt-2 text-right text-sm sm:text-base font-extrabold text-red-700 sm:text-lg">$0.00
+                    </p>
                   </button>
                   <button type="button" id="account-remaining-card" onclick="setAccountSummaryTypeFilter(null)"
-                    class="rounded-2xl border border-blue-200 bg-blue-50 p-3 text-left transition hover:bg-blue-100 hover:shadow-sm">
+                    class="rounded-2xl border border-blue-200 bg-blue-50 p-2 sm:p-3 text-left transition hover:bg-blue-100 hover:shadow-sm">
                     <p class="text-[10px] font-bold uppercase tracking-[0.18em] text-blue-700">Remaining</p>
                     <p id="account-monthly-remaining"
-                      class="mt-2 text-right text-base font-extrabold text-blue-700 sm:text-lg">$0.00</p>
+                      class="mt-1 sm:mt-2 text-right text-sm sm:text-base font-extrabold text-blue-700 sm:text-lg">$0.00
+                    </p>
                   </button>
-                </div>
-              </div>
-            </div>
+                </div> <!-- End of Summary Totals Card Buttons -->
+              </div> <!-- End of Summary Totals Card Content -->
+            </div> <!-- End of Summary Totals Card -->
 
-            <!-- Quadrant Details Card: Launch Portal, Edit Account, Current & Cleared Balances -->
-            <div
-              class="bg-white p-4 rounded-3xl border border-slate-200 shadow-sm flex flex-col justify-between space-y-3">
-              <div class="grid grid-cols-2 gap-3">
+            <!-- Balances & Quick Action Card: Matches Controls & Monthly Summary Height/Design -->
+            <div id="balances-card"
+              class="bg-gradient-to-br from-slate-50 via-white to-blue-50 rounded-3xl border border-slate-200 shadow-sm p-5 flex flex-col justify-between h-[188px] shrink-0 lg:!mt-0">
 
-                <!-- Q1 (Upper Left): Launch Portal -->
-                <div class="flex items-center justify-start">
-                  <a id="tx-acc-external-btn" href="#" target="_blank" rel="noopener noreferrer"
-                    class="hidden w-full text-center inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white py-2.5 text-[11px] font-bold text-slate-700 hover:bg-slate-50 transition shadow-sm">
-                    <span>🔗</span> Launch Portal
-                  </a>
-                  <div id="tx-acc-external-placeholder"
-                    class="w-full text-center py-2.5 text-[11px] font-bold text-slate-300 border border-dashed border-slate-200 rounded-xl select-none">
-                    No Portal Linked
+              <!-- Content Stack -->
+              <div class="space-y-3 flex-1 flex flex-col justify-center">
+
+                <!-- Row 1: Portal Action & Current Balance (Symmetrically aligned top-to-bottom) -->
+                <div class="flex items-center justify-between gap-3 h-[42px] shrink-0">
+                  <!-- Left: Portal Button Wrapper -->
+                  <div class="w-1/2 h-full">
+                    <a id="tx-acc-external-btn" href="#" target="_blank" rel="noopener noreferrer"
+                      class="hidden w-full h-full text-center inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white text-xs font-bold text-slate-700 hover:bg-slate-50 transition shadow-sm">
+                      <span>🔗</span> Portal
+                    </a>
+                    <div id="tx-acc-external-placeholder"
+                      class="w-full h-full text-center flex items-center justify-center text-xs font-bold text-slate-300 border border-dashed border-slate-200 rounded-xl select-none">
+                      No Portal
+                    </div>
+                  </div>
+                  <!-- Right: Current Balance Display -->
+                  <div class="w-1/2 h-full flex flex-col justify-between py-0.5 text-right pr-1 shrink-0">
+                    <div id="tx-acc-balance" class="text-xl font-black tracking-tight text-slate-900 leading-none">$0.00
+                    </div>
+                    <div class="text-[9px] text-slate-400 font-extrabold uppercase tracking-wider leading-none">Current
+                      Balance</div>
                   </div>
                 </div>
 
-                <!-- Q2 (Upper Right): Current Balance (Larger Font Weight and Size) -->
-                <div class="text-right flex flex-col justify-center pr-1">
-                  <div id="tx-acc-balance" class="text-lg font-black tracking-tight text-slate-900">$0.00</div>
-                  <div class="text-[9px] text-slate-400 font-extrabold uppercase tracking-wider mt-0.5">Current
-                    Balance</div>
-                </div>
-
-                <!-- Q3 (Lower Left): Edit Account (Spelled out "Account") -->
-                <div class="flex items-center justify-start">
-                  <button type="button" onclick="openAccountModal(activeAccountId)"
-                    class="w-full text-center inline-flex items-center justify-center gap-1.5 rounded-xl border border-blue-100 bg-blue-50 py-2.5 text-[11px] font-bold text-blue-700 hover:bg-blue-100 transition">
-                    <span>✎</span> Edit Account
-                  </button>
-                </div>
-
-                <!-- Q4 (Lower Right): Cleared Balance (Larger Font Weight and Size) -->
-                <div class="text-right flex flex-col justify-center pr-1">
-                  <div class="flex items-center justify-end gap-1">
-                    <div id="tx-acc-cleared" class="text-base font-black tracking-tight text-emerald-600">$0.00</div>
-                    <button type="button" onclick="openClearedBalanceModal()" title="Edit cleared balance"
-                      class="text-emerald-600 hover:text-emerald-800 text-xs">✎</button>
+                <!-- Row 2: Edit Account Action & Cleared Balance (Symmetrically aligned top-to-bottom) -->
+                <div class="flex items-center justify-between gap-3 h-[42px] shrink-0">
+                  <!-- Left: Edit Account Button -->
+                  <div class="w-1/2 h-full">
+                    <button type="button" onclick="openAccountModal(activeAccountId)"
+                      class="w-full h-full text-center inline-flex items-center justify-center gap-1.5 rounded-xl border border-blue-100 bg-blue-50 text-xs font-bold text-blue-700 hover:bg-blue-100 transition shadow-sm">
+                      <span>✎</span> Edit Account
+                    </button>
                   </div>
-                  <div class="text-[9px] text-emerald-700 font-extrabold uppercase tracking-wider mt-0.5">Cleared
-                    Balance</div>
-                </div>
-              </div> <!-- End of Account Details Card -->
+                  <!-- Right: Cleared Balance Display -->
+                  <div class="w-1/2 h-full flex flex-col justify-between py-0.5 text-right pr-1 shrink-0">
+                    <div class="flex items-center justify-end gap-1 leading-none">
+                      <div id="tx-acc-cleared" class="text-lg font-black tracking-tight text-emerald-600 leading-none">
+                        $0.00</div>
+                      <button type="button" onclick="openClearedBalanceModal()" title="Edit cleared balance"
+                        class="text-emerald-600 hover:text-emerald-800 text-xs leading-none">✎</button>
+                    </div>
+                    <div class="text-[9px] text-emerald-700 font-extrabold uppercase tracking-wider leading-none">
+                      Cleared Balance</div>
+                  </div>
+                </div> <!-- End of Row 2: Edit Account Action & Cleared Balance -->
+              </div> <!-- End of Account Details Container -->
 
-              <!-- Credit Limit Container (Nested bottom card footer) -->
-              <div id="tx-acc-credit-limit-container" class="hidden border-t border-slate-100 pt-2 space-y-1 shrink-0">
-                <div class="flex justify-between text-[10px] font-semibold">
-                  <span class="text-slate-400">Credit Remaining</span>
-                  <span id="tx-acc-credit-remaining-label" class="text-slate-700"></span>
-                </div>
-                <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
-                  <div id="tx-acc-credit-progress" class="h-full rounded-full transition-all duration-300"
-                    style="width: 0%;"></div>
-                </div>
-              </div> <!-- End of Credit Limit Container -->
-            </div> <!-- End of Account Card Container -->
-
-            <!-- Static Add Transaction Button -->
-            <button onclick="openTxModal()"
-              class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition flex items-center justify-center gap-2 shadow-sm">
-              <span class="text-lg leading-none">+</span> Add Transaction
-            </button>
+              <!-- Bottom Section: Core Dynamic Quick Action Button -->
+              <button onclick="openTxModal()"
+                class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 rounded-xl transition flex items-center justify-center gap-2 shadow-sm text-sm shrink-0 h-[38px] mt-2">
+                <span class="text-base leading-none">+</span> Add Transaction
+              </button>
+            </div> <!-- End of Balances and Credit Limit Container -->
 
             <!-- Account-specific tag filter container -->
             <div id="tag-filter-container"
@@ -515,10 +533,12 @@
               <div id="transactions-list" class="space-y-3">
                 <p class="text-sm text-gray-500">Loading transactions...</p>
               </div>
-            </div> <!-- Closes transactions-list -->
-          </div> <!-- Closes ledger-feed-panel -->
-        </section> <!-- Closes RIGHT 1 COLUMN -->
-      </div> <!-- End of Main Content Container -->
+            </div>
+          </div>
+
+        </section>
+
+      </div>
     </main>
 
     <!-- Add/Edit Account Modal -->
@@ -2202,7 +2222,7 @@
           const accExpensesEl = document.getElementById('account-monthly-expenses');
           const accRemainingEl = document.getElementById('account-monthly-remaining');
           const accMonthLabel = document.getElementById('account-summary-month-label');
-          const accLiveBadge = document.getElementById('account-summary-live-badge'); // Target new badge element
+          const accSelector = document.getElementById('account-summary-month-select');
 
           // Standardize Month label string output
           if (accMonthLabel) {
@@ -2210,12 +2230,19 @@
             accMonthLabel.textContent = monthName;
           }
 
-          // Toggle localized Live Badge based on selection key
-          if (accLiveBadge) {
+          // Toggle border colors of Account select dropdown when browsing current month
+          if (accSelector) {
             const now = new Date();
             const currentMonthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
             const isCurrentMonth = selectedSummaryMonth === currentMonthKey;
-            accLiveBadge.classList.toggle('hidden', !isCurrentMonth);
+
+            if (isCurrentMonth) {
+              accSelector.classList.remove('border-slate-200');
+              accSelector.classList.add('border-blue-500', 'ring-2', 'ring-blue-100');
+            } else {
+              accSelector.classList.remove('border-blue-500', 'ring-2', 'ring-blue-100');
+              accSelector.classList.add('border-slate-200');
+            }
           }
 
           if (accIncomeEl) accIncomeEl.textContent = `$${accountIncome.toFixed(2)}`;
@@ -2227,11 +2254,11 @@
             const card = document.getElementById('account-remaining-card');
             if (card) {
               if (accountRemaining < 0) {
-                card.className = "rounded-2xl border border-red-200 bg-red-50 p-3 text-left transition hover:bg-red-100 hover:shadow-sm";
-                accRemainingEl.className = "mt-2 text-right text-base font-extrabold text-red-700 sm:text-lg";
+                card.className = "rounded-2xl border border-red-200 bg-red-50 p-2 sm:p-3 text-left transition hover:bg-red-100 hover:shadow-sm";
+                accRemainingEl.className = "mt-1 sm:mt-2 text-right text-sm sm:text-base font-extrabold text-red-700 sm:text-lg";
               } else {
-                card.className = "rounded-2xl border border-blue-200 bg-blue-50 p-3 text-left transition hover:bg-blue-100 hover:shadow-sm";
-                accRemainingEl.className = "mt-2 text-right text-base font-extrabold text-blue-700 sm:text-lg";
+                card.className = "rounded-2xl border border-blue-200 bg-blue-50 p-2 sm:p-3 text-left transition hover:bg-blue-100 hover:shadow-sm";
+                accRemainingEl.className = "mt-1 sm:mt-2 text-right text-sm sm:text-base font-extrabold text-blue-700 sm:text-lg";
               }
             }
           }
@@ -2445,11 +2472,17 @@
 
       function setSelectedSummaryMonth(monthKey) {
         selectedSummaryMonth = monthKey || selectedSummaryMonth;
-
         const selector = document.getElementById('summary-month-select');
         const accSelector = document.getElementById('account-summary-month-select');
-        if (selector) selector.value = selectedSummaryMonth;
-        if (accSelector) accSelector.value = selectedSummaryMonth;
+
+        if (selector) {
+          selector.value = selectedSummaryMonth;
+          selector.blur(); // 🌟 Instantly removes focus highlight after selection
+        }
+        if (accSelector) {
+          accSelector.value = selectedSummaryMonth;
+          accSelector.blur(); // 🌟 Instantly removes focus highlight after selection
+        }
 
         if (currentViewState === 'home-transactions') {
           showAllTransactions(selectedSummaryTransactionType);
@@ -2486,7 +2519,7 @@
         const expensesEl = document.getElementById('monthly-expenses');
         const remainingEl = document.getElementById('monthly-remaining');
         const selector = document.getElementById('summary-month-select');
-        const liveBadge = document.getElementById('summary-live-badge');
+
         if (!card || !monthLabel || !incomeEl || !expensesEl || !remainingEl) return;
 
         // 🧹 Guard: Never let the global monthly summary card pop back up in detail views
@@ -2498,8 +2531,20 @@
         if (selector && selector.options.length === 0) {
           buildMonthOptions();
         }
+
         if (selector) {
           selector.value = selectedSummaryMonth;
+          const now = new Date();
+          const currentMonthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+          const isCurrentMonth = selectedSummaryMonth === currentMonthKey;
+
+          if (isCurrentMonth) {
+            selector.classList.remove('border-slate-200');
+            selector.classList.add('border-blue-500', 'ring-2', 'ring-blue-100');
+          } else {
+            selector.classList.remove('border-blue-500', 'ring-2', 'ring-blue-100');
+            selector.classList.add('border-slate-200');
+          }
         }
 
         if (liveBadge) {
@@ -2895,11 +2940,13 @@
       // Show the home accounts view
       function showHomeAccounts() {
         globalActiveTagFilters = [];
+        activeAccountId = null; // 🌟 Clear account scope context
 
         document.getElementById('accounts-feed-panel').classList.remove('hidden');
         document.getElementById('all-transactions-feed-panel').classList.add('hidden');
         document.getElementById('ledger-feed-panel').classList.add('hidden');
         document.getElementById('home-tabs-switcher').classList.remove('hidden');
+
 
         // Show unified controls card & search accounts bar
         const controlsContainer = document.getElementById('home-controls-container');
@@ -2910,6 +2957,10 @@
 
         const accountSearchWrap = document.getElementById('account-search-wrap');
         if (accountSearchWrap) accountSearchWrap.classList.remove('hidden');
+
+        // Hide the transactions search field
+        const transactionSearchWrap = document.getElementById('transaction-search-wrap');
+        if (transactionSearchWrap) transactionSearchWrap.classList.add('hidden');
 
         // Restore cockpit sidebar on mobile now that we've left the ledger detail view
         document.getElementById('cockpit-sidebar')?.classList.remove('hidden');
@@ -2925,8 +2976,8 @@
         currentViewState = 'home-accounts';
         window.scrollTo(0, 0);
 
-        renderMonthlySummary(); // Re-evaluate visibility in case we arrived here from a detail view
-        relocateAccountSummaryCard(); // Return the Account Summary card to the ledger panel
+        renderMonthlySummary();
+        relocateAccountSummaryCard();
 
         if (accountsList) accountsList.classList.remove('hidden');
         if (accountTypeFilterBar) accountTypeFilterBar.classList.remove('hidden');
@@ -3018,21 +3069,26 @@
       function showAllTransactions(type = null) {
         selectedSummaryTransactionType = type ?? null;
         globalActiveTagFilters = [];
+        activeAccountId = null; // 🌟 Clear account scope context
 
         document.getElementById('accounts-feed-panel').classList.add('hidden');
         document.getElementById('all-transactions-feed-panel').classList.remove('hidden');
         document.getElementById('ledger-feed-panel').classList.add('hidden');
-        document.getElementById('home-tabs-switcher').classList.remove('hidden');
 
-        // Show unified controls container, but hide the accounts-specific search field
+
+        // Show unified controls container
         const controlsContainer = document.getElementById('home-controls-container');
         if (controlsContainer) controlsContainer.classList.remove('hidden');
 
         const titleWrap = document.getElementById('home-view-title-wrap');
         if (titleWrap) titleWrap.classList.remove('hidden');
 
+        // Hide accounts search bar & show transactions search bar
         const accountSearchWrap = document.getElementById('account-search-wrap');
         if (accountSearchWrap) accountSearchWrap.classList.add('hidden');
+
+        const transactionSearchWrap = document.getElementById('transaction-search-wrap');
+        if (transactionSearchWrap) transactionSearchWrap.classList.remove('hidden');
 
         // Restore cockpit sidebar on mobile now that we've left the ledger detail view
         document.getElementById('cockpit-sidebar')?.classList.remove('hidden');
@@ -3046,19 +3102,16 @@
         currentViewState = 'home-transactions';
         window.scrollTo(0, 0);
 
-        relocateAccountSummaryCard(); // Return the Account Summary card to the ledger panel
+        relocateAccountSummaryCard();
         if (newAccountButton) newAccountButton.classList.add('hidden');
 
-        const monthLabel = selectedSummaryMonth
-          ? new Date(`${selectedSummaryMonth}-01T00:00:00`).toLocaleString('en-US', { month: 'long', year: 'numeric' })
-          : 'Selected Month';
-
+        // Simplify header text titles by omitting date/month references
         if (title) {
           title.textContent = selectedSummaryTransactionType === 'income'
-            ? `Income - ${monthLabel}`
+            ? 'Income'
             : selectedSummaryTransactionType === 'expense'
-              ? `Expenses - ${monthLabel}`
-              : `Transactions - ${monthLabel}`;
+              ? 'Expenses'
+              : 'Transactions';
         }
 
         if (transactionsTab) {
