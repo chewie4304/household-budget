@@ -6,8 +6,17 @@ All notable changes to this project will be documented in this file.
 
 ## [1.6.2-dev] - 2026-09-02
 
+### Added
+- **Unified Controls Container:** Designed and integrated a card-styled controls wrapper container around the "Your Accounts" header, "New account" button, switcher toggle, and search inputs, matching the soft gradient background of your primary dashboard widgets.
+
+### Changed
+- **Vertical Stack Controls Layout:** Repositioned the view switcher tabs and the account search input box to stack vertically on desktop screens, resolving layout squishing by allowing both elements to expand to 100% card width.
+- **Symmetrical Card Parity:** Standardized the heights of the global Monthly Summary card, the new Controls Container, and the account-specific Monthly Summary card to a matching `lg:h-[188px]` to ensure perfect horizontal alignment on desktop viewports with zero visual jumps.
+
 ### Fixed
-- **Account Ledger Transaction Sorting:** Aligned the transaction sorting pipeline inside individual Account Details views to match the main Transactions View. The ledger now runs your standard comparison sorting engine, correctly bubbling Pending transactions to the top of the card feed, followed by Cleared transactions ordered by date (newest first) and creation timestamp, instead of incorrectly grouping cleared items first regardless of date. 
+- **Account Ledger Transaction Sorting:** Aligned the transaction sorting pipeline inside individual Account Details views to match the main Transactions View. The ledger now runs your standard comparison sorting engine, correctly bubbling Pending transactions to the top of the card feed, followed by Cleared transactions ordered by date (newest first) and creation timestamp, instead of incorrectly grouping cleared items first regardless of date.
+- **Right Column Layout Wrap:** Restored the right column's dedicated layout section, resolving a layout wrap bug that forced the active accounts list and filter bar to slip under the cockpit sidebar on desktop views.
+- **Dynamic Card Visibility & ID Conflicts:** Corrected a duplicate ID conflict on the account Monthly Summary card (restoring its unique `id="account-monthly-summary"`) and removed its default `hidden` class to allow the desktop cockpit sidebar teleportation engine to function cleanly.
 
 ## [1.6.1] - 2026-09-01
 
