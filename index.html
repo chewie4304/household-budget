@@ -283,12 +283,12 @@
               </button>
             </div>
 
-            <!-- Row 2: Grid Container for Switcher and Search Field (Stacked Vertically) -->
+            <!-- Row 2: Grid Container for Switcher and Active Search Field (Stacked Vertically) -->
             <div class="flex flex-col gap-3">
 
               <!-- Accounts/Transactions View Switcher Toggle -->
               <div id="home-tabs-switcher"
-                class="flex-1 w-full flex gap-2 rounded-2xl bg-slate-200 p-1 shadow-inner h-[42px] items-center">
+                class="flex-1 w-full flex gap-2 rounded-2xl bg-slate-200 p-1 shadow-inner h-[42px] items-center shrink-0">
                 <button id="home-accounts-tab" onclick="showHomeAccounts()"
                   class="flex-1 bg-blue-600 text-white px-3 py-1.5 rounded-xl text-sm font-semibold shadow-sm h-full transition-all">
                   Accounts
@@ -300,7 +300,7 @@
               </div>
 
               <!-- Search Accounts Input Field -->
-              <div id="account-search-wrap" class="flex-1 w-full relative">
+              <div id="account-search-wrap" class="flex-1 w-full relative shrink-0">
                 <input id="account-search" type="text"
                   oninput="renderAccounts(); checkClearButtonVisibility('account-search', 'clear-account-search')"
                   placeholder="Search accounts..."
@@ -309,7 +309,18 @@
                   onclick="clearAndFocusInput('account-search', 'clear-account-search', () => renderAccounts())"
                   class="hidden absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 items-center justify-center text-lg leading-none text-slate-400 hover:text-slate-600 transition-colors">&times;</button>
               </div>
-            </div>
+
+              <!-- Search Transactions Input Field (Hidden by default on Accounts tab) -->
+              <div id="transaction-search-wrap" class="flex-1 w-full relative shrink-0 hidden">
+                <input id="transaction-search" type="text"
+                  oninput="renderAllTransactions(); checkClearButtonVisibility('transaction-search', 'clear-transaction-search')"
+                  placeholder="Search transactions..."
+                  class="w-full border border-slate-200 bg-white pl-3 pr-10 py-2 rounded-xl text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-200 shadow-sm h-[42px]" />
+                <button type="button" id="clear-transaction-search"
+                  onclick="clearAndFocusInput('transaction-search', 'clear-transaction-search', () => renderAllTransactions())"
+                  class="hidden absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 items-center justify-center text-lg leading-none text-slate-400 hover:text-slate-600 transition-colors">&times;</button>
+              </div>
+            </div> <!-- End of search input fields wrapper -->
           </div>
 
           <!-- PANEL 1: Accounts Feed Panel (Shown when on Home -> Accounts) -->
@@ -350,18 +361,8 @@
                 <div id="global-tag-filter-autocomplete-dropdown"
                   class="hidden absolute left-0 right-0 mt-1 max-h-40 overflow-y-auto bg-white border border-slate-200 rounded-xl shadow-lg z-50">
                 </div>
-              </div>
-            </div>
-
-            <div id="transaction-search-wrap" class="relative">
-              <input id="transaction-search" type="text"
-                oninput="renderAllTransactions(); checkClearButtonVisibility('transaction-search', 'clear-transaction-search')"
-                placeholder="Search transactions..."
-                class="w-full border border-slate-200 bg-white pl-3 pr-10 py-2.5 rounded-xl text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-200 shadow-sm" />
-              <button type="button" id="clear-transaction-search"
-                onclick="clearAndFocusInput('transaction-search', 'clear-transaction-search', () => renderAllTransactions())"
-                class="hidden absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 items-center justify-center text-lg leading-none text-slate-400 hover:text-slate-600 transition-colors">&times;</button>
-            </div>
+              </div> <!-- End of global tag filter autocomplete dropdown wrapper -->
+            </div> <!-- End of global tag filter wrapper -->
 
             <div id="all-transactions-list" class="space-y-3">
               <p class="text-sm text-gray-500">Loading transactions...</p>
@@ -2916,6 +2917,10 @@
         const accountSearchWrap = document.getElementById('account-search-wrap');
         if (accountSearchWrap) accountSearchWrap.classList.remove('hidden');
 
+        // Hide the transactions search field
+        const transactionSearchWrap = document.getElementById('transaction-search-wrap');
+        if (transactionSearchWrap) transactionSearchWrap.classList.add('hidden');
+
         // Restore cockpit sidebar on mobile now that we've left the ledger detail view
         document.getElementById('cockpit-sidebar')?.classList.remove('hidden');
 
@@ -2930,8 +2935,8 @@
         currentViewState = 'home-accounts';
         window.scrollTo(0, 0);
 
-        renderMonthlySummary(); // Re-evaluate visibility in case we arrived here from a detail view
-        relocateAccountSummaryCard(); // Return the Account Summary card to the ledger panel
+        renderMonthlySummary();
+        relocateAccountSummaryCard();
 
         if (accountsList) accountsList.classList.remove('hidden');
         if (accountTypeFilterBar) accountTypeFilterBar.classList.remove('hidden');
@@ -3029,15 +3034,19 @@
         document.getElementById('ledger-feed-panel').classList.add('hidden');
         document.getElementById('home-tabs-switcher').classList.remove('hidden');
 
-        // Show unified controls container, but hide the accounts-specific search field
+        // Show unified controls container
         const controlsContainer = document.getElementById('home-controls-container');
         if (controlsContainer) controlsContainer.classList.remove('hidden');
 
         const titleWrap = document.getElementById('home-view-title-wrap');
         if (titleWrap) titleWrap.classList.remove('hidden');
 
+        // Hide accounts search bar & show transactions search bar
         const accountSearchWrap = document.getElementById('account-search-wrap');
         if (accountSearchWrap) accountSearchWrap.classList.add('hidden');
+
+        const transactionSearchWrap = document.getElementById('transaction-search-wrap');
+        if (transactionSearchWrap) transactionSearchWrap.classList.remove('hidden');
 
         // Restore cockpit sidebar on mobile now that we've left the ledger detail view
         document.getElementById('cockpit-sidebar')?.classList.remove('hidden');
@@ -3051,19 +3060,16 @@
         currentViewState = 'home-transactions';
         window.scrollTo(0, 0);
 
-        relocateAccountSummaryCard(); // Return the Account Summary card to the ledger panel
+        relocateAccountSummaryCard();
         if (newAccountButton) newAccountButton.classList.add('hidden');
 
-        const monthLabel = selectedSummaryMonth
-          ? new Date(`${selectedSummaryMonth}-01T00:00:00`).toLocaleString('en-US', { month: 'long', year: 'numeric' })
-          : 'Selected Month';
-
+        // Simplify header text titles by omitting date/month references
         if (title) {
           title.textContent = selectedSummaryTransactionType === 'income'
-            ? `Income - ${monthLabel}`
+            ? 'Income'
             : selectedSummaryTransactionType === 'expense'
-              ? `Expenses - ${monthLabel}`
-              : `Transactions - ${monthLabel}`;
+              ? 'Expenses'
+              : 'Transactions';
         }
 
         if (transactionsTab) {

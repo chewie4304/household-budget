@@ -10,7 +10,9 @@ All notable changes to this project will be documented in this file.
 - **Unified Controls Container:** Designed and integrated a card-styled controls wrapper container around the "Your Accounts" header, "New account" button, switcher toggle, and search inputs, matching the soft gradient background of your primary dashboard widgets.
 
 ### Changed
-- **Vertical Stack Controls Layout:** Repositioned the view switcher tabs and the account search input box to stack vertically on desktop screens, resolving layout squishing by allowing both elements to expand to 100% card width.
+- **Vertical Stack Controls Layout:** Repositioned the view switcher tabs and the active search input boxes to stack vertically on desktop screens, resolving layout squishing by allowing elements to expand to 100% card width.
+- **Search Fields Consolidation:** Relocated the "Search transactions" input box up into the main Controls Container card alongside the account search bar. The active search input now toggles dynamically based on your selected view tab while the card height remains completely static.
+- **Streamlined Transactions Headings:** Simplified the transaction history view titles by stripping out the dynamic month and year suffix labels (e.g., displaying as "Transactions", "Income", or "Expenses" instead of appending the month/year string).
 - **Symmetrical Card Parity:** Standardized the heights of the global Monthly Summary card, the new Controls Container, and the account-specific Monthly Summary card to a matching `lg:h-[188px]` to ensure perfect horizontal alignment on desktop viewports with zero visual jumps.
 
 ### Fixed
