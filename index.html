@@ -206,15 +206,12 @@
                   Month</p>
               </div>
               <div class="flex items-center gap-2 mt-0.5 sm:mt-0">
-                <!-- Active Live Badge -->
-                <span id="summary-live-badge"
-                  class="hidden inline-flex items-center rounded-full border border-blue-200 bg-blue-100 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-blue-700">Live</span>
                 <!-- Aligned Dropdown Selector -->
                 <select id="summary-month-select" onchange="setSelectedSummaryMonth(this.value)"
                   class="rounded-xl border border-slate-200 bg-white px-2 py-1 pr-8 text-xs font-semibold text-slate-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-300">
                 </select>
               </div>
-            </div>
+            </div> <!-- End of Summary Header -->
 
             <!-- Summary Totals Grid (Tighter padding & margins on mobile) -->
             <div class="grid grid-cols-3 gap-2 text-center shrink-0">
@@ -384,27 +381,43 @@
 
               <!-- Account-Specific Monthly Summary Card -->
               <div id="account-monthly-summary"
-                class="rounded-3xl border border-slate-200 bg-gradient-to-br from-slate-50 via-white to-blue-50 shadow-sm p-4 sm:p-5 space-y-2 sm:space-y-3 flex flex-col justify-between h-[188px]">
+                class="rounded-3xl border border-slate-200 bg-gradient-to-br from-slate-50 via-white to-blue-50 shadow-sm p-4 sm:p-5 flex flex-col justify-between h-[188px]">
 
-                <!-- Summary Header (Stacked on mobile, row on desktop) -->
-                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 sm:gap-2 shrink-0">
-                  <div class="flex flex-col leading-tight">
-                    <p class="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">Account Summary</p>
+                <!-- Summary Header Wrapper (Flex row on desktop, wrapped rows on mobile) -->
+                <div
+                  class="flex flex-wrap lg:flex-nowrap items-center lg:items-end justify-between w-full gap-x-3 gap-y-1.5 sm:gap-y-2 shrink-0">
+
+                  <!-- Left: Title Stack -->
+                  <div class="flex flex-col leading-tight min-w-0 lg:shrink-0">
+                    <p class="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500 truncate">Account Summary
+                    </p>
                     <p id="account-summary-month-label"
-                      class="text-sm sm:text-base font-bold text-slate-800 leading-tight">This Month</p>
+                      class="text-sm sm:text-base font-bold text-slate-800 leading-tight truncate">This Month</p>
                   </div>
-                  <div class="flex items-center gap-2 mt-0.5 sm:mt-0">
-                    <!-- Restored Live Badge -->
-                    <span id="account-summary-live-badge"
-                      class="hidden inline-flex items-center rounded-full border border-blue-200 bg-blue-100 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-blue-700">Live</span>
-                    <!-- Synced Dropdown Selector -->
+
+                  <!-- Right on Mobile / Far Right on Desktop: Dropdown Selector -->
+                  <div class="flex items-center gap-2 shrink-0 lg:order-last">
                     <select id="account-summary-month-select" onchange="setSelectedSummaryMonth(this.value)"
                       class="rounded-xl border border-slate-200 bg-white px-2 py-1 pr-8 text-xs font-semibold text-slate-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-300">
                     </select>
                   </div>
+
+                  <!-- Middle: Credit Limit Progress Container (Drops below header on mobile, sits inline on desktop) -->
+                  <div id="tx-acc-credit-limit-container"
+                    class="hidden w-full lg:w-auto lg:flex-1 lg:max-w-xs space-y-1 shrink-0 lg:mb-0.5">
+                    <div class="flex justify-between text-[10px] font-semibold leading-none">
+                      <span class="text-slate-400">Credit Remaining</span>
+                      <span id="tx-acc-credit-remaining-label" class="text-slate-700 font-extrabold"></span>
+                    </div>
+                    <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
+                      <div id="tx-acc-credit-progress" class="h-full rounded-full transition-all duration-300"
+                        style="width: 0%;"></div>
+                    </div>
+                  </div>
+
                 </div>
 
-                <!-- Summary Totals Grid (Tighter padding & margins on mobile) -->
+                <!-- Summary Totals Grid -->
                 <div class="grid grid-cols-3 gap-2 text-center shrink-0">
                   <button type="button" id="account-income-card" onclick="setAccountSummaryTypeFilter('income')"
                     class="rounded-2xl border border-emerald-200 bg-emerald-50 p-2 sm:p-3 text-left transition hover:bg-emerald-100 hover:shadow-sm">
@@ -480,21 +493,8 @@
                     <div class="text-[9px] text-emerald-700 font-extrabold uppercase tracking-wider leading-none">
                       Cleared Balance</div>
                   </div>
-                </div>
-
-              </div>
-
-              <!-- Credit Limit Container (Nested below balances, dynamically rendered for Credit Card accounts) -->
-              <div id="tx-acc-credit-limit-container" class="hidden border-t border-slate-100 pt-2 space-y-1 shrink-0">
-                <div class="flex justify-between text-[10px] font-semibold">
-                  <span class="text-slate-400">Credit Remaining</span>
-                  <span id="tx-acc-credit-remaining-label" class="text-slate-700"></span>
-                </div>
-                <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
-                  <div id="tx-acc-credit-progress" class="h-full rounded-full transition-all duration-300"
-                    style="width: 0%;"></div>
-                </div>
-              </div>
+                </div> <!-- End of Row 2: Edit Account Action & Cleared Balance -->
+              </div> <!-- End of Account Details Container -->
 
               <!-- Bottom Section: Core Dynamic Quick Action Button -->
               <button onclick="openTxModal()"
@@ -2227,7 +2227,7 @@
           const accExpensesEl = document.getElementById('account-monthly-expenses');
           const accRemainingEl = document.getElementById('account-monthly-remaining');
           const accMonthLabel = document.getElementById('account-summary-month-label');
-          const accLiveBadge = document.getElementById('account-summary-live-badge'); // Target new badge element
+          const accSelector = document.getElementById('account-summary-month-select');
 
           // Standardize Month label string output
           if (accMonthLabel) {
@@ -2235,12 +2235,19 @@
             accMonthLabel.textContent = monthName;
           }
 
-          // Toggle localized Live Badge based on selection key
-          if (accLiveBadge) {
+          // Toggle border colors of Account select dropdown when browsing current month
+          if (accSelector) {
             const now = new Date();
             const currentMonthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
             const isCurrentMonth = selectedSummaryMonth === currentMonthKey;
-            accLiveBadge.classList.toggle('hidden', !isCurrentMonth);
+
+            if (isCurrentMonth) {
+              accSelector.classList.remove('border-slate-200');
+              accSelector.classList.add('border-blue-500', 'ring-2', 'ring-blue-100');
+            } else {
+              accSelector.classList.remove('border-blue-500', 'ring-2', 'ring-blue-100');
+              accSelector.classList.add('border-slate-200');
+            }
           }
 
           if (accIncomeEl) accIncomeEl.textContent = `$${accountIncome.toFixed(2)}`;
@@ -2470,11 +2477,17 @@
 
       function setSelectedSummaryMonth(monthKey) {
         selectedSummaryMonth = monthKey || selectedSummaryMonth;
-
         const selector = document.getElementById('summary-month-select');
         const accSelector = document.getElementById('account-summary-month-select');
-        if (selector) selector.value = selectedSummaryMonth;
-        if (accSelector) accSelector.value = selectedSummaryMonth;
+
+        if (selector) {
+          selector.value = selectedSummaryMonth;
+          selector.blur(); // 🌟 Instantly removes focus highlight after selection
+        }
+        if (accSelector) {
+          accSelector.value = selectedSummaryMonth;
+          accSelector.blur(); // 🌟 Instantly removes focus highlight after selection
+        }
 
         if (currentViewState === 'home-transactions') {
           showAllTransactions(selectedSummaryTransactionType);
@@ -2511,7 +2524,7 @@
         const expensesEl = document.getElementById('monthly-expenses');
         const remainingEl = document.getElementById('monthly-remaining');
         const selector = document.getElementById('summary-month-select');
-        const liveBadge = document.getElementById('summary-live-badge');
+
         if (!card || !monthLabel || !incomeEl || !expensesEl || !remainingEl) return;
 
         // 🧹 Guard: Never let the global monthly summary card pop back up in detail views
@@ -2523,39 +2536,39 @@
         if (selector && selector.options.length === 0) {
           buildMonthOptions();
         }
+
         if (selector) {
           selector.value = selectedSummaryMonth;
-        }
-
-        if (liveBadge) {
           const now = new Date();
           const currentMonthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
           const isCurrentMonth = selectedSummaryMonth === currentMonthKey;
-          liveBadge.classList.toggle('hidden', !isCurrentMonth);
+          if (isCurrentMonth) {
+            selector.classList.remove('border-slate-200');
+            selector.classList.add('border-blue-500', 'ring-2', 'ring-blue-100');
+          } else {
+            selector.classList.remove('border-blue-500', 'ring-2', 'ring-blue-100');
+            selector.classList.add('border-slate-200');
+          }
         }
 
         const monthTx = getSelectedMonthTransactions();
         const totalIncome = roundCurrency(monthTx
           .filter(tx => parseFloat(tx.amount || 0) > 0)
           .reduce((sum, tx) => sum + parseFloat(tx.amount || 0), 0));
-
         const totalExpenses = roundCurrency(Math.abs(monthTx
           .filter(tx => parseFloat(tx.amount || 0) < 0)
           .reduce((sum, tx) => sum + parseFloat(tx.amount || 0), 0)));
-
         const remaining = roundCurrency(totalIncome - totalExpenses);
 
         const [year, month] = selectedSummaryMonth.split('-').map(Number);
         const monthName = new Date(year, month - 1, 1).toLocaleString('en-US', { month: 'long', year: 'numeric' });
-        monthLabel.textContent = monthName;
 
+        monthLabel.textContent = monthName;
         incomeEl.textContent = `$${totalIncome.toFixed(2)}`;
         expensesEl.textContent = `$${totalExpenses.toFixed(2)}`;
         remainingEl.textContent = `$${remaining.toFixed(2)}`;
-
         remainingEl.classList.toggle('text-red-700', remaining < 0);
         remainingEl.classList.toggle('text-blue-700', remaining >= 0);
-
         card.classList.remove('hidden');
       }
 
@@ -2920,11 +2933,13 @@
       // Show the home accounts view
       function showHomeAccounts() {
         globalActiveTagFilters = [];
+        activeAccountId = null; // 🌟 Clear account scope context
 
         document.getElementById('accounts-feed-panel').classList.remove('hidden');
         document.getElementById('all-transactions-feed-panel').classList.add('hidden');
         document.getElementById('ledger-feed-panel').classList.add('hidden');
         document.getElementById('home-tabs-switcher').classList.remove('hidden');
+
 
         // Show unified controls card & search accounts bar
         const controlsContainer = document.getElementById('home-controls-container');
@@ -3047,11 +3062,12 @@
       function showAllTransactions(type = null) {
         selectedSummaryTransactionType = type ?? null;
         globalActiveTagFilters = [];
+        activeAccountId = null; // 🌟 Clear account scope context
 
         document.getElementById('accounts-feed-panel').classList.add('hidden');
         document.getElementById('all-transactions-feed-panel').classList.remove('hidden');
         document.getElementById('ledger-feed-panel').classList.add('hidden');
-        document.getElementById('home-tabs-switcher').classList.remove('hidden');
+
 
         // Show unified controls container
         const controlsContainer = document.getElementById('home-controls-container');
