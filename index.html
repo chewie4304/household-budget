@@ -88,22 +88,22 @@
   <header class="sticky top-0 border-b border-slate-200 bg-white shadow-sm z-40">
     <div class="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-4 sm:px-6 sm:py-3">
 
-      <!-- Left: Branding & Dynamic Account Context (Absorbs remaining space to pin the right side) -->
+      <!-- Left: Branding & Dynamic Account Context -->
       <div class="flex flex-1 min-w-0 items-center gap-3">
         <!-- High-Fidelity App Emblem Logo -->
         <img src="icon-192.png" alt="Home Wealth Logo" class="h-12 w-12 shrink-0 rounded-xl object-contain shadow-md"
           aria-hidden="true" />
 
-        <!-- Dynamic Title Context -->
-        <div class="min-w-0">
+        <!-- 🌟 Dynamic Title Context (Turned into an un-styled block button with text selection preserved) -->
+        <button type="button" id="header-text-button" onclick="handleHeaderTitleClick()"
+          class="min-w-0 text-left block focus:outline-none cursor-default select-text">
           <!-- Main title -->
           <p id="header-main-title" class="truncate text-xl font-extrabold tracking-tight text-slate-900">Home Wealth
           </p>
-
           <!-- Subtitle -->
           <p id="header-sub-title" class="truncate text-xs font-bold uppercase tracking-[0.2em] text-slate-400">Your
             Money. Your Way.</p>
-        </div>
+        </button>
       </div>
 
       <!-- Right: Consolidated Dropdown Menu Trigger & Quick Nav (Locked to the far-right) -->
@@ -3043,7 +3043,6 @@
         activeTagFilters = [];
         currentViewState = 'accounts-detail';
 
-        // Transition feed displays
         document.getElementById('accounts-feed-panel').classList.remove('hidden');
         document.getElementById('all-transactions-feed-panel').classList.add('hidden');
         document.getElementById('ledger-feed-panel').classList.add('hidden');
@@ -3052,18 +3051,23 @@
         const titleWrap = document.getElementById('home-view-title-wrap');
         if (titleWrap) titleWrap.classList.remove('hidden');
 
-        // Restore cockpit sidebar on mobile now that we've left the ledger detail view
         document.getElementById('cockpit-sidebar')?.classList.remove('hidden');
 
-        // Sync Header Contexts
         document.getElementById('header-main-title').textContent = "Home Wealth";
         document.getElementById('header-sub-title').textContent = "Your Money. Your Way.";
         document.getElementById('menu-to-accounts-btn').classList.add('hidden');
 
-        // 🌟 Hide header account navigation arrows [1]
         const headerArrows = document.getElementById('header-account-nav-arrows');
         if (headerArrows) {
           headerArrows.classList.add('hidden');
+        }
+
+        // 🌟 Restore standard text cursor on home view
+        const headerBtn = document.getElementById('header-text-button');
+        if (headerBtn) {
+          headerBtn.classList.add('cursor-default');
+          headerBtn.classList.remove('cursor-pointer');
+          headerBtn.removeAttribute('title');
         }
 
         showHomeAccounts();
@@ -3072,13 +3076,12 @@
       // Show the home accounts view
       function showHomeAccounts() {
         globalActiveTagFilters = [];
-        activeAccountId = null; // Clear account scope context
+        activeAccountId = null;
         document.getElementById('accounts-feed-panel').classList.remove('hidden');
         document.getElementById('all-transactions-feed-panel').classList.add('hidden');
         document.getElementById('ledger-feed-panel').classList.add('hidden');
         document.getElementById('home-tabs-switcher').classList.remove('hidden');
 
-        // Show unified controls card & search accounts bar
         const controlsContainer = document.getElementById('home-controls-container');
         if (controlsContainer) controlsContainer.classList.remove('hidden');
 
@@ -3088,11 +3091,9 @@
         const accountSearchWrap = document.getElementById('account-search-wrap');
         if (accountSearchWrap) accountSearchWrap.classList.remove('hidden');
 
-        // Hide the transactions search field
         const transactionSearchWrap = document.getElementById('transaction-search-wrap');
         if (transactionSearchWrap) transactionSearchWrap.classList.add('hidden');
 
-        // Restore cockpit sidebar on mobile now that we've left the ledger detail view
         document.getElementById('cockpit-sidebar')?.classList.remove('hidden');
 
         const accountsList = document.getElementById('accounts-list');
@@ -3101,8 +3102,6 @@
         const title = document.getElementById('home-view-title');
         const accountTypeFilterBar = document.getElementById('account-type-filter-bar');
         const newAccountButton = document.getElementById('new-account-button');
-
-        // 🌟 Grab the new Home Add Transaction button reference
         const homeAddTxButton = document.getElementById('home-add-transaction-button');
 
         clearSearchForView('home-accounts');
@@ -3115,7 +3114,6 @@
         if (accountsList) accountsList.classList.remove('hidden');
         if (accountTypeFilterBar) accountTypeFilterBar.classList.remove('hidden');
 
-        // 🌟 Swap button visibilities cleanly
         if (newAccountButton) newAccountButton.classList.remove('hidden');
         if (homeAddTxButton) homeAddTxButton.classList.add('hidden');
 
@@ -3132,10 +3130,17 @@
         document.getElementById('header-sub-title').textContent = "Your Money. Your Way.";
         document.getElementById('menu-to-accounts-btn').classList.add('hidden');
 
-        // Hide header account navigation arrows
         const headerArrows = document.getElementById('header-account-nav-arrows');
         if (headerArrows) {
           headerArrows.classList.add('hidden');
+        }
+
+        // 🌟 Restore standard text cursor on home view
+        const headerBtn = document.getElementById('header-text-button');
+        if (headerBtn) {
+          headerBtn.classList.add('cursor-default');
+          headerBtn.classList.remove('cursor-pointer');
+          headerBtn.removeAttribute('title');
         }
 
         saveViewState();
@@ -3147,56 +3152,46 @@
           window.scrollTo(0, 0);
         }
         if (activeAccountId !== accId) {
-          selectedAccountTransactionType = null; // Reset filter only when switching to a different account
+          selectedAccountTransactionType = null;
         }
         activeAccountId = accId;
         activeTagFilters = [];
         currentViewState = 'transactions-detail';
 
-        // Synchronously hide the credit limit progress bar immediately to prevent transition flashing
         const limitContainer = document.getElementById('tx-acc-credit-limit-container');
         if (limitContainer) {
           limitContainer.classList.add('hidden');
         }
-
-        renderMonthlySummary(); // Hide immediately instead of waiting for the next re-render
-        relocateAccountSummaryCard(); // Move the Account Summary card into the cockpit sidebar on desktop
+        relocateAccountSummaryCard();
 
         const acc = accounts.find(a => a.id === accId);
         if (!acc) return;
 
-        // Toggle panels, hide tab switcher and view title wrap on specific account views
         document.getElementById('accounts-feed-panel').classList.add('hidden');
         document.getElementById('all-transactions-feed-panel').classList.add('hidden');
         document.getElementById('ledger-feed-panel').classList.remove('hidden');
         document.getElementById('home-tabs-switcher').classList.add('hidden');
 
-        // Hide unified home controls card completely inside individual account ledger views
         const controlsContainer = document.getElementById('home-controls-container');
         if (controlsContainer) controlsContainer.classList.add('hidden');
 
         const titleWrap = document.getElementById('home-view-title-wrap');
         if (titleWrap) titleWrap.classList.add('hidden');
 
-        // Hide cockpit sidebar on mobile to isolate ledger details view cleanly
         const cockpit = document.getElementById('cockpit-sidebar');
         if (cockpit) cockpit.classList.add('hidden');
 
-        // Render Dynamic Bank Context in Header
         document.getElementById('header-main-title').textContent = acc.name;
         const numText = acc.account_number ? acc.account_number : '';
         document.getElementById('header-sub-title').textContent = `${acc.institution || acc.type} ${numText ? '• ' + numText : ''}`;
 
-        // Enable "To Accounts" routing inside dropdown menu
         document.getElementById('menu-to-accounts-btn').classList.remove('hidden');
 
-        // 🌟 Show header account navigation arrows [1]
         const headerArrows = document.getElementById('header-account-nav-arrows');
         if (headerArrows) {
           headerArrows.classList.remove('hidden');
         }
 
-        // Handle external portal routing & placeholder display
         const externalBtn = document.getElementById('tx-acc-external-btn');
         const externalPlaceholder = document.getElementById('tx-acc-external-placeholder');
         if (acc.external_link) {
@@ -3213,6 +3208,14 @@
           if (externalPlaceholder) externalPlaceholder.classList.remove('hidden');
         }
 
+        // 🌟 Turn on the pointer cursor & title helper strictly inside detailed views
+        const headerBtn = document.getElementById('header-text-button');
+        if (headerBtn) {
+          headerBtn.classList.remove('cursor-default');
+          headerBtn.classList.add('cursor-pointer');
+          headerBtn.title = "Click to Edit Account";
+        }
+
         await fetchTransactions(accId);
         saveViewState();
       }
@@ -3221,35 +3224,30 @@
       function showAllTransactions(type = null) {
         selectedSummaryTransactionType = type ?? null;
         globalActiveTagFilters = [];
-        activeAccountId = null; // Clear account scope context
+        activeAccountId = null;
 
         document.getElementById('accounts-feed-panel').classList.add('hidden');
         document.getElementById('all-transactions-feed-panel').classList.remove('hidden');
         document.getElementById('ledger-feed-panel').classList.add('hidden');
 
-        // Show unified controls container
         const controlsContainer = document.getElementById('home-controls-container');
         if (controlsContainer) controlsContainer.classList.remove('hidden');
 
         const titleWrap = document.getElementById('home-view-title-wrap');
         if (titleWrap) titleWrap.classList.remove('hidden');
 
-        // Hide accounts search bar & show transactions search bar
         const accountSearchWrap = document.getElementById('account-search-wrap');
         if (accountSearchWrap) accountSearchWrap.classList.add('hidden');
 
         const transactionSearchWrap = document.getElementById('transaction-search-wrap');
         if (transactionSearchWrap) transactionSearchWrap.classList.remove('hidden');
 
-        // Restore cockpit sidebar on mobile now that we've left the ledger detail view
         document.getElementById('cockpit-sidebar')?.classList.remove('hidden');
 
         const accountsTab = document.getElementById('home-accounts-tab');
         const transactionsTab = document.getElementById('home-transactions-tab');
         const title = document.getElementById('home-view-title');
         const newAccountButton = document.getElementById('new-account-button');
-
-        // 🌟 Grab the new Home Add Transaction button reference
         const homeAddTxButton = document.getElementById('home-add-transaction-button');
 
         clearSearchForView('home-transactions');
@@ -3258,11 +3256,9 @@
 
         relocateAccountSummaryCard();
 
-        // 🌟 Swap button visibilities cleanly
         if (newAccountButton) newAccountButton.classList.add('hidden');
         if (homeAddTxButton) homeAddTxButton.classList.remove('hidden');
 
-        // Simplify header text titles by omitting date/month references
         if (title) {
           title.textContent = selectedSummaryTransactionType === 'income'
             ? 'Income'
@@ -3284,10 +3280,17 @@
         document.getElementById('header-sub-title').textContent = "Your Money. Your Way.";
         document.getElementById('menu-to-accounts-btn').classList.add('hidden');
 
-        // Hide header account navigation arrows
         const headerArrows = document.getElementById('header-account-nav-arrows');
         if (headerArrows) {
           headerArrows.classList.add('hidden');
+        }
+
+        // 🌟 Restore standard text cursor on home view
+        const headerBtn = document.getElementById('header-text-button');
+        if (headerBtn) {
+          headerBtn.classList.add('cursor-default');
+          headerBtn.classList.remove('cursor-pointer');
+          headerBtn.removeAttribute('title');
         }
 
         renderAllTransactions();
@@ -7125,6 +7128,13 @@ This action can be undone by cancelling your edits.`,
           animateArrowSlide(direction);
         }
       });
+
+      function handleHeaderTitleClick() {
+        // Only trigger the edit account modal if we are viewing a specific account detail ledger
+        if (currentViewState === 'transactions-detail' && activeAccountId) {
+          openAccountModal(activeAccountId);
+        }
+      }
 
       function animateArrowSlide(direction) {
         const contentEl = document.getElementById('tx-view-content');
