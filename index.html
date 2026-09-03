@@ -587,9 +587,12 @@
           <h3 id="modal-title" class="font-bold text-lg">Add New Account</h3>
           <button onclick="toggleAccountModal(false)" class="text-gray-400 text-2xl">&times;</button>
         </div>
+
+        <!-- Account Form -->
         <form id="account-form" onsubmit="handleAccountSubmit(event)" class="space-y-3">
           <input type="hidden" id="editingAccId" value="" />
-          <!-- Account Name Input with Clear Button -->
+
+          <!-- 1. Account Name -->
           <div>
             <label class="text-xs font-semibold text-gray-600">Account Name</label>
             <div class="relative mt-1">
@@ -601,12 +604,40 @@
                 aria-label="Clear account name">&times;</button>
             </div>
           </div>
+
+          <!-- 2. Institution / Bank -->
+          <div>
+            <label class="text-xs font-semibold text-gray-600">Institution / Bank</label>
+            <div class="relative mt-1">
+              <input type="text" id="accInstitution" placeholder="e.g., Chase, Wells Fargo, Local CU"
+                oninput="checkClearButtonVisibility('accInstitution', 'clear-accInstitution')"
+                class="w-full border pl-2 pr-8 py-2 rounded-lg font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-300" />
+              <button type="button" id="clear-accInstitution"
+                onclick="clearAndFocusInput('accInstitution', 'clear-accInstitution')"
+                class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 w-5 h-5 items-center justify-center text-lg leading-none text-slate-400 hover:text-slate-600 transition-colors"
+                aria-label="Clear institution">&times;</button>
+            </div>
+          </div>
+
+          <!-- 3. Account Number (Forced numeric keypad on tap) -->
+          <div>
+            <label class="text-xs font-semibold text-gray-600">Account Number (or Last 4 Digits)</label>
+            <div class="relative mt-1">
+              <input type="text" id="accNumber" placeholder="e.g., 1234" inputmode="numeric" pattern="*"
+                oninput="checkClearButtonVisibility('accNumber', 'clear-accNumber')"
+                class="w-full border pl-2 pr-8 py-2 rounded-lg font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-300" />
+              <button type="button" id="clear-accNumber" onclick="clearAndFocusInput('accNumber', 'clear-accNumber')"
+                class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 w-5 h-5 items-center justify-center text-lg leading-none text-slate-400 hover:text-slate-600 transition-colors"
+                aria-label="Clear account number">&times;</button>
+            </div>
+          </div>
+
+          <!-- Required Parameters: Compact Account Type & Initial Balance Row -->
           <div class="grid grid-cols-2 gap-2">
-            <!-- Left Column: Account Type -->
             <div>
               <label class="text-xs font-semibold text-gray-600">Account Type</label>
               <select id="accType" onchange="toggleAccountDueDateField()"
-                class="w-full border p-2 rounded-lg mt-1 bg-white">
+                class="w-full border p-2 rounded-lg mt-1 bg-white font-semibold text-gray-800">
                 <option value="cash">Cash</option>
                 <option value="checking">Checking</option>
                 <option value="credit">Credit Card</option>
@@ -615,7 +646,7 @@
                 <option value="savings">Savings</option>
               </select>
             </div>
-            <!-- Right Column: Initial Balance -->
+
             <div>
               <label class="text-xs font-semibold text-gray-600">Initial Balance ($)</label>
               <div class="relative mt-1">
@@ -631,10 +662,11 @@
               </div>
             </div>
           </div>
-          <!-- Account Due Date Field (conditionally shown) -->
-          <div id="accDueDateField" class="hidden col-span-2">
+
+          <!-- Account Due Date Field (conditionally shown for credit cards or loans) -->
+          <div id="accDueDateField" class="hidden">
             <label class="text-xs font-semibold text-gray-600">Payment Due Date</label>
-            <div class="relative">
+            <div class="relative mt-1">
               <input type="text" id="accDueDate" readonly placeholder="Select Day of Month (1-31)"
                 onclick="openDueDateCalendarModal()"
                 class="w-full border p-2 rounded-lg mt-1 bg-white cursor-pointer font-medium text-gray-800" />
@@ -644,18 +676,30 @@
               </button>
             </div>
           </div>
-          <!-- Credit Limit Field (conditionally shown for credit cards) -->
-          <input type="text" id="accCreditLimit" placeholder="0.00" inputmode="decimal"
-            oninput="restrictToMathInput(this); checkClearButtonVisibility('accCreditLimit', 'clear-accCreditLimit')"
-            onfocus="this.classList.remove('border-red-500', 'focus:ring-red-200')" onblur="handleMathEvaluation(this)"
-            class="w-full border pl-2 pr-8 py-2 rounded-lg font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-300" />
+
+          <!-- Credit Limit Field (conditionally shown for credit cards only) -->
+          <div id="accCreditLimitField" class="hidden">
+            <label class="text-xs font-semibold text-gray-600">Credit Limit ($)</label>
+            <div class="relative mt-1">
+              <input type="text" id="accCreditLimit" placeholder="0.00" inputmode="decimal"
+                oninput="restrictToMathInput(this); checkClearButtonVisibility('accCreditLimit', 'clear-accCreditLimit')"
+                onfocus="this.classList.remove('border-red-500', 'focus:ring-red-200')"
+                onblur="handleMathEvaluation(this)"
+                class="w-full border pl-2 pr-8 py-2 rounded-lg font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-300" />
+              <button type="button" id="clear-accCreditLimit"
+                onclick="clearAndFocusInput('accCreditLimit', 'clear-accCreditLimit')"
+                class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 w-5 h-5 items-center justify-center text-lg leading-none text-slate-400 hover:text-slate-600 transition-colors"
+                aria-label="Clear credit limit">&times;</button>
+            </div>
+          </div>
+
+          <!-- 4. Alert when below minimum -->
           <div class="space-y-2 pt-1">
             <div class="flex items-center justify-between gap-2">
               <label class="text-xs font-semibold text-gray-600">Alert when below minimum</label>
               <input type="checkbox" id="accMinAlertEnabled" onchange="toggleAccountAlertControls()"
                 class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
             </div>
-            <!-- Minimum Balance Alert Input Field (conditionally shown) -->
             <div id="accMinAlertField" class="hidden">
               <div class="relative mt-1">
                 <input type="text" id="accMinBalance" placeholder="Minimum balance" inputmode="decimal"
@@ -671,13 +715,13 @@
             </div>
           </div>
 
+          <!-- 5. Alert when above maximum -->
           <div class="space-y-2 pt-1">
             <div class="flex items-center justify-between gap-2">
               <label class="text-xs font-semibold text-gray-600">Alert when above maximum</label>
               <input type="checkbox" id="accMaxAlertEnabled" onchange="toggleAccountAlertControls()"
                 class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
             </div>
-            <!-- Maximum Balance Alert Input Field (conditionally shown) -->
             <div id="accMaxAlertField" class="hidden">
               <div class="relative mt-1">
                 <input type="text" id="accMaxBalance" placeholder="Maximum balance" inputmode="decimal"
@@ -692,32 +736,8 @@
               </div>
             </div>
           </div>
-          <!-- Institution / Bank Input with Clear Button -->
-          <div>
-            <label class="text-xs font-semibold text-gray-600">Institution / Bank</label>
-            <div class="relative mt-1">
-              <input type="text" id="accInstitution" placeholder="e.g., Chase, Wells Fargo, Local CU"
-                oninput="checkClearButtonVisibility('accInstitution', 'clear-accInstitution')"
-                class="w-full border pl-2 pr-8 py-2 rounded-lg font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-300" />
-              <button type="button" id="clear-accInstitution"
-                onclick="clearAndFocusInput('accInstitution', 'clear-accInstitution')"
-                class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 w-5 h-5 items-center justify-center text-lg leading-none text-slate-400 hover:text-slate-600 transition-colors"
-                aria-label="Clear institution">&times;</button>
-            </div>
-          </div>
-          <!-- Account Number Input with Clear Button -->
-          <div>
-            <label class="text-xs font-semibold text-gray-600">Account Number (or Last 4 Digits)</label>
-            <div class="relative mt-1">
-              <input type="text" id="accNumber" placeholder="e.g., ****1234"
-                oninput="checkClearButtonVisibility('accNumber', 'clear-accNumber')"
-                class="w-full border pl-2 pr-8 py-2 rounded-lg font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-300" />
-              <button type="button" id="clear-accNumber" onclick="clearAndFocusInput('accNumber', 'clear-accNumber')"
-                class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 w-5 h-5 items-center justify-center text-lg leading-none text-slate-400 hover:text-slate-600 transition-colors"
-                aria-label="Clear account number">&times;</button>
-            </div>
-          </div>
-          <!-- Quick Connect App Selector -->
+
+          <!-- 6. Quick Connect App Preset Selector -->
           <div>
             <label class="text-xs font-semibold text-gray-600">Quick Connect App Preset</label>
             <select id="accAppPreset" onchange="applyAppPreset()"
@@ -761,7 +781,8 @@
               <option value="https://www.wellsfargo.com">Wells Fargo</option>
             </select>
           </div>
-          <!-- Connected Website or App URL Input with Clear Button -->
+
+          <!-- 7. Connected Website or App URL -->
           <div>
             <label class="text-xs font-semibold text-gray-600">Connected Website or App URL</label>
             <div class="relative mt-1">
@@ -774,6 +795,7 @@
                 aria-label="Clear link">&times;</button>
             </div>
           </div>
+
           <div class="pt-2 space-y-2">
             <button type="submit" id="submitBtn"
               class="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold shadow">
@@ -788,7 +810,7 @@
               Unarchive Account
             </button>
           </div>
-        </form>
+        </form> <!-- End of Account Form -->
       </div>
     </div>
 
@@ -5037,7 +5059,11 @@
         checkClearButtonVisibility('accMinBalance', 'clear-accMinBalance');
         checkClearButtonVisibility('accMaxBalance', 'clear-accMaxBalance');
       }
+
+      //=====================================
       // --- Account Modal Logic ---
+      //=====================================
+
       function openAccountModal(accountId = null) {
         const form = document.getElementById('account-form');
         form.reset();
@@ -5045,7 +5071,6 @@
         if (presetSelect) {
           presetSelect.value = '';
         }
-
         const deleteBtn = document.getElementById('deleteBtn');
         const unarchiveBtn = document.getElementById('unarchiveBtn');
 
@@ -5081,11 +5106,9 @@
           unarchiveBtn.classList.add('hidden');
         }
 
-        // 1. Sync modal view layout displays based on account parameters
         toggleAccountAlertControls();
         toggleAccountDueDateField();
 
-        // 2. Initialize clear button visibility states (Once, completely, and cleanly!)
         checkClearButtonVisibility('accName', 'clear-accName');
         checkClearButtonVisibility('accBalance', 'clear-accBalance');
         checkClearButtonVisibility('accCreditLimit', 'clear-accCreditLimit');
@@ -5095,25 +5118,38 @@
         checkClearButtonVisibility('accMinBalance', 'clear-accMinBalance');
         checkClearButtonVisibility('accMaxBalance', 'clear-accMaxBalance');
 
-        // 3. Open the modal wrapper
         toggleAccountModal(true);
       }
+      function toggleAccountDueDateField() {
+        const accType = document.getElementById('accType').value;
 
+        // Toggle Payment Due Date (Credit and Loans)
+        const dueField = document.getElementById('accDueDateField');
+        if (dueField) {
+          if (['credit', 'loan'].includes(accType)) {
+            dueField.classList.remove('hidden');
+          } else {
+            dueField.classList.add('hidden');
+            document.getElementById('accDueDate').value = '';
+          }
+        }
+
+        // Toggle Credit Limit (Credit Cards only)
+        const limitField = document.getElementById('accCreditLimitField');
+        if (limitField) {
+          if (accType === 'credit') {
+            limitField.classList.remove('hidden');
+          } else {
+            limitField.classList.add('hidden');
+            document.getElementById('accCreditLimit').value = '';
+          }
+        }
+      }
       function toggleAccountModal(show) {
         const modal = document.getElementById('account-modal');
         if (show) {
           modal.classList.remove('hidden');
           document.getElementById('account-modal-content')?.scrollTo(0, 0);
-        } else {
-          modal.classList.add('hidden');
-        }
-      }
-
-      function toggleTxModal(show) {
-        const modal = document.getElementById('tx-modal');
-        if (show) {
-          modal.classList.remove('hidden');
-          modal.querySelector('div')?.scrollTo(0, 0);
         } else {
           modal.classList.add('hidden');
         }
@@ -5158,33 +5194,6 @@
         checkClearButtonVisibility('txAmount', 'clear-txAmount');
       }
 
-      // --- Payment Due Date Modal & Picker Logic ---
-
-      function toggleAccountDueDateField() {
-        const accType = document.getElementById('accType').value;
-
-        // Toggle Payment Due Date (Credit and Loans)
-        const dueField = document.getElementById('accDueDateField');
-        if (dueField) {
-          if (['credit', 'loan'].includes(accType)) {
-            dueField.classList.remove('hidden');
-          } else {
-            dueField.classList.add('hidden');
-            document.getElementById('accDueDate').value = '';
-          }
-        }
-
-        // Toggle Credit Limit (Credit Cards only)
-        const limitField = document.getElementById('accCreditLimitField');
-        if (limitField) {
-          if (accType === 'credit') {
-            limitField.classList.remove('hidden');
-          } else {
-            limitField.classList.add('hidden');
-            document.getElementById('accCreditLimit').value = '';
-          }
-        }
-      }
       // --- Apply App Preset Logic ---
       function applyAppPreset() {
         const presetSelect = document.getElementById('accAppPreset');
@@ -6960,7 +6969,6 @@ This action can be undone by cancelling your edits.`,
       }
 
       async function handleAccountSubmit(e) {
-        // 🚫 Block saving if any invalid inputs exist
         if (e.target.querySelector('.border-red-500')) {
           showAppMessage("Please resolve all invalid fields before saving.");
           const submitBtn = document.getElementById('submitBtn');
@@ -6970,25 +6978,19 @@ This action can be undone by cancelling your edits.`,
           }
           return;
         }
-
         e.preventDefault();
         const submitBtn = document.getElementById('submitBtn');
         submitBtn.disabled = true;
-
         const editId = document.getElementById('editingAccId').value;
         const minAlertEnabled = document.getElementById('accMinAlertEnabled').checked;
         const maxAlertEnabled = document.getElementById('accMaxAlertEnabled').checked;
-
         const minBalance = minAlertEnabled ? roundCurrency(parseFloat(document.getElementById('accMinBalance').value)) : null;
         const maxBalance = maxAlertEnabled ? roundCurrency(parseFloat(document.getElementById('accMaxBalance').value)) : null;
-
         const accType = document.getElementById('accType').value;
         const dueDateVal = document.getElementById('accDueDate').value;
         const due_date = ['credit', 'loan'].includes(accType) && dueDateVal ? parseInt(dueDateVal, 10) : null;
-
         const limitVal = document.getElementById('accCreditLimit').value;
         const credit_limit = accType === 'credit' && limitVal ? roundCurrency(parseFloat(limitVal)) : null;
-
         const external_link = document.getElementById('accExternalLink').value.trim() || null;
 
         const payload = {
@@ -7005,20 +7007,13 @@ This action can be undone by cancelling your edits.`,
         };
 
         const { error } = await saveAccountData(payload, editId || null);
-
         submitBtn.disabled = false;
-
         if (error) {
           showAppMessage("Error saving account: " + error.message);
           return;
         }
-
         toggleAccountModal(false);
-
-        // 1. Fetch fresh account data from Supabase to update the global 'accounts' array
         await fetchAccounts();
-
-        // 2. If editing from the detailed transactions view, force-refresh the active card elements
         if (currentViewState === 'transactions-detail' && activeAccountId) {
           await showTransactionsView(activeAccountId);
         }

@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 ## [unreleased]
 
+### Added
+- **Account Number Numeric Keypad:** Configured `inputmode="numeric"` and numeric formats on the account number input field to force a clean, simplified number pad on mobile devices.
+- **Conditional Credit Limit Input:** Restored the `#accCreditLimit` field nested inside a newly designed, labeled `#accCreditLimitField` container. The field features an absolute-positioned clear button and dynamically un-hides strictly for Credit Card accounts, maintaining layout consistency.
+
+### Changed
+- **Form Layout Harmonization:** Completely restructured the Add/Edit Account Form layout, rearranging inputs to follow a highly logical visual progression: Account Name, Institution/Bank, Account Number, Compact Type & Balance, Payment Due Date, Credit Limit, Min/Max Alerts, App Preset, and Connected Website URL.
+
 ## [1.6.3] - 2026-09-03
 
 ### Added
