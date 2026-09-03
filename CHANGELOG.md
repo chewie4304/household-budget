@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file.
 ## [unreleased]
 
 ### Added
+- **Global View Action Swapping:** Configured a secondary quick-action button (`#home-add-transaction-button`) inside the Controls Container heading block. When toggling the main dashboard switch from Accounts to Transactions, the "+ New Account" action now dynamically slides away and is replaced by a "+ Add Transaction" action, ensuring the primary viewport always maintains an active, context-appropriate workflow shortcut.
 - **Account Number Numeric Keypad:** Configured `inputmode="numeric"` and numeric formats on the account number input field to force a clean, simplified number pad on mobile devices.
 - **Conditional Credit Limit Input:** Restored the `#accCreditLimit` field nested inside a newly designed, labeled `#accCreditLimitField` container. The field features an absolute-positioned clear button and dynamically un-hides strictly for Credit Card accounts, maintaining layout consistency.
 

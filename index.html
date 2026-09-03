@@ -303,10 +303,18 @@
             <!-- Row 1: Title & New Account Button -->
             <div id="home-view-title-wrap" class="flex min-h-[38px] items-center justify-between gap-3">
               <h2 id="home-view-title" class="text-2xl font-extrabold tracking-tight text-slate-800">Your Accounts</h2>
+
               <button id="new-account-button" onclick="openAccountModal()"
                 class="inline-flex shrink-0 items-center gap-1 rounded-xl border border-slate-200 bg-white px-2.5 py-2 text-xs font-bold text-slate-600 shadow-sm transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700 sm:px-3 sm:text-sm">
                 <span class="text-base leading-none text-blue-600" aria-hidden="true">+</span>
                 <span>New account</span>
+              </button>
+
+              <!-- 🌟 Added Add Transaction button to replace New Account button in Transactions View -->
+              <button id="home-add-transaction-button" onclick="openTxModal()"
+                class="hidden inline-flex shrink-0 items-center gap-1 rounded-xl border border-slate-200 bg-white px-2.5 py-2 text-xs font-bold text-slate-600 shadow-sm transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700 sm:px-3 sm:text-sm">
+                <span class="text-base leading-none text-blue-600" aria-hidden="true">+</span>
+                <span>Add Transaction</span>
               </button>
             </div>
 
@@ -3091,6 +3099,9 @@
         const accountTypeFilterBar = document.getElementById('account-type-filter-bar');
         const newAccountButton = document.getElementById('new-account-button');
 
+        // 🌟 Grab the new Home Add Transaction button reference
+        const homeAddTxButton = document.getElementById('home-add-transaction-button');
+
         clearSearchForView('home-accounts');
         currentViewState = 'home-accounts';
         window.scrollTo(0, 0);
@@ -3100,10 +3111,12 @@
 
         if (accountsList) accountsList.classList.remove('hidden');
         if (accountTypeFilterBar) accountTypeFilterBar.classList.remove('hidden');
+
+        // 🌟 Swap button visibilities cleanly
         if (newAccountButton) newAccountButton.classList.remove('hidden');
+        if (homeAddTxButton) homeAddTxButton.classList.add('hidden');
 
         if (title) title.textContent = 'Your Accounts';
-
         if (accountsTab) {
           accountsTab.classList.add('bg-blue-600', 'text-white');
           accountsTab.classList.remove('bg-transparent', 'bg-white', 'text-gray-700', 'border', 'border-gray-200');
@@ -3112,12 +3125,11 @@
           transactionsTab.classList.add('bg-white', 'text-gray-700', 'border', 'border-gray-200');
           transactionsTab.classList.remove('bg-transparent', 'bg-blue-600', 'text-white');
         }
-
         document.getElementById('header-main-title').textContent = "Home Wealth";
         document.getElementById('header-sub-title').textContent = "Your Money. Your Way.";
         document.getElementById('menu-to-accounts-btn').classList.add('hidden');
 
-        // 🌟 Hide header account navigation arrows
+        // Hide header account navigation arrows
         const headerArrows = document.getElementById('header-account-nav-arrows');
         if (headerArrows) {
           headerArrows.classList.add('hidden');
@@ -3234,13 +3246,18 @@
         const title = document.getElementById('home-view-title');
         const newAccountButton = document.getElementById('new-account-button');
 
+        // 🌟 Grab the new Home Add Transaction button reference
+        const homeAddTxButton = document.getElementById('home-add-transaction-button');
+
         clearSearchForView('home-transactions');
         currentViewState = 'home-transactions';
         window.scrollTo(0, 0);
 
         relocateAccountSummaryCard();
 
+        // 🌟 Swap button visibilities cleanly
         if (newAccountButton) newAccountButton.classList.add('hidden');
+        if (homeAddTxButton) homeAddTxButton.classList.remove('hidden');
 
         // Simplify header text titles by omitting date/month references
         if (title) {
@@ -3264,7 +3281,7 @@
         document.getElementById('header-sub-title').textContent = "Your Money. Your Way.";
         document.getElementById('menu-to-accounts-btn').classList.add('hidden');
 
-        // 🌟 Hide header account navigation arrows [1]
+        // Hide header account navigation arrows
         const headerArrows = document.getElementById('header-account-nav-arrows');
         if (headerArrows) {
           headerArrows.classList.add('hidden');
