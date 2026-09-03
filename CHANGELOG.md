@@ -11,6 +11,9 @@ All notable changes to this project will be documented in this file.
 ### Changed
 - **Form Layout Harmonization:** Completely restructured the Add/Edit Account Form layout, rearranging inputs to follow a highly logical visual progression: Account Name, Institution/Bank, Account Number, Compact Type & Balance, Payment Due Date, Credit Limit, Min/Max Alerts, App Preset, and Connected Website URL.
 
+### Fixed
+- **Single-Quote Autocomplete Crash:** Patched `handleAutocompleteTyping()` to pre-escape apostrophes and single quotes (`\\'`) inside generated suggestions lists, resolving an inline handler evaluation syntax crash when selecting expense payees (e.g., "McDonald's" or "Kohl's").
+
 ## [1.6.3] - 2026-09-03
 
 ### Added

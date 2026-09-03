@@ -4814,17 +4814,14 @@
 
       function handleAutocompleteTyping(type, value) {
         const query = (value || '').trim().toLowerCase();
-
         if (type === 'payee') {
           const payeeList = document.getElementById('payee-suggestions-custom');
           if (!payeeList || !Array.isArray(transactions)) return;
-
           if (query.length === 0) {
             payeeList.innerHTML = '';
             payeeList.classList.add('hidden');
             return;
           }
-
           const uniquePayees = [...new Set(
             transactions
               .map(tx => (tx.payee || '').trim())
@@ -4832,31 +4829,30 @@
           )].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
 
           const filteredPayees = uniquePayees.filter(p => p.toLowerCase().includes(query));
-
           if (filteredPayees.length === 0) {
             payeeList.innerHTML = '';
             payeeList.classList.add('hidden');
             return;
           }
-
-          payeeList.innerHTML = filteredPayees.map(p => `
-      <div onclick="selectCustomAutocomplete('payee', '${escapeHtml(p)}')" 
-           class="px-3 py-2 cursor-pointer hover:bg-slate-100 border-b border-slate-100 last:border-b-0 text-slate-800 font-semibold text-left">
-        ${escapeHtml(p)}
-      </div>
-    `).join('');
+          payeeList.innerHTML = filteredPayees.map(p => {
+            // 🌟 Pre-escape single quotes so they decode cleanly into JS escaped characters inside the inline handler
+            const safePayee = escapeHtml(p.replace(/'/g, "\\'"));
+            return `
+              <div onclick="selectCustomAutocomplete('payee', '${safePayee}')"
+              class="px-3 py-2 cursor-pointer hover:bg-slate-100 border-b border-slate-100 last:border-b-0 text-slate-800 font-semibold text-left">
+              ${escapeHtml(p)}
+              </div>
+            `;
+          }).join('');
           payeeList.classList.remove('hidden');
-
         } else if (type === 'desc') {
           const descList = document.getElementById('desc-suggestions-custom');
           if (!descList || !Array.isArray(transactions)) return;
-
           if (query.length === 0) {
             descList.innerHTML = '';
             descList.classList.add('hidden');
             return;
           }
-
           const uniqueDescs = [...new Set(
             transactions
               .map(tx => (tx.description || '').trim())
@@ -4864,19 +4860,21 @@
           )].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
 
           const filteredDescs = uniqueDescs.filter(d => d.toLowerCase().includes(query));
-
           if (filteredDescs.length === 0) {
             descList.innerHTML = '';
             descList.classList.add('hidden');
             return;
           }
-
-          descList.innerHTML = filteredDescs.map(d => `
-      <div onclick="selectCustomAutocomplete('desc', '${escapeHtml(d)}')" 
-           class="px-3 py-2 cursor-pointer hover:bg-slate-100 border-b border-slate-100 last:border-b-0 text-slate-800 font-semibold text-left">
-        ${escapeHtml(d)}
-      </div>
-    `).join('');
+          descList.innerHTML = filteredDescs.map(d => {
+            // 🌟 Pre-escape single quotes for descriptions as well to ensure total visual safety
+            const safeDesc = escapeHtml(d.replace(/'/g, "\\'"));
+            return `
+              <div onclick="selectCustomAutocomplete('desc', '${safeDesc}')"
+              class="px-3 py-2 cursor-pointer hover:bg-slate-100 border-b border-slate-100 last:border-b-0 text-slate-800 font-semibold text-left">
+              ${escapeHtml(d)}
+              </div>
+            `;
+          }).join('');
           descList.classList.remove('hidden');
         }
       }
