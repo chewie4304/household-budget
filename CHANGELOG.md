@@ -4,16 +4,33 @@ All notable changes to this project will be documented in this file.
 
 ## [unreleased]
 
-## [1.6.2] - 2026-09-02
+## [1.6.2-dev] - 2026-09-02
+
+### Added
+- **Unified Controls Container:** Designed and integrated a card-styled controls wrapper container around the "Your Accounts" header, "New account" button, switcher toggle, and search inputs, matching the soft gradient background of your primary dashboard widgets.
 
 ### Changed
-- **Unified Controls Panel:** Redesigned the right-column home dashboard header into a unified, card-styled Controls Container matching the soft gradient, visual padding, and height (`lg:h-[188px]`) of the global Monthly Summary card.
-- **Stacked Layout Architecture:** Reorganized the view switching tabs and the "Search accounts" input field to stack vertically rather than horizontally, maximizing search bar visibility and preventing cramped horizontal squishing on desktop screens.
+- **Vertical Stack Controls Layout:** Repositioned the view switcher tabs and the active search input boxes to stack vertically on desktop screens, resolving layout squishing by allowing elements to expand to 100% card width.
+- **Search Fields Consolidation:** Relocated the "Search transactions" input box up into the main Controls Container card alongside the account search bar. The active search input now toggles dynamically based on your selected view tab while the card height remains completely static.
+- **Streamlined Transactions Headings:** Simplified the transaction history view titles by stripping out the dynamic month and year suffix labels (e.g., displaying as "Transactions", "Income", or "Expenses" instead of appending the month/year string).
+- **Balances & Quick Action Card Consolidation:** Relocated the "+ Add Transaction" button inside the primary account details balances card, group-unifying all ledger actions (Portal launching, Edit Account, Current & Cleared Balances, and Add Transaction) into a single, cohesive vertical container.
+- **Balances Card Styling Harmonization:** Upgraded the balances card to use the signature gradient background (`bg-gradient-to-br from-slate-50 via-white to-blue-50`), rounded corners (`rounded-3xl`), border weights, and visual shadows, perfectly matching the design language of your primary widgets.
+- **Balances Card Desktop Height & Alignment:** Standardized the balances card to a matching `lg:h-[188px]` desktop height and appended `lg:!mt-0` to bypass empty-sibling parent margins, locking the card into a laser-straight horizontal alignment with the neighboring Account Summary card.
+- **Symmetrical Card Parity:** Standardized the heights of the global Monthly Summary card, the new Controls Container, and the account-specific Monthly Summary card to a matching `lg:h-[188px]` to ensure perfect horizontal alignment on desktop viewports with zero visual jumps.
+- **Responsive Anti-Whiplash Grid Gap:** Restructured the main grid layout gap to `gap-3 lg:gap-4`. This collapses the mobile vertical spacing between the stacked columns to exactly `12px` (matching the ledger's internal `space-y-3` vertical spacing), ensuring the bottom cards remain completely stationary with zero shifting during view toggles.
+- **Flexible Account Summary Card Header Overhaul:** Overhauled the account-specific Monthly Summary card header from a rigid CSS Grid to a responsive Flex-Wrap layout container (`flex flex-wrap lg:flex-nowrap`). This ensures elements self-align perfectly on all screens and prevents layout/height distortions when the Credit Limit progress bar is dynamically hidden on cash or savings accounts.
+- **Streamlined Header Metrics & Vertical Gaps:** Relocated the credit limit progress bar into the Account Summary card. Stacking elements vertically with a responsive middle-track alignment on mobile tightened the vertical gap between the header metrics and sub-cards to fit them beautifully inside the matching `188px` card boundary with zero overflow.
+- **Enlarged Quick Actions & Symmetrical Alignment:** Scaled up the Launch Portal and Edit Account buttons (and corresponding text) to a highly tap-friendly size. Grouped them inside fixed `h-[42px]` rows so the top and bottom edges of the buttons align symmetrically with the top and bottom bounds of their enlarged Current and Cleared Balance text displays.
+- **Active Month Dropdown Highlighting:** Replaced the legacy green/blue "Live" badges on the summary cards with a clean active-month border transition on the dropdown selectors themselves. The dropdown border dynamically paints royal blue when viewing the current month and returns to grey for past months, backed by an auto-`blur()` trigger to instantly strip focused keyboard ring outlines on selection.
 
 ### Fixed
-- **Account Ledger Transaction Sorting:** Aligned the transaction sorting pipeline inside individual Account Details views to match the main Transactions View. The ledger now runs your standard comparison sorting engine, correctly bubbling Pending transactions to the top of the feed followed by Cleared transactions ordered by date (newest first) and creation timestamp.
-- **Column Grid Alignment Restoration:** Resolved a grid wrapping bug by establishing a dedicated right-column column-flex `<section>` wrapper, pulling the active accounts list and account filter bar back to the right column on desktop instead of wrapping underneath the cockpit sidebar.
-- **Summary Element ID and Visibility Restorations:** Resolved a critical layout ID overlap conflict and default hidden-class bug on the account Monthly Summary card, successfully restoring full layout symmetry and enabling the desktop cockpit card "teleportation" engine to lock back into place.
+- **Account Ledger Transaction Sorting:** Aligned the transaction sorting pipeline inside individual Account Details views to match the main Transactions View. The ledger now runs your standard comparison sorting engine, correctly bubbling Pending transactions to the top of the card feed, followed by Cleared transactions ordered by date (newest first) and creation timestamp, instead of incorrectly grouping cleared items first regardless of date.
+- **Right Column Layout Wrap:** Restored the right column's dedicated layout section, resolving a layout wrap bug that forced the active accounts list and filter bar to slip under the cockpit sidebar on desktop views.
+- **Dynamic Card Visibility & ID Conflicts:** Corrected a duplicate ID conflict on the account Monthly Summary card (restoring its unique `id="account-monthly-summary"`) and removed its default `hidden` class to allow the desktop cockpit sidebar teleportation engine to function cleanly.
+- **Horizontal Transition Twitching:** Injected `scrollbar-gutter: stable;` on the root `<html>` element to ensure a stable layout margin for scrollbars, permanently correcting horizontal layout shifting when transitioning between varying content-height panels.
+- **Fatal ReferenceError script crash:** Patched `renderMonthlySummary()` to completely remove the dead `liveBadge` checker block, resolving a fatal `ReferenceError` script crash that froze dashboard rendering when toggling tabs.
+- **Dashboard Sync Hijack Guard:** Updated `showHomeAccounts()` and `showAllTransactions()` to explicitly clear the active account context on home tab switches (`activeAccountId = null`). This prevents background real-time sync processes from hijacking the view and drawing ledger panels over the main landing dashboard.
+
 
 ## [1.6.1] - 2026-09-01
 
