@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 
 ## [unreleased]
 
+### Changed
+- **Header Typography Scaling:** Scaled up the sticky application header typography to improve legibility and visual prominence. Enlarged the main brand and dynamic account title (`#header-main-title`) from `text-lg` to `text-xl`, and enlarged the tagline and dynamic bank institution metadata subtitle (`#header-sub-title`) from `text-[10px]` to `text-xs`.
+
 ## [1.6.4] - 2026-09-03
 
 ### Added
