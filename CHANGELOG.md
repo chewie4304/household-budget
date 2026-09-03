@@ -4,11 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [unreleased]
 
-## [1.6.2-dev] - 2026-09-02
+## [1.6.2] - 2026-09-02
 
 ### Added
 - **Unified Controls Container:** Designed and integrated a card-styled controls wrapper container around the "Your Accounts" header, "New account" button, switcher toggle, and search inputs, matching the soft gradient background of your primary dashboard widgets.
 - **Interactive Navigation Submenu:** Expanded the main menu (☰) "Return to Accounts" link into an elegant collapsible accordion list renamed to "Accounts." Selecting it reveals a dynamic submenu featuring "All Accounts" at the top, followed by a list of all active financial accounts sorted in their standard display sequence for rapid navigation.
+- **Header Account Navigation Arrows:** Integrated Left and Right arrow buttons (◀ / ▶) in the sticky application header for swift click-to-cycle ledger transitions on desktop.
 
 ### Changed
 - **Vertical Stack Controls Layout:** Repositioned the view switcher tabs and the active search input boxes to stack vertically on desktop screens, resolving layout squishing by allowing elements to expand to 100% card width.
@@ -27,6 +28,8 @@ All notable changes to this project will be documented in this file.
 - **Account Type Filter Dropdown Conversion:** Replaced the row of account type filtering buttons with an elegant custom dropdown selector nested inside a unified filter container, matching the exact height, border design, and location of the transaction search inputs.
 - **Chronological Dropdown Reversal:** Reversed the monthly summary selector dropdown sequence so that the most recent (current) active month floats at the very top of the options list, followed chronologically by past historical months.
 - **Navigation Scroll Isolation:** Bound the mobile dropdown navigation container with `max-h-[calc(100vh-80px)]` and enabled `overscroll-contain` to isolate scrolling, ensuring touch swipes scroll smoothly through the accounts list instead of dragging the background page.
+- **Carousel Animation Direction Alignment:** Rebalanced the exit and entrance slide physics parameters across desktop clicks and touch swipe gestures, ensuring that both clicks and touches slide current cards off-screen while the next chronologically enters from the physically expected direction with buttery-smooth responsiveness.
+- **Hardware-Accelerated Carousel Restoration:** Restructured `#ledger-feed-panel` to reinstate the `#transactions-view` capture bounds and `#tx-view-content` hardware-accelerated transform elements to fully restore mobile touch-swiping and desktop transitions.
 
 ### Fixed
 - **Account Ledger Transaction Sorting:** Aligned the transaction sorting pipeline inside individual Account Details views to match the main Transactions View. The ledger now runs your standard comparison sorting engine, correctly bubbling Pending transactions to the top of the card feed, followed by Cleared transactions ordered by date (newest first) and creation timestamp, instead of incorrectly grouping cleared items first regardless of date.
@@ -36,6 +39,7 @@ All notable changes to this project will be documented in this file.
 - **Fatal ReferenceError script crash:** Patched `renderMonthlySummary()` to completely remove the dead `liveBadge` checker block, resolving a fatal `ReferenceError` script crash that froze dashboard rendering when toggling tabs.
 - **Dashboard Sync Hijack Guard:** Updated `showHomeAccounts()` and `showAllTransactions()` to explicitly clear the active account context on home tab switches (`activeAccountId = null`). This prevents background real-time sync processes from hijacking the view and drawing ledger panels over the main landing dashboard.
 - **Transition Flash Remediation:** Patched `showTransactionsView()` to synchronously hide the credit limit progress bar container immediately upon initiating an account switch, preventing the previous account's credit metrics from flashing on-screen during network data retrieval.
+- **Missing Global State and App Initialization Restored:** Resolved a compilation state loss during refactoring by un-nesting modal structures and recovering crucial global state trackers (including `plannedTransactions` and `alert state` triggers), successfully un-hiding and rendering all custom dashboard widgets and modals.
 
 ## [1.6.1] - 2026-09-01
 

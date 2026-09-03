@@ -7065,7 +7065,6 @@ This action can be undone by cancelling your edits.`,
       // 1. Desktop Arrow Key Transitions
       document.addEventListener('keydown', (e) => {
         if (currentViewState !== 'transactions-detail') return;
-
         const activeTag = document.activeElement ? document.activeElement.tagName : '';
         if (activeTag === 'INPUT' || activeTag === 'TEXTAREA' || activeTag === 'SELECT') return;
 
@@ -7079,8 +7078,8 @@ This action can be undone by cancelling your edits.`,
         const contentEl = document.getElementById('tx-view-content');
         if (contentEl) {
           contentEl.classList.add('duration-200', 'ease-out');
-          // 🌟 Reversed: 'next' slides current view right (100%), 'prev' slides it left (-100%)
-          const offScreenOffset = direction === 'next' ? '100%' : '-100%';
+          // Going next: exits to left (-100%); Going prev: exits to right (100%)
+          const offScreenOffset = direction === 'next' ? '-100%' : '100%';
           contentEl.style.transform = `translateX(${offScreenOffset})`;
           contentEl.style.opacity = '0';
           setTimeout(() => {
@@ -7094,39 +7093,32 @@ This action can be undone by cancelling your edits.`,
       // 2. Real-Time Mobile Drag & Sweep Listeners
       const txViewContainer = document.getElementById('transactions-view');
       if (txViewContainer) {
-        txViewContainer.addEventListener('touchend', (e) => {
+        // Capture starting coordinates and instantly disable transition delay for lag-free tracking
+        txViewContainer.addEventListener('touchstart', (e) => {
           if (currentViewState !== 'transactions-detail') return;
-          const contentEl = document.getElementById('tx-view-content');
-          if (contentEl && isSwiping) {
-            contentEl.classList.add('duration-200', 'ease-out');
-            const swipeThreshold = 100; // Requires dragging 100px to commit account swap
-            if (Math.abs(currentTranslation) > swipeThreshold) {
-              const direction = currentTranslation > 0 ? 'prev' : 'next';
-              // 🌟 Reversed: swiping left ('next') sweeps page right ('100%')
-              const offscreenTarget = currentTranslation > 0 ? '-100%' : '100%';
-              contentEl.style.transform = `translateX(${offscreenTarget})`;
-              contentEl.style.opacity = '0';
-              setTimeout(() => {
-                executeSwipeAccountSwitch(direction);
-              }, 200);
-            } else {
-              contentEl.style.transform = 'translateX(0px)';
-              contentEl.style.opacity = '1';
-            }
-          }
+          const [touch] = e.touches;
+          if (!touch) return;
+          touchStartX = touch.clientX;
+          touchStartY = touch.clientY;
           isSwiping = false;
           isScrolling = false;
+          currentTranslation = 0;
+
+          const contentEl = document.getElementById('tx-view-content');
+          if (contentEl) {
+            contentEl.classList.remove('duration-200', 'ease-out');
+          }
         }, { passive: true });
 
+        // Track finger movement and translate the card element 1-to-1 under the thumb
         txViewContainer.addEventListener('touchmove', (e) => {
           if (currentViewState !== 'transactions-detail' || isScrolling) return;
           const [touch] = e.touches;
           if (!touch) return;
-
           const deltaX = touch.clientX - touchStartX;
           const deltaY = touch.clientY - touchStartY;
 
-          // Detect gesture path on initial scroll movements
+          // Isolate pure horizontal swipes from vertical page scrolls
           if (!isSwiping && !isScrolling) {
             const absX = Math.abs(deltaX);
             const absY = Math.abs(deltaY);
@@ -7138,43 +7130,37 @@ This action can be undone by cancelling your edits.`,
           }
 
           if (isSwiping) {
-            // Freeze browser elastic-bouncing so horizontal card drags stay locked
-            if (e.cancelable) e.preventDefault();
-
+            if (e.cancelable) e.preventDefault(); // Stop mobile elastic-bounce scroll conflicts
             const contentEl = document.getElementById('tx-view-content');
             if (contentEl) {
               currentTranslation = deltaX;
-              // Move the element 1-to-1 under the user's thumb
               contentEl.style.transform = `translateX(${currentTranslation}px)`;
-
-              // Gradually fade out opacity as the user sweeps the ledger off the screen
+              // Fade out slightly as the card is swept away
               const opacityPercent = Math.max(0.3, 1 - (Math.abs(currentTranslation) / 320));
               contentEl.style.opacity = String(opacityPercent);
             }
           }
-        }, { passive: false }); // passive: false allows us to override background bouncing
+        }, { passive: false });
 
+        // SINGLE, clean touchend event listener
         txViewContainer.addEventListener('touchend', (e) => {
           if (currentViewState !== 'transactions-detail') return;
-
           const contentEl = document.getElementById('tx-view-content');
           if (contentEl && isSwiping) {
-            // Re-enable smooth transition animations
             contentEl.classList.add('duration-200', 'ease-out');
             const swipeThreshold = 100; // Requires dragging 100px to commit account swap
 
             if (Math.abs(currentTranslation) > swipeThreshold) {
-              // COMMIT: Sweep the ledger completely off the screen
               const direction = currentTranslation > 0 ? 'prev' : 'next';
+              // Sweep in direction of drag (swipe right goes off right, swipe left goes off left)
               const offscreenTarget = currentTranslation > 0 ? '100%' : '-100%';
               contentEl.style.transform = `translateX(${offscreenTarget})`;
               contentEl.style.opacity = '0';
-
               setTimeout(() => {
                 executeSwipeAccountSwitch(direction);
               }, 200);
             } else {
-              // ABORT: Snap card elastically back to the center of the viewport
+              // Snap back to center
               contentEl.style.transform = 'translateX(0px)';
               contentEl.style.opacity = '1';
             }
@@ -7191,6 +7177,7 @@ This action can be undone by cancelling your edits.`,
         if (activeAccounts.length <= 1) return;
         const currentIndex = activeAccounts.findIndex(a => a.id === activeAccountId);
         if (currentIndex === -1) return;
+
         let nextIdx;
         if (direction === 'next') {
           nextIdx = (currentIndex + 1) % activeAccounts.length;
@@ -7205,11 +7192,12 @@ This action can be undone by cancelling your edits.`,
         const contentEl = document.getElementById('tx-view-content');
         if (contentEl) {
           contentEl.classList.remove('duration-200', 'ease-out');
-          // 🌟 Reversed: incoming 'next' account teleports to left (-100%) and slides to center
-          const startPosition = direction === 'next' ? '-100%' : '100%';
+          // Teleport incoming card to the opposite edge and glide it gracefully to center
+          // Going next: starts at right (100%); Going prev: starts at left (-100%)
+          const startPosition = direction === 'next' ? '100%' : '-100%';
           contentEl.style.transform = `translateX(${startPosition})`;
           contentEl.style.opacity = '0';
-          void contentEl.offsetWidth; // Trigger DOM reflow
+          void contentEl.offsetWidth; // Trigger layout reflow
           contentEl.classList.add('duration-200', 'ease-out');
           contentEl.style.transform = 'translateX(0px)';
           contentEl.style.opacity = '1';
