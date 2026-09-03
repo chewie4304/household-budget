@@ -2220,14 +2220,24 @@
       }
 
       async function fetchData() {
-        // Try ordering by created_at or name if 'id' isn't sequential
         const { data: accData, error: accError } = await sb.from('accounts').select('*').order('created_at', { ascending: true });
         const { data: txData, error: txError } = await sb.from('transactions').select('*').order('date', { ascending: false });
 
         if (accError) console.error("Error fetching accounts:", accError);
         if (txError) console.error("Error fetching transactions:", txError);
 
-        if (accData) accounts = accData;
+        if (accData) {
+          // 🌟 Protect alert configurations from being clobbered during background data fetches!
+          const storedAlerts = getStoredAccountAlerts();
+          accounts = accData.map(acc => {
+            const stored = storedAlerts[acc.id] || {};
+            return {
+              ...acc,
+              min_balance_alert: acc.min_balance_alert ?? stored.min_balance_alert ?? null,
+              max_balance_alert: acc.max_balance_alert ?? stored.max_balance_alert ?? null
+            };
+          });
+        }
         if (txData) transactions = txData;
 
         // Always populate the accounts list & monthly summary so they're ready even if we land on a detail view
@@ -2235,7 +2245,7 @@
 
         // Re-render active view
         if (activeAccountId) {
-          showTransactionsView(activeAccountId, true); // ⚡ Preserve scroll during background data updates
+          showTransactionsView(activeAccountId, true); // Preserve scroll during background data updates
         }
       }
 
@@ -2377,7 +2387,12 @@
       }
 
       async function saveAccountData(payload, editId) {
-        const supportedColumns = ['name', 'type', 'initial_balance', 'institution', 'account_number', 'due_date', 'credit_limit', 'external_link'];
+        // 🌟 Added alert columns to the permitted sync list!
+        const supportedColumns = [
+          'name', 'type', 'initial_balance', 'institution',
+          'account_number', 'due_date', 'credit_limit', 'external_link',
+          'min_balance_alert', 'max_balance_alert'
+        ];
         const safePayload = Object.fromEntries(
           Object.entries(payload).filter(([key]) => supportedColumns.includes(key))
         );
@@ -2725,14 +2740,14 @@
           const tags = Array.isArray(tx.tags) ? tx.tags : [];
           const isTransfer = !!tx.transfer_id;
           const tagsHtml = tags.length > 0 ? `
-        <div class="flex flex-wrap gap-1 mt-1">
-        ${tags.map(t => {
+            <div class="flex flex-wrap gap-1 mt-1">
+            ${tags.map(t => {
             const displayName = getLabelDisplayName(t);
             const colorClass = getLabelColorStyle(t);
             return `<span class="text-[10px] px-1.5 py-0.5 rounded font-semibold ${colorClass}">${displayName}</span>`;
           }).join('')}
-        </div>
-        ` : '';
+            </div>
+          ` : '';
 
           // 🎯 Calculate receipt button links for the card
           const receiptUrls = tx.receipt_url ? tx.receipt_url.split(',').map(u => u.trim()).filter(Boolean) : [];
@@ -2849,6 +2864,7 @@
         const list = document.getElementById('accounts-list');
         const searchInput = document.getElementById('account-search');
         const query = searchInput ? searchInput.value.trim() : '';
+
         const filteredAccounts = accounts.filter(function (acc) {
           return matchesSearch(acc, query) && accountMatchesTypeFilter(acc);
         });
@@ -2862,8 +2878,10 @@
     `;
           return;
         }
+
         list.innerHTML = filteredAccounts.map(acc => {
           const initialBal = parseFloat(acc.initial_balance || 0);
+
           // Grab transactions from global array, falling back to acc.transactions if empty:
           const globalTxs = (typeof transactions !== 'undefined' && transactions.length > 0)
             ? transactions.filter(tx => (tx.account_id === acc.id || tx.accountId === acc.id))
@@ -2875,25 +2893,34 @@
 
           const totalTxSum = txList.reduce((sum, tx) => sum + parseFloat(tx.amount || 0), 0);
           const currentBal = roundCurrency(initialBal + totalTxSum);
+
           const clearedTxSum = txList.reduce((sum, tx) => {
             const status = String(tx.status || '').trim().toLowerCase();
             const isCleared = status === 'reconciled' || status === 'cleared';
             return isCleared ? sum + parseFloat(tx.amount || 0) : sum;
           }, 0);
-          const clearedBal = roundCurrency(initialBal + clearedTxSum);
 
+          const clearedBal = roundCurrency(initialBal + clearedTxSum);
           const { minBalance, maxBalance, minEnabled, maxEnabled, signedBalance, debtBalance, isCreditAccount } = getAccountAlertConfig(acc, currentBal);
 
+          // 🌟 Initialize both variables safely to prevent ReferenceErrors!
           let alertBadge = '';
+          let mobileAlertBadge = '';
 
-          // Synchronize card badges with the new normalized alert formulas
+          // Synchronize card badges with the dynamic alert formulas
           if (minEnabled) {
             const minTriggered = isCreditAccount
               ? debtBalance > minBalance
               : signedBalance < minBalance;
-
             if (minTriggered) {
-              alertBadge = `<div class="mt-2 inline-flex items-center rounded-full border border-red-200 bg-red-100 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-red-700">${isCreditAccount ? 'High Debt' : 'Low Balance'}: $${(isCreditAccount ? Math.abs(minBalance) : minBalance).toFixed(2)}</div>`;
+              const label = isCreditAccount ? 'High Debt' : 'Low Balance';
+              const formattedAmount = (isCreditAccount ? Math.abs(minBalance) : minBalance).toFixed(2);
+
+              // Desktop version (hidden on mobile)
+              alertBadge = `<div class="mt-2 hidden lg:inline-flex items-center rounded-full border border-red-200 bg-red-100 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-red-700">${label}: $${formattedAmount}</div>`;
+
+              // Mobile version (using block div and mt-2 for perfect spacing, hidden on desktop)
+              mobileAlertBadge = `<div class="mt-2 inline-flex lg:hidden items-center rounded-full border border-red-200 bg-red-100 px-1.5 py-0.5 text-[9px] font-extrabold uppercase tracking-wider text-red-700 shrink-0 select-none">${label}: $${formattedAmount}</div>`;
             }
           }
 
@@ -2901,45 +2928,57 @@
             const maxTriggered = isCreditAccount
               ? debtBalance < maxBalance
               : signedBalance > maxBalance;
-
             if (maxTriggered) {
-              alertBadge = `<div class="mt-2 inline-flex items-center rounded-full border border-amber-200 bg-amber-100 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-amber-700">${isCreditAccount ? 'Low Debt' : 'High Balance'}: $${(isCreditAccount ? Math.abs(maxBalance) : maxBalance).toFixed(2)}</div>`;
+              const label = isCreditAccount ? 'Low Debt' : 'High Balance';
+              const formattedAmount = (isCreditAccount ? Math.abs(maxBalance) : maxBalance).toFixed(2);
+
+              // Desktop version (hidden on mobile)
+              alertBadge = `<div class="mt-2 hidden lg:inline-flex items-center rounded-full border border-amber-200 bg-amber-100 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-amber-700">${label}: $${formattedAmount}</div>`;
+
+              // Mobile version (using block div and mt-2 for perfect spacing, hidden on desktop)
+              mobileAlertBadge = `<div class="mt-2 inline-flex lg:hidden items-center rounded-full border border-amber-200 bg-amber-100 px-1.5 py-0.5 text-[9px] font-extrabold uppercase tracking-wider text-amber-700 shrink-0 select-none">${label}: $${formattedAmount}</div>`;
             }
           }
 
           const numText = acc.account_number ? `${acc.account_number}` : '';
 
           return `
-      <div onclick="showTransactionsView('${acc.id}')" class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex justify-between items-center cursor-pointer transition-all duration-150 hover:-translate-y-0.5 hover:border-blue-300 hover:shadow-md">
-        <div class="min-w-0 flex-1 pr-3">
-          <!-- Line 1: Name Type • (Account Number) -->
-          <p class="font-bold text-slate-900 text-base">
-            ${acc.name}
-            <span class="text-xs font-semibold text-slate-400 capitalize ml-1.5">
-              ${acc.type}${numText ? ' • ' + numText : ''}
-            </span>
-          </p>
+            <div onclick="showTransactionsView('${acc.id}')" class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex justify-between items-center cursor-pointer transition-all duration-150 hover:-translate-y-0.5 hover:border-blue-300 hover:shadow-md">
+              <div class="min-w-0 flex-1 pr-3">
           
-          <!-- Line 2: Institution (if configured) -->
-          ${acc.institution ? `<p class="mt-1 text-[11px] text-slate-500 uppercase tracking-[0.14em]">${acc.institution}</p>` : ''}
-          
-          <!-- Line 3: Due Date (if configured) -->
-          ${acc.due_date ? `<p class="mt-0.5 text-[11px] text-slate-500 uppercase tracking-[0.14em]">Due: Day ${acc.due_date}</p>` : ''}
-          
-          ${alertBadge}
-        </div>
-        <div class="text-right space-y-1 shrink-0">
-          <div>
-            <div class="text-lg font-extrabold text-slate-900">$${currentBal.toFixed(2)}</div>
-            <div class="text-[10px] text-slate-500 font-semibold uppercase tracking-[0.14em]">Current</div>
-          </div>
-          <div>
-            <div class="text-sm font-bold text-emerald-600">$${clearedBal.toFixed(2)}</div>
-            <div class="text-[10px] text-emerald-700 font-semibold uppercase tracking-[0.14em]">Cleared</div>
-          </div>
-        </div>
-      </div>
-    `;
+                <!-- Line 1: Name & Type -->
+                <p class="font-bold text-slate-900 text-base">
+                  ${acc.name}
+                  <span class="text-xs font-semibold text-slate-400 capitalize ml-1.5">
+                    ${acc.type}${numText ? ' • ' + numText : ''}
+                  </span>
+                </p>
+
+                <!-- Line 2: Institution (if configured) -->
+                ${acc.institution ? `<p class="mt-1 text-[11px] text-slate-500 uppercase tracking-[0.14em]">${acc.institution}</p>` : ''}
+
+                <!-- Line 3: Due Date (if configured) -->
+                ${acc.due_date ? `<p class="mt-0.5 text-[11px] text-slate-500 uppercase tracking-[0.14em]">Due: Day ${acc.due_date}</p>` : ''}
+
+                <!-- Mobile-only alert badge rendered below -->
+                ${mobileAlertBadge}
+
+                <!-- Desktop-only alert badge rendered below -->
+                ${alertBadge}
+              </div>
+
+              <div class="text-right space-y-1 shrink-0">
+                <div>
+                  <div class="text-lg font-extrabold text-slate-900">$${currentBal.toFixed(2)}</div>
+                  <div class="text-[10px] text-slate-500 font-semibold uppercase tracking-[0.14em]">Current</div>
+                </div>
+                <div>
+                  <div class="text-sm font-bold text-emerald-600">$${clearedBal.toFixed(2)}</div>
+                  <div class="text-[10px] text-emerald-700 font-semibold uppercase tracking-[0.14em]">Cleared</div>
+                </div>
+              </div>
+            </div>
+          `;
         }).join('');
       }
 

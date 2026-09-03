@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 
 ## [unreleased]
 
+## [1.6.3] - 2026-09-03
+
+### Added
+- **Mobile-Only Dynamic Alert Badges:** Integrated a responsive, color-coded alert badge inside mobile account cards, placed directly below the due date. The badge is hidden on desktop widescreen screens using Tailwind's responsive queries (`lg:hidden inline-flex`) and only activates when an account triggers a balance or debt threshold violation.
+- **Supabase Alert Column Support:** Added the database-level schema columns (`min_balance_alert` and `max_balance_alert`) to enable alert configuration persistence and real-time syncing between devices.
+
+### Changed
+- **Whitelisted Database Payloads:** Restored `min_balance_alert` and `max_balance_alert` parameters to the permitted columns whitelist inside `saveAccountData()`, preventing API payloads from stripping out alert settings before writing to Supabase.
+- **Robust State Hydration Guard:** Patched `fetchData()` to safely map and fallback to locally-cached alert thresholds when fetching fresh records, shielding active account configuration memory from being clobbered during background database syncs.
+- **Unified Alert Evaluation:** Synchronized checking/savings limit gates and credit card debt threshold evaluations across both desktop and mobile viewports.
+
 ## [1.6.2] - 2026-09-02
 
 ### Added
