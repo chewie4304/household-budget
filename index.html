@@ -564,11 +564,17 @@
                   <div id="transactions-list" class="space-y-3">
                     <p class="text-sm text-gray-500">Loading transactions...</p>
                   </div> <!-- End of transactions list -->
-                </div> <!-- End of ledger section -->
-              </div> <!-- End of main content container -->
-            </div> <!-- End of secondary content container -->
-          </div> <!-- End of page content container -->
-        </section> <!-- End of main section -->
+                </div> <!-- End of Ledger space-y-1 container -->
+              </div> <!-- End of tx-view-content (New Swiping Wrapper) -->
+            </div> <!-- End of transactions-view (New Swiping Wrapper) -->
+          </div> <!-- End of ledger-feed-panel -->
+          <!-- Rest of original outer closing tags -->
+      </div> <!-- End of main content container -->
+      </div> <!-- End of secondary content container -->
+      </div> <!-- End of page content container -->
+
+      </section> <!-- End of main section -->
+
       </div> <!-- End of page wrapper -->
     </main> <!-- End of main content -->
 
@@ -2991,36 +2997,72 @@
         showHomeAccounts();
       }
 
-      function showAccountsView() {
-        window.scrollTo(0, 0);
-        activeAccountId = null;
-        activeTagFilters = [];
-        currentViewState = 'accounts-detail';
-
-        // Transition feed displays
+      // Show the home accounts view
+      function showHomeAccounts() {
+        globalActiveTagFilters = [];
+        activeAccountId = null; // Clear account scope context
         document.getElementById('accounts-feed-panel').classList.remove('hidden');
         document.getElementById('all-transactions-feed-panel').classList.add('hidden');
         document.getElementById('ledger-feed-panel').classList.add('hidden');
         document.getElementById('home-tabs-switcher').classList.remove('hidden');
 
+        // Show unified controls card & search accounts bar
+        const controlsContainer = document.getElementById('home-controls-container');
+        if (controlsContainer) controlsContainer.classList.remove('hidden');
+
         const titleWrap = document.getElementById('home-view-title-wrap');
         if (titleWrap) titleWrap.classList.remove('hidden');
+
+        const accountSearchWrap = document.getElementById('account-search-wrap');
+        if (accountSearchWrap) accountSearchWrap.classList.remove('hidden');
+
+        // Hide the transactions search field
+        const transactionSearchWrap = document.getElementById('transaction-search-wrap');
+        if (transactionSearchWrap) transactionSearchWrap.classList.add('hidden');
 
         // Restore cockpit sidebar on mobile now that we've left the ledger detail view
         document.getElementById('cockpit-sidebar')?.classList.remove('hidden');
 
-        // Sync Header Contexts
+        const accountsList = document.getElementById('accounts-list');
+        const accountsTab = document.getElementById('home-accounts-tab');
+        const transactionsTab = document.getElementById('home-transactions-tab');
+        const title = document.getElementById('home-view-title');
+        const accountTypeFilterBar = document.getElementById('account-type-filter-bar');
+        const newAccountButton = document.getElementById('new-account-button');
+
+        clearSearchForView('home-accounts');
+        currentViewState = 'home-accounts';
+        window.scrollTo(0, 0);
+
+        renderMonthlySummary();
+        relocateAccountSummaryCard();
+
+        if (accountsList) accountsList.classList.remove('hidden');
+        if (accountTypeFilterBar) accountTypeFilterBar.classList.remove('hidden');
+        if (newAccountButton) newAccountButton.classList.remove('hidden');
+
+        if (title) title.textContent = 'Your Accounts';
+
+        if (accountsTab) {
+          accountsTab.classList.add('bg-blue-600', 'text-white');
+          accountsTab.classList.remove('bg-transparent', 'bg-white', 'text-gray-700', 'border', 'border-gray-200');
+        }
+        if (transactionsTab) {
+          transactionsTab.classList.add('bg-white', 'text-gray-700', 'border', 'border-gray-200');
+          transactionsTab.classList.remove('bg-transparent', 'bg-blue-600', 'text-white');
+        }
+
         document.getElementById('header-main-title').textContent = "Home Wealth";
         document.getElementById('header-sub-title').textContent = "Your Money. Your Way.";
         document.getElementById('menu-to-accounts-btn').classList.add('hidden');
 
-        // 🌟 Hide header account navigation arrows [1]
+        // 🌟 Hide header account navigation arrows
         const headerArrows = document.getElementById('header-account-nav-arrows');
         if (headerArrows) {
           headerArrows.classList.add('hidden');
         }
 
-        showHomeAccounts();
+        saveViewState();
       }
 
       // Show the transactions view for a specific account, optionally preserving scroll position
@@ -7037,10 +7079,10 @@ This action can be undone by cancelling your edits.`,
         const contentEl = document.getElementById('tx-view-content');
         if (contentEl) {
           contentEl.classList.add('duration-200', 'ease-out');
-          const offScreenOffset = direction === 'next' ? '-100%' : '100%';
+          // 🌟 Reversed: 'next' slides current view right (100%), 'prev' slides it left (-100%)
+          const offScreenOffset = direction === 'next' ? '100%' : '-100%';
           contentEl.style.transform = `translateX(${offScreenOffset})`;
           contentEl.style.opacity = '0';
-
           setTimeout(() => {
             executeSwipeAccountSwitch(direction);
           }, 200);
@@ -7052,22 +7094,28 @@ This action can be undone by cancelling your edits.`,
       // 2. Real-Time Mobile Drag & Sweep Listeners
       const txViewContainer = document.getElementById('transactions-view');
       if (txViewContainer) {
-        txViewContainer.addEventListener('touchstart', (e) => {
+        txViewContainer.addEventListener('touchend', (e) => {
           if (currentViewState !== 'transactions-detail') return;
-          const [touch] = e.touches; // 🎯 Safe ES6 touch destructuring
-          if (!touch) return;
-
-          touchStartX = touch.clientX;
-          touchStartY = touch.clientY;
+          const contentEl = document.getElementById('tx-view-content');
+          if (contentEl && isSwiping) {
+            contentEl.classList.add('duration-200', 'ease-out');
+            const swipeThreshold = 100; // Requires dragging 100px to commit account swap
+            if (Math.abs(currentTranslation) > swipeThreshold) {
+              const direction = currentTranslation > 0 ? 'prev' : 'next';
+              // 🌟 Reversed: swiping left ('next') sweeps page right ('100%')
+              const offscreenTarget = currentTranslation > 0 ? '-100%' : '100%';
+              contentEl.style.transform = `translateX(${offscreenTarget})`;
+              contentEl.style.opacity = '0';
+              setTimeout(() => {
+                executeSwipeAccountSwitch(direction);
+              }, 200);
+            } else {
+              contentEl.style.transform = 'translateX(0px)';
+              contentEl.style.opacity = '1';
+            }
+          }
           isSwiping = false;
           isScrolling = false;
-          currentTranslation = 0;
-
-          const contentEl = document.getElementById('tx-view-content');
-          if (contentEl) {
-            // Instantly disable CSS transitions so dragging tracks 1-to-1 with zero latency
-            contentEl.classList.remove('duration-200', 'ease-out');
-          }
         }, { passive: true });
 
         txViewContainer.addEventListener('touchmove', (e) => {
@@ -7139,40 +7187,29 @@ This action can be undone by cancelling your edits.`,
       // 3. Centralized transition swapper
       function executeSwipeAccountSwitch(direction) {
         if (currentViewState !== 'transactions-detail' || !activeAccountId) return;
-
         const activeAccounts = accounts.filter(a => !a.is_grayed_out && !a.is_archived);
         if (activeAccounts.length <= 1) return;
-
         const currentIndex = activeAccounts.findIndex(a => a.id === activeAccountId);
         if (currentIndex === -1) return;
-
         let nextIdx;
         if (direction === 'next') {
           nextIdx = (currentIndex + 1) % activeAccounts.length;
         } else {
           nextIdx = (currentIndex - 1 + activeAccounts.length) % activeAccounts.length;
         }
-
-        const nextAcc = activeAccounts.at(nextIdx); // 🎯 Safe array accessor
+        const nextAcc = activeAccounts.at(nextIdx);
         if (!nextAcc) return;
 
-        // Render the new ledger card content
         showTransactionsView(nextAcc.id);
 
-        // Instantly teleport the new ledger off-screen on the opposite side, then slide it to center
         const contentEl = document.getElementById('tx-view-content');
         if (contentEl) {
           contentEl.classList.remove('duration-200', 'ease-out');
-
-          // Position starting boundary based on entrance path
-          const startPosition = direction === 'next' ? '100%' : '-100%';
+          // 🌟 Reversed: incoming 'next' account teleports to left (-100%) and slides to center
+          const startPosition = direction === 'next' ? '-100%' : '100%';
           contentEl.style.transform = `translateX(${startPosition})`;
           contentEl.style.opacity = '0';
-
-          // Trigger DOM reflow so browser captures the starting teleport offset
-          void contentEl.offsetWidth;
-
-          // Glide smoothly into the center of the screen
+          void contentEl.offsetWidth; // Trigger DOM reflow
           contentEl.classList.add('duration-200', 'ease-out');
           contentEl.style.transform = 'translateX(0px)';
           contentEl.style.opacity = '1';
