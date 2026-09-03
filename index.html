@@ -88,37 +88,38 @@
   <header class="sticky top-0 border-b border-slate-200 bg-white shadow-sm z-40">
     <div class="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-4 sm:px-6 sm:py-3">
 
-      <!-- Left: Branding & Dynamic Account Context -->
-      <div class="flex min-w-0 items-center gap-3">
+      <!-- Left: Branding & Dynamic Account Context (Absorbs remaining space to pin the right side) -->
+      <div class="flex flex-1 min-w-0 items-center gap-3">
         <!-- High-Fidelity App Emblem Logo -->
-        <img src="icon-192.png" alt="Home Wealth Logo" class="h-10 w-10 shrink-0 rounded-xl object-contain shadow-md"
+        <img src="icon-192.png" alt="Home Wealth Logo" class="h-12 w-12 shrink-0 rounded-xl object-contain shadow-md"
           aria-hidden="true" />
 
         <!-- Dynamic Title Context -->
         <div class="min-w-0">
-          <!-- Main title (scaled from text-lg to text-xl) -->
+          <!-- Main title -->
           <p id="header-main-title" class="truncate text-xl font-extrabold tracking-tight text-slate-900">Home Wealth
           </p>
 
-          <!-- Subtitle (scaled from text-[10px] to text-xs) -->
+          <!-- Subtitle -->
           <p id="header-sub-title" class="truncate text-xs font-bold uppercase tracking-[0.2em] text-slate-400">Your
             Money. Your Way.</p>
         </div>
       </div>
 
-      <!-- Right: Consolidated Dropdown Menu Trigger & Quick Nav -->
-      <div class="relative flex shrink-0 items-center gap-2">
-
+      <!-- Right: Consolidated Dropdown Menu Trigger & Quick Nav (Locked to the far-right) -->
+      <div class="relative flex shrink-0 items-center justify-end gap-2">
         <!-- Prev/Next Account Arrow Buttons (Only shown in Account Details view on Desktop) -->
-        <div id="header-account-nav-arrows" class="hidden sm:flex items-center gap-1">
-          <button type="button" onclick="animateArrowSlide('prev')" title="Previous Account"
-            class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700">
-            <span class="text-xs font-bold">◀</span>
-          </button>
-          <button type="button" onclick="animateArrowSlide('next')" title="Next Account"
-            class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700">
-            <span class="text-xs font-bold">▶</span>
-          </button>
+        <div class="hidden lg:block">
+          <div id="header-account-nav-arrows" class="hidden lg:flex items-center gap-1">
+            <button type="button" onclick="animateArrowSlide('prev')" title="Previous Account"
+              class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700">
+              <span class="text-xs font-bold">◀</span>
+            </button>
+            <button type="button" onclick="animateArrowSlide('next')" title="Next Account"
+              class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700">
+              <span class="text-xs font-bold">▶</span>
+            </button>
+          </div>
         </div>
 
         <button onclick="toggleMobileMenu(event)" aria-label="Navigation Menu"
@@ -129,6 +130,7 @@
         <!-- Absolute Positioned Floater Menu Dropdown -->
         <div id="mobile-nav-dropdown"
           class="hidden absolute right-0 top-12 w-64 bg-white border border-slate-200 rounded-2xl shadow-xl py-2 z-50 animate-fade-in max-h-[calc(100vh-80px)] overflow-y-auto overscroll-contain">
+
           <!-- Section 1: Core Action -->
           <button onclick="handleMenuAction('add-transaction')"
             class="w-full text-left px-4 py-3 text-sm font-extrabold text-blue-700 hover:bg-blue-50 flex items-center gap-2 transition-colors">
@@ -145,21 +147,21 @@
               <span id="submenu-arrow"
                 class="text-[9px] text-slate-400 transition-transform duration-150 inline-block">▶</span>
             </button>
-            <!-- Sub-menu list container (rendered dynamically on click) -->
+
+            <!-- Sub-menu list container -->
             <div id="menu-accounts-submenu"
               class="hidden pl-8 pr-4 py-1 space-y-1 bg-slate-50/50 border-y border-slate-100">
               <!-- Dynamically populated options -->
             </div>
-          </div> <!-- End of Accounts Menu Section -->
+          </div>
 
-          <!-- Section 3: Upcoming Widgets Controls (Extensible!) -->
+          <!-- Section 3: Upcoming Widgets Controls -->
           <button onclick="handleMenuAction('toggle-planned')"
             class="w-full text-left px-4 py-2.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2 transition-colors">
             <span>📅</span> Planned Transactions
           </button>
         </div>
       </div>
-
     </div>
   </header>
 

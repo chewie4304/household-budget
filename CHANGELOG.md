@@ -5,7 +5,10 @@ All notable changes to this project will be documented in this file.
 ## [unreleased]
 
 ### Changed
+- **Header Alignment and Shifting Prevention:** Refactored the sticky application header to utilize a flexible branding spacer layout (`flex-1 min-w-0`). This absorbs all dynamic width adjustments when account titles change length, keeping the right-hand desktop navigation controls and menu trigger permanently locked and flush to the right margin with zero physical shifting.
 - **Header Typography Scaling:** Scaled up the sticky application header typography to improve legibility and visual prominence. Enlarged the main brand and dynamic account title (`#header-main-title`) from `text-lg` to `text-xl`, and enlarged the tagline and dynamic bank institution metadata subtitle (`#header-sub-title`) from `text-[10px]` to `text-xs`.
+- **Header Icon Scaling:** Enlarged the brand emblem image from h-10 w-10 to h-12 w-12, bringing it into perfect alignment with the scaled-up text sizes.
+- **Mobile Arrow Navigation Removal:** Updated the header account navigation arrow wrapper from sm:flex to lg:flex, completely hiding the desktop click-to-cycle arrows on all mobile and tablet viewports where touch swiping handles navigation.
 
 ## [1.6.4] - 2026-09-03
 
