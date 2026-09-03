@@ -9,10 +9,14 @@ All notable changes to this project will be documented in this file.
 - **Dynamic Context Cursor Switching:** Configured the application header button to alternate between standard text cursors (`cursor-default`) during dashboard cockpit views and clickable indicators (`cursor-pointer`) when viewing individual account ledgers.
 
 ### Changed
+- **Widescreen Financial Cockpit Stack:** Refactored renderMonthlySummary() to keep the global Monthly Summary widget visible inside the desktop left column when inspecting individual account details. This establishes a vertical cockpit view displaying global budget totals and specific account balances stacked symmetrically.
 - **Header Alignment and Shifting Prevention:** Refactored the sticky application header to utilize a flexible branding spacer layout (`flex-1 min-w-0`). This absorbs all dynamic width adjustments when account titles change length, keeping the right-hand desktop navigation controls and menu trigger permanently locked and flush to the right margin with zero physical shifting.
 - **Header Typography Scaling:** Scaled up the sticky application header typography to improve legibility and visual prominence. Enlarged the main brand and dynamic account title (`#header-main-title`) from `text-lg` to `text-xl`, and enlarged the tagline and dynamic bank institution metadata subtitle (`#header-sub-title`) from `text-[10px]` to `text-xs`.
 - **Header Icon Scaling:** Enlarged the brand emblem image from h-10 w-10 to h-12 w-12, bringing it into perfect alignment with the scaled-up text sizes.
 - **Mobile Arrow Navigation Removal:** Updated the header account navigation arrow wrapper from sm:flex to lg:flex, completely hiding the desktop click-to-cycle arrows on all mobile and tablet viewports where touch swiping handles navigation.
+
+### Fixed
+- **Home View Navigation Arrows Leak:** Swapped the lg:flex breakpoint class on `#header-account-nav-arrows` for a standard flex helper. This allows browser layout logic to correctly respect the hidden class when returning to the landing dashboard on widescreen monitors.
 
 ## [1.6.4] - 2026-09-03
 
