@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## [unreleased]
 
+## [1.6.4] - 2026-09-03
+
 ### Added
 - **Global View Action Swapping:** Configured a secondary quick-action button (`#home-add-transaction-button`) inside the Controls Container heading block. When toggling the main dashboard switch from Accounts to Transactions, the "+ New Account" action now dynamically slides away and is replaced by a "+ Add Transaction" action, ensuring the primary viewport always maintains an active, context-appropriate workflow shortcut.
 - **Account Number Numeric Keypad:** Configured `inputmode="numeric"` and numeric formats on the account number input field to force a clean, simplified number pad on mobile devices.
