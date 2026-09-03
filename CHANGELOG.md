@@ -8,6 +8,7 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 - **Unified Controls Container:** Designed and integrated a card-styled controls wrapper container around the "Your Accounts" header, "New account" button, switcher toggle, and search inputs, matching the soft gradient background of your primary dashboard widgets.
+- **Interactive Navigation Submenu:** Expanded the main menu (☰) "Return to Accounts" link into an elegant collapsible accordion list renamed to "Accounts." Selecting it reveals a dynamic submenu featuring "All Accounts" at the top, followed by a list of all active financial accounts sorted in their standard display sequence for rapid navigation.
 
 ### Changed
 - **Vertical Stack Controls Layout:** Repositioned the view switcher tabs and the active search input boxes to stack vertically on desktop screens, resolving layout squishing by allowing elements to expand to 100% card width.
@@ -23,6 +24,9 @@ All notable changes to this project will be documented in this file.
 - **Enlarged Quick Actions & Symmetrical Alignment:** Scaled up the Launch Portal and Edit Account buttons (and corresponding text) to a highly tap-friendly size. Grouped them inside fixed `h-[42px]` rows so the top and bottom edges of the buttons align symmetrically with the top and bottom bounds of their enlarged Current and Cleared Balance text displays.
 - **Active Month Dropdown Highlighting:** Replaced the legacy green/blue "Live" badges on the summary cards with a clean active-month border transition on the dropdown selectors themselves. The dropdown border dynamically paints royal blue when viewing the current month and returns to grey for past months, backed by an auto-`blur()` trigger to instantly strip focused keyboard ring outlines on selection.
 - **Desktop Summary Header Alignment Polish:** Adjusted the desktop bottom-margin offsets (`lg:mb-1`) on both the credit limit progress bar and the month select dropdown wrapper to pull their bottom edges up to align cleanly with the baseline of your month and year text.
+- **Account Type Filter Dropdown Conversion:** Replaced the row of account type filtering buttons with an elegant custom dropdown selector nested inside a unified filter container, matching the exact height, border design, and location of the transaction search inputs.
+- **Chronological Dropdown Reversal:** Reversed the monthly summary selector dropdown sequence so that the most recent (current) active month floats at the very top of the options list, followed chronologically by past historical months.
+- **Navigation Scroll Isolation:** Bound the mobile dropdown navigation container with `max-h-[calc(100vh-80px)]` and enabled `overscroll-contain` to isolate scrolling, ensuring touch swipes scroll smoothly through the accounts list instead of dragging the background page.
 
 ### Fixed
 - **Account Ledger Transaction Sorting:** Aligned the transaction sorting pipeline inside individual Account Details views to match the main Transactions View. The ledger now runs your standard comparison sorting engine, correctly bubbling Pending transactions to the top of the card feed, followed by Cleared transactions ordered by date (newest first) and creation timestamp, instead of incorrectly grouping cleared items first regardless of date.

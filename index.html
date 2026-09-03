@@ -114,7 +114,7 @@
 
         <!-- Absolute Positioned Floater Menu Dropdown -->
         <div id="mobile-nav-dropdown"
-          class="hidden absolute right-0 top-12 w-64 bg-white border border-slate-200 rounded-2xl shadow-xl py-2 z-50 animate-fade-in">
+          class="hidden absolute right-0 top-12 w-64 bg-white border border-slate-200 rounded-2xl shadow-xl py-2 z-50 animate-fade-in max-h-[calc(100vh-80px)] overflow-y-auto overscroll-contain">
           <!-- Section 1: Core Action -->
           <button onclick="handleMenuAction('add-transaction')"
             class="w-full text-left px-4 py-3 text-sm font-extrabold text-blue-700 hover:bg-blue-50 flex items-center gap-2 transition-colors">
@@ -123,11 +123,20 @@
 
           <hr class="border-slate-100 my-1">
 
-          <!-- Section 2: View Navigation (Context-Aware) -->
-          <button id="menu-to-accounts-btn" onclick="handleMenuAction('to-accounts')"
-            class="hidden w-full text-left px-4 py-2.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2 transition-colors">
-            <span>🏠</span> Return to Accounts
-          </button>
+          <!-- Section 2: View Navigation (Context-Aware Accordion Dropdown) -->
+          <div id="menu-to-accounts-btn" class="hidden">
+            <button type="button" onclick="toggleAccountsSubmenu(event)"
+              class="w-full text-left px-4 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-50 flex items-center justify-between transition-colors">
+              <span class="flex items-center gap-2"><span>🏠</span> Accounts</span>
+              <span id="submenu-arrow"
+                class="text-[9px] text-slate-400 transition-transform duration-150 inline-block">▶</span>
+            </button>
+            <!-- Sub-menu list container (rendered dynamically on click) -->
+            <div id="menu-accounts-submenu"
+              class="hidden pl-8 pr-4 py-1 space-y-1 bg-slate-50/50 border-y border-slate-100">
+              <!-- Dynamically populated options -->
+            </div>
+          </div> <!-- End of Accounts Menu Section -->
 
           <!-- Section 3: Upcoming Widgets Controls (Extensible!) -->
           <button onclick="handleMenuAction('toggle-planned')"
@@ -330,11 +339,29 @@
 
           <!-- PANEL 1: Accounts Feed Panel (Shown when on Home -> Accounts) -->
           <div id="accounts-feed-panel" class="space-y-3">
-            <div id="account-type-filter-bar" class="flex flex-wrap gap-2"></div>
+            <!-- Account Type Filter Card Container -->
+            <div id="account-type-filter-container"
+              class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm space-y-2">
+              <div class="flex items-center justify-between flex-wrap gap-2">
+                <div class="flex items-center gap-2.5">
+                  <span class="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Filter by Account
+                    Type</span>
+                </div>
+              </div>
+              <div class="relative">
+                <select id="account-type-select" onchange="setAccountTypeFilter(this.value)"
+                  class="w-full border border-slate-200 bg-white px-2.5 py-1 rounded-xl text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-100 shadow-sm h-[36px] appearance-none cursor-pointer pr-8">
+                </select>
+                <!-- Customized Dropdown Chevron Arrow scaled for h-[36px] -->
+                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-slate-400">
+                  <span class="text-[8px]">▼</span>
+                </div>
+              </div>
+            </div> <!-- End of account type filter card container -->
             <div id="accounts-list" class="space-y-3">
               <p class="text-sm text-gray-500">Loading accounts...</p>
-            </div>
-          </div>
+            </div> <!-- End of accounts list container -->
+          </div> <!-- End of accounts feed panel -->
 
           <!-- PANEL 2: All Transactions Feed Panel (Shown when on Home -> Transactions) -->
           <div id="all-transactions-feed-panel" class="hidden space-y-3">
@@ -1386,6 +1413,11 @@
       let activeReceiptFiles = [];
       let activeReceiptUrls = [];
       let accountAlertState = {};
+      try {
+        accountAlertState = JSON.parse(sessionStorage.getItem('household-budget-alert-state') || '{}');
+      } catch (e) {
+        accountAlertState = {};
+      }
       let supportsCheckNumber = false;
       let currentViewState = 'home-accounts';
       let splitDetailsExpanded = new Set();
@@ -1407,6 +1439,15 @@
       let selectedAccountTransactionType = null;
       let selectedAccountTypeFilter = 'all';
       let filteredTransactionsLookup = {};
+
+      // Helper to save the alert acknowledgment state securely across refreshes
+      function saveAccountAlertState() {
+        try {
+          sessionStorage.setItem('household-budget-alert-state', JSON.stringify(accountAlertState));
+        } catch (e) {
+          console.warn('Failed to save alert state to sessionStorage:', e);
+        }
+      }
 
       // Phase 1: Core Utilities & State Management Functions
 
@@ -1954,7 +1995,9 @@
         const minBalance = parseFloat(account.min_balance_alert ?? stored.min_balance_alert ?? account.min_balance ?? NaN);
         const maxBalance = parseFloat(account.max_balance_alert ?? stored.max_balance_alert ?? account.max_balance ?? NaN);
         const signedBalance = Number.isFinite(currentBalanceOverride) ? currentBalanceOverride : calculateAccountBalance(account);
-        const isCreditAccount = String(account.type || '').toLowerCase() === 'credit';
+
+        // 🌟 Use normalizeAccountType to robustly detect all credit card formats
+        const isCreditAccount = normalizeAccountType(account && account.type) === 'credit';
         const debtBalance = isCreditAccount ? Math.abs(signedBalance) : signedBalance;
 
         return {
@@ -1990,16 +2033,16 @@
         accounts.forEach(acc => {
           const currentBalance = calculateAccountBalance(acc);
           const { minBalance, maxBalance, minEnabled, maxEnabled, signedBalance, debtBalance, isCreditAccount } = getAccountAlertConfig(acc, currentBalance);
-
           const previousState = accountAlertState[acc.id] || { triggered: false };
+
           let breachType = null;
           let breachValue = null;
-
           const isDebtAccount = !!isCreditAccount;
 
+          // Correctly evaluate debt thresholds using positive debt balances
           if (minEnabled) {
             const minTriggered = isDebtAccount
-              ? signedBalance < minBalance
+              ? debtBalance > minBalance
               : signedBalance < minBalance;
 
             if (minTriggered) {
@@ -2010,7 +2053,7 @@
 
           if (!breachType && maxEnabled) {
             const maxTriggered = isDebtAccount
-              ? signedBalance > maxBalance
+              ? debtBalance < maxBalance
               : signedBalance > maxBalance;
 
             if (maxTriggered) {
@@ -2019,20 +2062,34 @@
             }
           }
 
-          if (breachType && !previousState.triggered) {
-            const isHigh = breachType === 'high';
-            const label = isDebtAccount ? 'debt' : 'balance';
-            const displayAmount = isDebtAccount ? debtBalance : signedBalance;
-            const directionText = isHigh ? 'above' : 'below';
-            openCustomConfirm({
-              title: 'Balance Alert',
-              message: `${acc.name} ${label} is $${displayAmount.toFixed(2)} — ${directionText} your alert threshold of $${breachValue.toFixed(2)}.`,
-              confirmLabel: 'OK',
-              onConfirm: () => { }
-            });
-            accountAlertState[acc.id] = { triggered: true, type: breachType };
-          } else if (!breachType) {
-            accountAlertState[acc.id] = { triggered: false, type: null };
+          if (breachType) {
+            const isSplashVisible = !!document.getElementById('brand-splash');
+
+            // Only pop up the alert modal if this is the active account whose detail view was loaded and splash is gone
+            if (acc.id === activeAccountId && currentViewState === 'transactions-detail' && !isSplashVisible) {
+              if (!previousState.triggered) {
+                const isHigh = breachType === 'high';
+                const label = isDebtAccount ? 'debt' : 'balance';
+                const displayAmount = isDebtAccount ? debtBalance : signedBalance;
+                const directionText = isHigh ? 'above' : 'below';
+
+                openCustomConfirm({
+                  title: 'Balance Alert',
+                  message: `${acc.name} ${label} is $${displayAmount.toFixed(2)} — ${directionText} your alert threshold of $${breachValue.toFixed(2)}.`,
+                  confirmLabel: 'OK',
+                  onConfirm: () => { }
+                });
+
+                accountAlertState[acc.id] = { triggered: true, type: breachType };
+                saveAccountAlertState(); // Persist the acknowledgment securely across page refreshes
+              }
+            }
+          } else {
+            // Clear trigger history if the balance goes back inside safe boundaries
+            if (previousState.triggered) {
+              accountAlertState[acc.id] = { triggered: false, type: null };
+              saveAccountAlertState();
+            }
           }
         });
       }
@@ -2048,7 +2105,11 @@
             splash.style.opacity = '0';
             splash.style.pointerEvents = 'none';
             // Wait exactly 1.2s for the cinematic fade-out transition to complete before removing from DOM
-            setTimeout(() => splash.remove(), 1200);
+            setTimeout(() => {
+              splash.remove();
+              // 🌟 Re-evaluate balance alerts now that the splash screen is completely gone
+              checkAccountBalanceAlerts();
+            }, 1200);
           }
         }, 3000);
 
@@ -2459,18 +2520,20 @@
       function buildMonthOptions() {
         const selector = document.getElementById('summary-month-select');
         const accSelector = document.getElementById('account-summary-month-select');
-
         const now = new Date();
         const options = [];
-        for (let i = 11; i >= 0; i--) {
+
+        // Loop upwards from 0 to 11 to place the most recent/current month at the top of the list [2]
+        for (let i = 0; i < 12; i++) {
           const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
           const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
           const label = d.toLocaleString('en-US', { month: 'long', year: 'numeric' });
           options.push(`<option value="${key}">${label}</option>`);
         }
+
         const html = options.join('');
 
-        // Synchronously populate and select on both selectors if they exist
+        // Synchronously populate and select on both selectors if they exist [2, 3]
         if (selector) {
           selector.innerHTML = html;
           selector.value = selectedSummaryMonth;
@@ -2749,8 +2812,8 @@
       }
 
       function renderAccountTypeFilters() {
-        const bar = document.getElementById('account-type-filter-bar');
-        if (!bar) return;
+        const select = document.getElementById('account-type-select');
+        if (!select) return;
 
         // 1. Gather all unique normalized account types from active accounts
         const rawTypes = accounts.filter(a => !a.is_archived).map(a => normalizeAccountType(a.type || ''));
@@ -2761,32 +2824,23 @@
 
         // 3. Build the dynamic list, starting with 'All'
         const dynamicFilters = [
-          { value: 'all', label: 'All' },
+          { value: 'all', label: 'All Accounts' },
           ...uniqueTypes.map(type => ({
             value: type,
             // Capitalize the label for clean display
-            label: type.charAt(0).toUpperCase() + type.slice(1)
+            label: type.charAt(0).toUpperCase() + type.slice(1) + ' Accounts'
           })),
-          ...(accounts.some(a => a.is_archived) ? [{ value: 'archived', label: 'Archived' }] : [])
+          ...(accounts.some(a => a.is_archived) ? [{ value: 'archived', label: 'Archived Accounts' }] : [])
         ];
 
         if (!dynamicFilters.some(filter => filter.value === selectedAccountTypeFilter)) {
           selectedAccountTypeFilter = 'all';
         }
 
-        // 4. Render the buttons
-        bar.innerHTML = dynamicFilters.map(function (f) {
-          const isActive = f.value === selectedAccountTypeFilter;
-          return (
-            '<button type="button" onclick="setAccountTypeFilter(\'' + f.value + '\')" ' +
-            'class="rounded-full px-3 py-1 text-sm font-medium transition ' +
-            (isActive
-              ? 'bg-blue-600 text-white shadow-sm'
-              : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50') +
-            '">' +
-            f.label +
-            '</button>'
-          );
+        // 4. Render the dropdown options instead of buttons
+        select.innerHTML = dynamicFilters.map(function (f) {
+          const isSelected = f.value === selectedAccountTypeFilter;
+          return '<option value="' + f.value + '"' + (isSelected ? ' selected' : '') + '>' + f.label + '</option>';
         }).join('');
       }
 
@@ -2830,11 +2884,13 @@
           const clearedBal = roundCurrency(initialBal + clearedTxSum);
 
           const { minBalance, maxBalance, minEnabled, maxEnabled, signedBalance, debtBalance, isCreditAccount } = getAccountAlertConfig(acc, currentBal);
+
           let alertBadge = '';
 
+          // Synchronize card badges with the new normalized alert formulas
           if (minEnabled) {
             const minTriggered = isCreditAccount
-              ? signedBalance < minBalance
+              ? debtBalance > minBalance
               : signedBalance < minBalance;
 
             if (minTriggered) {
@@ -2844,7 +2900,7 @@
 
           if (!alertBadge && maxEnabled) {
             const maxTriggered = isCreditAccount
-              ? signedBalance > maxBalance
+              ? debtBalance < maxBalance
               : signedBalance > maxBalance;
 
             if (maxTriggered) {
@@ -3012,7 +3068,7 @@
         activeTagFilters = [];
         currentViewState = 'transactions-detail';
 
-        // 🌟 Synchronously hide the credit limit progress bar immediately to prevent transition flashing
+        // Synchronously hide the credit limit progress bar immediately to prevent transition flashing
         const limitContainer = document.getElementById('tx-acc-credit-limit-container');
         if (limitContainer) {
           limitContainer.classList.add('hidden');
@@ -6082,6 +6138,7 @@
       // ==========================================
       // DRAG AND DROP REORDER ENGINE
       // ==========================================
+
       function handleLabelDragStart(e, pathId) {
         draggedPathId = pathId;
         e.target.closest('.group').classList.add('dragging');
@@ -7152,17 +7209,98 @@ This action can be undone by cancelling your edits.`,
         });
       }
 
+      // ============================================================
       // --- MOBILE NAVIGATION & MENU STATE ENGINE ---
+      // ============================================================
+
       function toggleMobileMenu(event) {
         event.stopPropagation();
         const dropdown = document.getElementById('mobile-nav-dropdown');
-        if (dropdown) dropdown.classList.toggle('hidden');
+        if (dropdown) {
+          dropdown.classList.toggle('hidden');
+          // If opening the dropdown menu, render the accounts submenu options fresh!
+          if (!dropdown.classList.contains('hidden')) {
+            renderAccountsSubmenu();
+          }
+        }
+      }
+      // Toggle sub-menu drawer inside the navigation dropdown menu
+      function toggleAccountsSubmenu(event) {
+        if (event) event.stopPropagation();
+        const submenu = document.getElementById('menu-accounts-submenu');
+        const arrow = document.getElementById('submenu-arrow');
+        if (!submenu || !arrow) return;
+
+        const isHidden = submenu.classList.contains('hidden');
+        if (isHidden) {
+          submenu.classList.remove('hidden');
+          arrow.classList.add('rotate-90');
+        } else {
+          submenu.classList.add('hidden');
+          arrow.classList.remove('rotate-90');
+        }
+      }
+      // Dynamically compile active accounts in the same order they are displayed on-screen
+      function renderAccountsSubmenu() {
+        const submenu = document.getElementById('menu-accounts-submenu');
+        if (!submenu) return;
+
+        // Filter out archived accounts to match renderAccounts sorting
+        const activeAccounts = accounts.filter(acc => !acc.is_archived);
+        let html = '';
+
+        // 1. All Accounts Link (takes user back to Home accounts cockpit)
+        html += `
+          <button onclick="handleMenuAction('to-accounts'); event.stopPropagation();"
+            class="w-full text-left py-2 text-xs font-bold text-blue-600 hover:text-blue-700 transition flex items-center gap-1.5">
+            <span class="text-[9px]">●</span> All Accounts
+          </button>
+        `;
+
+        // 2. Individual Sorted Active Accounts Links
+        activeAccounts.forEach(acc => {
+          const isCurrent = acc.id === activeAccountId;
+          const activeClass = isCurrent
+            ? 'text-blue-600 font-extrabold bg-blue-50/50 rounded-lg px-2 -ml-2'
+            : 'text-slate-600 font-medium hover:text-slate-900';
+          html += `
+            <button onclick="handleSubmenuAccountSelect('${acc.id}'); event.stopPropagation();"
+              class="w-full text-left py-1.5 text-xs transition truncate flex items-center gap-1.5 ${activeClass}">
+              <span class="text-[8px] text-slate-300">○</span> ${escapeHtml(acc.name)}
+            </button>
+          `;
+        });
+
+        submenu.innerHTML = html;
+      }
+      // Select an account from the sub-menu and navigate directly to its ledger transactions
+      function handleSubmenuAccountSelect(accountId) {
+        // Close the parent dropdown
+        const dropdown = document.getElementById('mobile-nav-dropdown');
+        if (dropdown) dropdown.classList.add('hidden');
+
+        // Collapse the sub-menu container and reset arrow transform state for next time
+        const submenu = document.getElementById('menu-accounts-submenu');
+        const arrow = document.getElementById('submenu-arrow');
+        if (submenu) submenu.classList.add('hidden');
+        if (arrow) arrow.classList.remove('rotate-90');
+
+        // Load selected account ledger details
+        showTransactionsView(accountId);
       }
 
       // Global click event to catch taps anywhere else on screen and close the menu
       document.addEventListener('click', () => {
         const dropdown = document.getElementById('mobile-nav-dropdown');
-        if (dropdown) dropdown.classList.add('hidden');
+        if (dropdown) {
+          dropdown.classList.add('hidden');
+
+          // Collapsing submenu on main menu close is a nice cleanup touch!
+          const submenu = document.getElementById('menu-accounts-submenu');
+          const arrow = document.getElementById('submenu-arrow');
+          if (submenu) submenu.classList.add('hidden');
+          if (arrow) arrow.classList.remove('rotate-90');
+        }
       });
 
       function handleMenuAction(action) {
