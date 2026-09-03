@@ -3012,6 +3012,12 @@
         activeTagFilters = [];
         currentViewState = 'transactions-detail';
 
+        // 🌟 Synchronously hide the credit limit progress bar immediately to prevent transition flashing
+        const limitContainer = document.getElementById('tx-acc-credit-limit-container');
+        if (limitContainer) {
+          limitContainer.classList.add('hidden');
+        }
+
         renderMonthlySummary(); // Hide immediately instead of waiting for the next re-render
         relocateAccountSummaryCard(); // Move the Account Summary card into the cockpit sidebar on desktop
 

@@ -7,11 +7,9 @@ All notable changes to this project will be documented in this file.
 ## [1.6.2-dev] - 2026-09-02
 
 ### Added
-
 - **Unified Controls Container:** Designed and integrated a card-styled controls wrapper container around the "Your Accounts" header, "New account" button, switcher toggle, and search inputs, matching the soft gradient background of your primary dashboard widgets.
 
 ### Changed
-
 - **Vertical Stack Controls Layout:** Repositioned the view switcher tabs and the active search input boxes to stack vertically on desktop screens, resolving layout squishing by allowing elements to expand to 100% card width.
 - **Search Fields Consolidation:** Relocated the "Search transactions" input box up into the main Controls Container card alongside the account search bar. The active search input now toggles dynamically based on your selected view tab while the card height remains completely static.
 - **Streamlined Transactions Headings:** Simplified the transaction history view titles by stripping out the dynamic month and year suffix labels (e.g., displaying as "Transactions", "Income", or "Expenses" instead of appending the month/year string).
@@ -27,13 +25,13 @@ All notable changes to this project will be documented in this file.
 - **Desktop Summary Header Alignment Polish:** Adjusted the desktop bottom-margin offsets (`lg:mb-1`) on both the credit limit progress bar and the month select dropdown wrapper to pull their bottom edges up to align cleanly with the baseline of your month and year text.
 
 ### Fixed
-
 - **Account Ledger Transaction Sorting:** Aligned the transaction sorting pipeline inside individual Account Details views to match the main Transactions View. The ledger now runs your standard comparison sorting engine, correctly bubbling Pending transactions to the top of the card feed, followed by Cleared transactions ordered by date (newest first) and creation timestamp, instead of incorrectly grouping cleared items first regardless of date.
 - **Right Column Layout Wrap:** Restored the right column's dedicated layout section, resolving a layout wrap bug that forced the active accounts list and filter bar to slip under the cockpit sidebar on desktop views.
 - **Dynamic Card Visibility & ID Conflicts:** Corrected a duplicate ID conflict on the account Monthly Summary card (restoring its unique `id="account-monthly-summary"`) and removed its default `hidden` class to allow the desktop cockpit sidebar teleportation engine to function cleanly.
 - **Horizontal Transition Twitching:** Injected `scrollbar-gutter: stable;` on the root `<html>` element to ensure a stable layout margin for scrollbars, permanently correcting horizontal layout shifting when transitioning between varying content-height panels.
 - **Fatal ReferenceError script crash:** Patched `renderMonthlySummary()` to completely remove the dead `liveBadge` checker block, resolving a fatal `ReferenceError` script crash that froze dashboard rendering when toggling tabs.
 - **Dashboard Sync Hijack Guard:** Updated `showHomeAccounts()` and `showAllTransactions()` to explicitly clear the active account context on home tab switches (`activeAccountId = null`). This prevents background real-time sync processes from hijacking the view and drawing ledger panels over the main landing dashboard.
+- **Transition Flash Remediation:** Patched `showTransactionsView()` to synchronously hide the credit limit progress bar container immediately upon initiating an account switch, preventing the previous account's credit metrics from flashing on-screen during network data retrieval.
 
 ## [1.6.1] - 2026-09-01
 
