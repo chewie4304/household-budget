@@ -6824,11 +6824,9 @@ This action can be undone by cancelling your edits.`,
         }
 
         // 🛡️ DUP-CHECK: SCAN EXISTING TRANSACTIONS WITHIN A WEEK WINDOW (Now handles creations & edits!)
-        const signedAmount = txType === 'expense' ? -Math.abs(amount) : Math.abs(amount);
-        const cleanNewPayee = savedPayee.trim().toLowerCase();
-
-        const potentialDuplicate = transactions.find(tx => {
-          // 🎯 EXCLUDE the active transaction being updated/edited itself from triggering the flag
+        const signedAmount = txType === "expense" ? -Math.abs(amount) : Math.abs(amount);
+        const potentialDuplicate = transactions.find(function (tx) {
+          // EXCLUDE the active transaction being updated/edited itself from triggering the flag
           if (editId && String(tx.id) === String(editId)) return false;
 
           // 1. Account must match
@@ -6838,15 +6836,12 @@ This action can be undone by cancelling your edits.`,
           const sameAmount = Math.abs(parseFloat(tx.amount || 0) - signedAmount) < 0.005;
 
           // 3. Date must be within 7 days of the targeted transaction date
-          const newDateObj = new Date(`${date}T00:00:00`);
-          const txDateObj = new Date(`${tx.date}T00:00:00`);
+          const newDateObj = new Date(date + "T00:00:00");
+          const txDateObj = new Date(tx.date + "T00:00:00");
           const diffDays = Math.round(Math.abs(newDateObj - txDateObj) / (1000 * 60 * 60 * 24));
           const withinWeek = diffDays <= 7;
 
-          // 4. Payee/Payer must match (Case-insensitive)
-          const samePayee = (tx.payee || '').trim().toLowerCase() === cleanNewPayee;
-
-          return sameAccount && sameAmount && withinWeek && samePayee;
+          return sameAccount && sameAmount && withinWeek;
         });
 
         if (potentialDuplicate) {
