@@ -32,6 +32,7 @@ All notable changes to this project will be documented in this file.
 - **Fluid Carousel Swiping Transitions:** Streamlined executeSummaryCardSwitch() by removing immediate coordinate resets during active swipe transitions. This allows the cards to slide smoothly to their target locations directly from your finger's drag offset with zero awkward jumping or snapping.
 - **Inversion-Free Carousel Physics:** Corrected card swipe endpoints to parse raw finger offsets directly from the changedTouches touchstart delta instead of translating the CSS transform position. This prevents calculations from inverting during carousel loop orders, ensuring the active card glides smoothly in the direction of the swipe with zero visual jumping or rebound snapping.
 - **Widescreen Cockpit Scroll-Shift Prevention:** Locked the desktop sticky top offset to exactly 89px. By matching the exact height of the header plus the top container padding, the sidebar remains perfectly stationary on scroll start with zero visual shifting or alignment jumps.
+- **Aligned Mobile Filter Transitions:** Refactored the homepage right-column feed container to utilize responsive gap constraints of 12px on mobile screens and 16px on desktop screens. This perfectly matches the ledger feed vertical space-y-3 spacing structure, eliminating the 4px vertical shift when navigating between the homepage and individual account details views.
 
 ## [1.6.5] - 2026-09-03
 
