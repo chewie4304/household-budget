@@ -15,6 +15,8 @@ All notable changes to this project will be documented in this file.
 - **Scroll Isolation and Spill Protection:** Bound the sticky cockpit layout to a viewport-restricted maximum height with vertical scrollbars and overscroll containment, allowing the sidebar to be scrolled independently if widget heights exceed screen boundaries without bleeding scroll inputs into the background page.
 
 ### Changed
+- **Dashboard Typography and Metric Scaling:** Engineered a clean responsive layout scaling sequence that expands primary layout metrics across mobile devices and computer displays. Sized account card titles, current totals, and cleared balances to increase legibility and balance visual authority on loaded dashboards.
+- **Monthly Summary and Ledger Layout Refinements:** Redesigned both the global Monthly Summary and individual Account-Specific Summary blocks to map labels and calculations using bold, high-contrast, black-font text classes, maximizing visual hierarchy across all active viewports.
 - **Home Landing View Enforcement:** Modified applySavedViewState() to ignore deep-linked active account views during initial application boots. The app will now consistently initialize onto the Home accounts cockpit or global transactions page.
 - **Streamlined Accordion Submenu:** Purged the redundant All Accounts item inside the context-aware accordion list, keeping the inner dropdown menu focused strictly on active financial accounts.
 - **Dropdown Typography and Scaling Adjustments:** Scaled up font sizes inside the floating dropdown, making the Home and Add Transaction core button blocks highly prominent text-xl and nesting individual account selection buttons at a highly readable text-sm (increased from text-xs).
