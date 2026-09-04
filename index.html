@@ -242,9 +242,9 @@
           <!-- Placeholder to return Monthly Summary back home on desktop/home viewports -->
           <div id="cockpit-monthly-summary-placeholder" class="w-full">
 
-            <!-- Widget 1: Monthly Summary (Cleaned nesting, responsive padding to fit content) -->
+            <!-- Widget 1: Monthly Summary (Adjusted mobile height to h-44 to match ledger deck slider) -->
             <div id="monthly-summary"
-              class="hidden w-full h-48 shrink-0 rounded-3xl border border-slate-200 bg-gradient-to-br from-slate-50 via-white to-blue-50 shadow-sm p-4 sm:p-5 flex flex-col justify-between overflow-hidden">
+              class="hidden w-full h-44 shrink-0 rounded-3xl border border-slate-200 bg-gradient-to-br from-slate-50 via-white to-blue-50 shadow-sm p-4 sm:p-5 flex flex-col justify-between overflow-hidden">
 
               <!-- Summary Header (Cleaned and unified) -->
               <div class="flex items-center justify-between w-full gap-3 shrink-0">
@@ -458,9 +458,9 @@
                 class="w-full space-y-3 lg:space-y-4 transition-transform duration-200 ease-out">
 
                 <!-- Default home for the Account Summary card; relocated into the cockpit sidebar on desktop -->
-                <!-- Configured wrapper with relative clipping and fixed height -->
+                <!-- Account ledger summary wrapper -->
                 <div id="ledger-account-summary-wrapper"
-                  class="w-full overflow-hidden rounded-3xl h-48 relative hidden">
+                  class="w-full overflow-hidden rounded-3xl h-44 relative hidden">
                   <!-- Dynamic slider container populated by the relocation engine on mobile details views -->
                   <div id="summary-cards-slider" class="flex w-full h-full transition-transform duration-200 ease-out"
                     style="transform: translateX(0%);">
@@ -582,24 +582,24 @@
                   class="hidden bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm space-y-2">
                   <div class="flex items-center justify-between flex-wrap gap-2">
                     <div class="flex items-center gap-2.5">
-                      <span class="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Filter by
-                        Labels</span>
+                      <span class="text-xs font-bold text-gray-500 uppercase tracking-wider">Filter by Labels</span>
                       <label
-                        class="inline-flex items-center gap-1 text-[10px] font-bold text-slate-500 cursor-pointer select-none">
+                        class="inline-flex items-center gap-1 text-xs font-bold text-slate-500 cursor-pointer select-none">
                         <input type="checkbox" id="tag-filter-match-all" onchange="toggleTagFilterMatchMode()"
                           class="h-3.5 w-3.5 rounded border-slate-300 text-blue-600 focus:ring-blue-500" />
                         <span>Match All (AND)</span>
                       </label>
                     </div>
                     <button type="button" onclick="openLabelPicker('filter')"
-                      class="text-[10px] font-bold text-blue-600 hover:text-blue-700 transition">🏷️ Select</button>
+                      class="text-xs font-bold text-blue-600 hover:text-blue-700 transition">🏷️ Select</button>
                   </div>
+
                   <div class="relative">
                     <div onclick="document.getElementById('tag-filter-search-input').focus()"
-                      class="flex flex-wrap items-center gap-1 min-h-[36px] p-1.5 rounded-xl border border-slate-200 bg-white cursor-text">
+                      class="flex flex-wrap items-center gap-1 min-h-9 p-1.5 rounded-xl border border-slate-200 bg-white cursor-text">
                       <div id="tag-filter-preview" class="contents"></div>
                       <input type="text" id="tag-filter-search-input" placeholder="Type to filter..."
-                        class="flex-1 min-w-[8px] text-xs font-semibold bg-transparent border-0 p-0 focus:ring-0 focus:outline-none text-slate-800"
+                        class="flex-1 min-w-2 text-xs font-semibold bg-transparent border-0 p-0 focus:ring-0 focus:outline-none text-slate-800"
                         oninput="handleTagFilterSearchTyping(this.value)"
                         onkeydown="handleTagFilterSearchKeydown(event)" />
                     </div>
@@ -3105,9 +3105,9 @@
           ledgerSlider.appendChild(accountCard);
           accountCard.classList.remove('hidden');
 
-          // Reset to native heights
-          accountCard.style.height = isDesktop ? '188px' : '100%';
-          monthlyCard.style.height = '188px';
+          // Reset to native heights (desktop locks to 188px, mobile matches 176px h-44 standard)
+          accountCard.style.height = isDesktop ? "188px" : "100%";
+          monthlyCard.style.height = isDesktop ? "188px" : "176px";
 
           cockpitAccountSlot.classList.add('hidden');
           if (ledgerWrapper) ledgerWrapper.classList.add('hidden');
@@ -3506,12 +3506,12 @@
             const displayPath = getLabelDisplayPath(t);
             const colorClass = getLabelColorStyle(t);
             return `
-        <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-lg text-[10px] font-bold shadow-sm transition ${colorClass}" title="${displayPath}">
-          ${displayName}
-          <button type="button" onclick="removeTagFilter(${idx})" 
-            class="text-xs font-semibold opacity-70 hover:opacity-100 focus:outline-none">&times;</button>
-        </span>
-      `;
+            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-xs font-black tracking-wide shadow-sm transition ${colorClass}" title="${displayPath}">
+              ${displayName}
+              <button type="button" onclick="removeTagFilter(${idx})"
+                class="text-xs font-semibold opacity-70 hover:opacity-100 focus:outline-none">&times;</button>
+            </span>
+            `;
           }).join('');
         }
       }
@@ -3703,12 +3703,12 @@
             const displayPath = getLabelDisplayPath(t);
             const colorClass = getLabelColorStyle(t);
             return `
-        <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-lg text-[10px] font-bold shadow-sm transition ${colorClass}" title="${displayPath}">
-          ${displayName}
-          <button type="button" onclick="removeGlobalTagFilter(${idx})"
-            class="text-xs font-semibold opacity-70 hover:opacity-100 focus:outline-none">&times;</button>
-        </span>
-      `;
+            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-xs font-black tracking-wide shadow-sm transition ${colorClass}" title="${displayPath}">
+              ${displayName}
+              <button type="button" onclick="removeGlobalTagFilter(${idx})"
+                class="text-xs font-semibold opacity-70 hover:opacity-100 focus:outline-none">&times;</button>
+            </span>
+            `;
           }).join('');
         }
       }
