@@ -26,6 +26,7 @@ All notable changes to this project will be documented in this file.
 - **Standardized Tag Filter Dimensions:** Refactored the Global Label Filter layout to use standard Tailwind height and width classes, removing arbitrary bracket values from class configurations.
 - **Line-Wrapped Transaction Card Dates:** Decoupled the transaction date from the account name line inside the global homepage Transactions list card, stacking the date on its own dedicated line to accommodate the upscaled typography with zero horizontal overcrowding.
 - **Unified Ledger Typography Scaling:** Standardized the transaction card date layout inside individual account detailed ledger views to use high-contrast text-xs font tracking, matching the homepage list aesthetics with zero square brackets.
+- **Broadened Duplicate Transaction Detection:** Removed the payee and payer validation requirement from the transaction save pipeline scanner. Duplicate logging checks now alert users when matching sums are recorded in the same financial ledger within a seven-day window, regardless of text mismatches or payee name variations.
 
 ### Fixed
 - **Fluid Carousel Swiping Transitions:** Streamlined executeSummaryCardSwitch() by removing immediate coordinate resets during active swipe transitions. This allows the cards to slide smoothly to their target locations directly from your finger's drag offset with zero awkward jumping or snapping.
