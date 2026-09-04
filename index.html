@@ -77,6 +77,18 @@
     .dragging {
       opacity: 0.4;
     }
+
+    @media (min-width: 1024px) {
+      #cockpit-sidebar {
+        position: sticky;
+        top: 89px;
+        max-height: calc(100vh - 100px);
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        scrollbar-width: thin;
+        padding-right: 4px;
+      }
+    }
   </style>
 </head>
 
