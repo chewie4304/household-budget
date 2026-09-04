@@ -7165,7 +7165,8 @@ This action can be undone by cancelling your edits.`,
 
           const contentEl = document.getElementById('tx-view-content');
           if (contentEl) {
-            contentEl.classList.remove('duration-200', 'ease-out');
+            // Disable CSS transitions completely to ensure direct, lag-free tracking under finger
+            contentEl.style.transition = 'none';
           }
         }, { passive: true });
 
@@ -7206,6 +7207,8 @@ This action can be undone by cancelling your edits.`,
           if (currentViewState !== 'transactions-detail') return;
           const contentEl = document.getElementById('tx-view-content');
           if (contentEl && isSwiping) {
+            // Restore transition styles so the card sweeps or snaps back smoothly
+            contentEl.style.transition = '';
             contentEl.classList.add('duration-200', 'ease-out');
             const swipeThreshold = 100; // Requires dragging 100px to commit account swap
 
@@ -7250,13 +7253,19 @@ This action can be undone by cancelling your edits.`,
 
         const contentEl = document.getElementById('tx-view-content');
         if (contentEl) {
-          contentEl.classList.remove('duration-200', 'ease-out');
-          // Teleport incoming card to the opposite edge and glide it gracefully to center
+          // Force inline transition-none to override Tailwind and teleport instantly
+          contentEl.style.transition = 'none';
+
+          // Teleport incoming card to the opposite edge
           // Going next: starts at right (100%); Going prev: starts at left (-100%)
           const startPosition = direction === 'next' ? '100%' : '-100%';
           contentEl.style.transform = `translateX(${startPosition})`;
           contentEl.style.opacity = '0';
-          void contentEl.offsetWidth; // Trigger layout reflow
+
+          void contentEl.offsetWidth; // Force synchronous reflow to register new position before animating
+
+          // Restore transition rules and glide the new card elegantly into focus
+          contentEl.style.transition = '';
           contentEl.classList.add('duration-200', 'ease-out');
           contentEl.style.transform = 'translateX(0px)';
           contentEl.style.opacity = '1';

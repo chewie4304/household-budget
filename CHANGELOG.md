@@ -17,6 +17,7 @@ All notable changes to this project will be documented in this file.
 - **Accounts Sub-menu Heading Icon Refinement:** Transitioned the Accounts submenu accordion icon from the home emoji to the bank emoji to establish a distinct visual separation from the main brand-logo Home button.
 
 ### Fixed
+- **Buttery-Smooth Swipe Animations:** Resolved an animation direction glitch where card transition-transform styles were fighting active Tailwind transition properties. By binding temporary inline transition-none properties on touchstart and during teleportation phases, the active card now exits in the direction of the swipe while the incoming card teleports instantly and glides smoothly into focus from the physically expected side with zero visual stuttering.
 
 ## [1.6.5] - 2026-09-03
 
