@@ -5,8 +5,16 @@ All notable changes to this project will be documented in this file.
 ## [unreleased]
 
 ### Added
+- **Interactive Logo Home Link:** Configured an interactive onclick="showAccountsView()" event handler on the top-left sticky application header logo, providing a fast, tactile shortcut back to the primary dashboard.
+- **Header Dropdown Home Choice:** Added a prominent, main-level navigation action labeled Home inside the floating menu dropdown, positioned directly above "+ Add Transaction" for maximum visibility.
+- **High-Fidelity Brand Menu Icon:** Swapped out the standard Home emoji for your custom icon-192.png brand emblem inside the newly added Home dropdown button, scaling it cleanly to a height and width of 6 units with rounded corners and a soft drop shadow to match native application aesthetics.
+- **Persistent Dropdown Accounts Sub-Menu:** Standardized the dropdown navigation structure so the Accounts submenu remains persistently displayed across both home cockpit dashboard states and individual ledger details views.
 
 ### Changed
+- **Home Landing View Enforcement:** Modified applySavedViewState() to ignore deep-linked active account views during initial application boots. The app will now consistently initialize onto the Home accounts cockpit or global transactions page.
+- **Streamlined Accordion Submenu:** Purged the redundant All Accounts item inside the context-aware accordion list, keeping the inner dropdown menu focused strictly on active financial accounts.
+- **Dropdown Typography and Scaling Adjustments:** Scaled up font sizes inside the floating dropdown, making the Home and Add Transaction core button blocks highly prominent text-xl and nesting individual account selection buttons at a highly readable text-sm (increased from text-xs).
+- **Accounts Sub-menu Heading Icon Refinement:** Transitioned the Accounts submenu accordion icon from the home emoji to the bank emoji to establish a distinct visual separation from the main brand-logo Home button.
 
 ### Fixed
 

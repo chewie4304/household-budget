@@ -90,8 +90,9 @@
 
       <!-- Left: Branding & Dynamic Account Context -->
       <div class="flex flex-1 min-w-0 items-center gap-3">
-        <!-- High-Fidelity App Emblem Logo -->
-        <img src="icon-192.png" alt="Home Wealth Logo" class="h-12 w-12 shrink-0 rounded-xl object-contain shadow-md"
+        <!-- High-Fidelity App Emblem Logo (Quick shortcut to Home) -->
+        <img src="icon-192.png" alt="Home Wealth Logo" onclick="showAccountsView()"
+          class="h-12 w-12 shrink-0 rounded-xl object-contain shadow-md cursor-pointer hover:opacity-95 active:scale-95 transition-all"
           aria-hidden="true" />
 
         <!-- 🌟 Dynamic Title Context (Turned into an un-styled block button with text selection preserved) -->
@@ -131,19 +132,27 @@
         <div id="mobile-nav-dropdown"
           class="hidden absolute right-0 top-12 w-64 bg-white border border-slate-200 rounded-2xl shadow-xl py-2 z-50 animate-fade-in max-h-[calc(100vh-80px)] overflow-y-auto overscroll-contain">
 
-          <!-- Section 1: Core Action -->
+          <!-- 🌟 Section 1: Core Action (Home & Add Transaction with user-refined font scaling) -->
+          <button onclick="handleMenuAction('to-accounts')"
+            class="w-full text-left px-4 py-3 text-xl font-extrabold text-blue-700 hover:bg-slate-50 flex items-center gap-2 transition-colors">
+            <!-- Brand Icon: Sized perfectly, with rounded corners and a subtle drop shadow -->
+            <img src="icon-192.png" alt="Home" class="h-6 w-6 shrink-0 rounded-md object-contain shadow-sm"
+              aria-hidden="true" />
+            <span>Home</span>
+          </button>
+
           <button onclick="handleMenuAction('add-transaction')"
-            class="w-full text-left px-4 py-3 text-sm font-extrabold text-blue-700 hover:bg-blue-50 flex items-center gap-2 transition-colors">
-            <span class="text-lg">+</span> Add Transaction
+            class="w-full text-left px-4 text-xl font-extrabold text-blue-700 hover:bg-blue-50 flex items-center gap-2 transition-colors">
+            <span class="text-xl">+</span> Add Transaction
           </button>
 
           <hr class="border-slate-100 my-1">
 
-          <!-- Section 2: View Navigation (Context-Aware Accordion Dropdown) -->
-          <div id="menu-to-accounts-btn" class="hidden">
+          <!-- 🌟 Section 2: View Navigation (Accounts menu unhidden by default & icon shifted to 🏦 to avoid Home duplication) -->
+          <div id="menu-to-accounts-btn" class="">
             <button type="button" onclick="toggleAccountsSubmenu(event)"
-              class="w-full text-left px-4 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-50 flex items-center justify-between transition-colors">
-              <span class="flex items-center gap-2"><span>🏠</span> Accounts</span>
+              class="w-full text-left px-4 py-2.5 text-md font-bold text-slate-700 hover:bg-slate-50 flex items-center justify-between transition-colors">
+              <span class="flex items-center gap-2"><span>🏦</span> Accounts</span>
               <span id="submenu-arrow"
                 class="text-[9px] text-slate-400 transition-transform duration-150 inline-block">▶</span>
             </button>
@@ -157,7 +166,7 @@
 
           <!-- Section 3: Upcoming Widgets Controls -->
           <button onclick="handleMenuAction('toggle-planned')"
-            class="w-full text-left px-4 py-2.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2 transition-colors">
+            class="w-full text-left px-4 py-2.5 text-md font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2 transition-colors">
             <span>📅</span> Planned Transactions
           </button>
         </div>
@@ -1957,16 +1966,12 @@
         const isTransactionsView = saved.view === 'home-transactions';
         const accountSearch = document.getElementById('account-search');
         const transactionSearch = document.getElementById('transaction-search');
-
         if (accountSearch) accountSearch.value = saved.accountSearch || '';
         if (transactionSearch) transactionSearch.value = saved.transactionSearch || '';
 
+        // 🌟 Always land on the primary Home cockpit tabs on launch (disregarding deep detailed ledgers)
         if (isTransactionsView) {
           showAllTransactions();
-        } else if (saved.view === 'transactions-detail' && saved.currentAccountId) {
-          showTransactionsView(saved.currentAccountId);
-        } else if (saved.view === 'accounts-detail' && saved.currentAccountId) {
-          showAccountsView();
         } else {
           showHomeAccounts();
         }
@@ -3047,7 +3052,6 @@
 
         document.getElementById('header-main-title').textContent = "Home Wealth";
         document.getElementById('header-sub-title').textContent = "Your Money. Your Way.";
-        document.getElementById('menu-to-accounts-btn').classList.add('hidden');
 
         const headerArrows = document.getElementById('header-account-nav-arrows');
         if (headerArrows) {
@@ -3120,7 +3124,6 @@
         }
         document.getElementById('header-main-title').textContent = "Home Wealth";
         document.getElementById('header-sub-title').textContent = "Your Money. Your Way.";
-        document.getElementById('menu-to-accounts-btn').classList.add('hidden');
 
         const headerArrows = document.getElementById('header-account-nav-arrows');
         if (headerArrows) {
@@ -3274,7 +3277,6 @@
 
         document.getElementById('header-main-title').textContent = "Home Wealth";
         document.getElementById('header-sub-title').textContent = "Your Money. Your Way.";
-        document.getElementById('menu-to-accounts-btn').classList.add('hidden');
 
         const headerArrows = document.getElementById('header-account-nav-arrows');
         if (headerArrows) {
@@ -7305,30 +7307,20 @@ This action can be undone by cancelling your edits.`,
       function renderAccountsSubmenu() {
         const submenu = document.getElementById('menu-accounts-submenu');
         if (!submenu) return;
-
         // Filter out archived accounts to match renderAccounts sorting
         const activeAccounts = accounts.filter(acc => !acc.is_archived);
         let html = '';
-
-        // 1. All Accounts Link (takes user back to Home accounts cockpit)
-        html += `
-          <button onclick="handleMenuAction('to-accounts'); event.stopPropagation();"
-            class="w-full text-left py-2 text-xs font-bold text-blue-600 hover:text-blue-700 transition flex items-center gap-1.5">
-            <span class="text-[9px]">●</span> All Accounts
-          </button>
-        `;
-
-        // 2. Individual Sorted Active Accounts Links
+        // Sorted Active Accounts List
         activeAccounts.forEach(acc => {
           const isCurrent = acc.id === activeAccountId;
           const activeClass = isCurrent
             ? 'text-blue-600 font-extrabold bg-blue-50/50 rounded-lg px-2 -ml-2'
             : 'text-slate-600 font-medium hover:text-slate-900';
           html += `
-            <button onclick="handleSubmenuAccountSelect('${acc.id}'); event.stopPropagation();"
-              class="w-full text-left py-1.5 text-xs transition truncate flex items-center gap-1.5 ${activeClass}">
-              <span class="text-[8px] text-slate-300">○</span> ${escapeHtml(acc.name)}
-            </button>
+          <button onclick="handleSubmenuAccountSelect('${acc.id}'); event.stopPropagation();"
+            class="w-full text-left py-1.5 text-sm transition truncate flex items-center gap-1.5 ${activeClass}">
+            <span class="text-[8px] text-slate-300">○</span> ${escapeHtml(acc.name)}
+          </button>
           `;
         });
 
