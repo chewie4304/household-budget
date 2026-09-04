@@ -438,7 +438,9 @@
           <!-- PANEL 3: Individual Account Ledger Feed Panel (Shown when inside an Account details view) -->
           <div id="ledger-feed-panel" class="hidden">
             <div id="transactions-view" class="w-full overflow-hidden">
-              <div id="tx-view-content" class="w-full space-y-3 transition-transform duration-200 ease-out">
+              <!-- Added lg:space-y-4 to match the 16px sidebar gap and align ledger items horizontally on load -->
+              <div id="tx-view-content"
+                class="w-full space-y-3 lg:space-y-4 transition-transform duration-200 ease-out">
 
                 <!-- Default home for the Account Summary card; relocated into the cockpit sidebar on desktop -->
                 <!-- Configured wrapper with relative clipping and fixed height -->
@@ -3057,6 +3059,10 @@
           cockpitAccountSlot.classList.remove('hidden');
           accountCard.classList.remove('hidden');
 
+          // Set exact height to match balances card and restore internal spacing
+          accountCard.style.height = '188px';
+          monthlyCard.style.height = '188px';
+
           cockpitMonthlySlot.appendChild(monthlyCard);
           monthlyCard.classList.remove('hidden');
 
@@ -3069,6 +3075,10 @@
           accountCard.classList.remove('hidden');
           monthlyCard.classList.remove('hidden');
 
+          // Expand to fill the mobile slider track height
+          accountCard.style.height = '100%';
+          monthlyCard.style.height = '100%';
+
           cockpitAccountSlot.classList.add('hidden');
           if (ledgerWrapper) ledgerWrapper.classList.remove('hidden');
         } else {
@@ -3079,102 +3089,84 @@
           ledgerSlider.appendChild(accountCard);
           accountCard.classList.remove('hidden');
 
+          // Reset to native heights
+          accountCard.style.height = isDesktop ? '188px' : '100%';
+          monthlyCard.style.height = '188px';
+
           cockpitAccountSlot.classList.add('hidden');
           if (ledgerWrapper) ledgerWrapper.classList.add('hidden');
         }
       }
       function executeSummaryCardSwitch(targetCard, direction) {
-        const slider = document.getElementById('summary-cards-slider');
-        const accountCard = document.getElementById('account-monthly-summary');
-        const monthlyCard = document.getElementById('monthly-summary');
-        const wrapper = document.getElementById('ledger-account-summary-wrapper');
+        const slider = document.getElementById("summary-cards-slider");
+        const accountCard = document.getElementById("account-monthly-summary");
+        const monthlyCard = document.getElementById("monthly-summary");
+        const wrapper = document.getElementById("ledger-account-summary-wrapper");
 
         if (!slider || !accountCard || !monthlyCard || !wrapper) return;
 
         const width = wrapper.offsetWidth;
         currentSummaryCard = targetCard;
 
-        slider.style.transition = 'none';
-        slider.classList.remove('duration-200', 'ease-out');
+        slider.style.transition = "transform 0.2s ease-out";
+        slider.classList.add("duration-200", "ease-out");
 
-        if (targetCard === 'monthly' && direction === 'left') {
-          accountCard.style.order = '';
-          monthlyCard.style.order = '';
-          slider.style.transform = 'translateX(0px)';
-          void slider.offsetWidth;
-          slider.style.transition = 'transform 0.2s ease-out';
-          slider.classList.add('duration-200', 'ease-out');
-          slider.style.transform = `translateX(-${width}px)`;
-        }
-        else if (targetCard === 'account' && direction === 'right') {
-          accountCard.style.order = '';
-          monthlyCard.style.order = '';
-          slider.style.transform = `translateX(-${width}px)`;
-          void slider.offsetWidth;
-          slider.style.transition = 'transform 0.2s ease-out';
-          slider.classList.add('duration-200', 'ease-out');
-          slider.style.transform = 'translateX(0px)';
-        }
-        else if (targetCard === 'monthly' && direction === 'right') {
-          monthlyCard.style.order = '-1';
-          accountCard.style.order = '1';
-          slider.style.transform = `translateX(-${width}px)`;
-          void slider.offsetWidth;
-          slider.style.transition = 'transform 0.2s ease-out';
-          slider.classList.add('duration-200', 'ease-out');
-          slider.style.transform = 'translateX(0px)';
-        }
-        else if (targetCard === 'account' && direction === 'left') {
-          monthlyCard.style.order = '1';
-          accountCard.style.order = '2';
-          slider.style.transform = 'translateX(0px)';
-          void slider.offsetWidth;
-          slider.style.transition = 'transform 0.2s ease-out';
-          slider.classList.add('duration-200', 'ease-out');
-          slider.style.transform = `translateX(-${width}px)`;
+        // Resting visual transform transitions mapped purely to physical swipe directions
+        if (currentSummaryCard === "monthly") {
+          if (direction === "left") {
+            slider.style.transform = "translateX(-" + width + "px)";
+          } else {
+            slider.style.transform = "translateX(0px)";
+          }
+        } else {
+          if (direction === "right") {
+            slider.style.transform = "translateX(0px)";
+          } else {
+            slider.style.transform = "translateX(-" + width + "px)";
+          }
         }
 
-        setTimeout(() => {
-          slider.style.transition = 'none';
-          slider.classList.remove('duration-200', 'ease-out');
-          accountCard.style.order = '';
-          monthlyCard.style.order = '';
-          slider.style.transform = currentSummaryCard === 'account' ? 'translateX(0px)' : `translateX(-${width}px)`;
+        // Smoothly reset order structures on transition completion
+        setTimeout(function () {
+          slider.style.transition = "none";
+          slider.classList.remove("duration-200", "ease-out");
+          accountCard.style.order = "";
+          monthlyCard.style.order = "";
+          slider.style.transform = currentSummaryCard === "account" ? "translateX(0px)" : "translateX(-" + width + "px)";
         }, 200);
       }
-
       function snapBackSummaryCard() {
-        const slider = document.getElementById('summary-cards-slider');
-        const accountCard = document.getElementById('account-monthly-summary');
-        const monthlyCard = document.getElementById('monthly-summary');
-        const wrapper = document.getElementById('ledger-account-summary-wrapper');
+        const slider = document.getElementById("summary-cards-slider");
+        const accountCard = document.getElementById("account-monthly-summary");
+        const monthlyCard = document.getElementById("monthly-summary");
+        const wrapper = document.getElementById("ledger-account-summary-wrapper");
 
         if (!slider || !accountCard || !monthlyCard || !wrapper) return;
         const width = wrapper.offsetWidth;
 
-        slider.style.transition = 'transform 0.2s ease-out';
-        slider.classList.add('duration-200', 'ease-out');
+        slider.style.transition = "transform 0.2s ease-out";
+        slider.classList.add("duration-200", "ease-out");
 
-        if (currentSummaryCard === 'account') {
-          if (monthlyCard.style.order === '-1') {
-            slider.style.transform = `translateX(-${width}px)`;
+        if (currentSummaryCard === "account") {
+          if (monthlyCard.style.order === "-1") {
+            slider.style.transform = "translateX(-" + width + "px)";
           } else {
-            slider.style.transform = 'translateX(0px)';
+            slider.style.transform = "translateX(0px)";
           }
         } else {
-          if (monthlyCard.style.order === '1') {
-            slider.style.transform = 'translateX(0px)';
+          if (monthlyCard.style.order === "1") {
+            slider.style.transform = "translateX(0px)";
           } else {
-            slider.style.transform = `translateX(-${width}px)`;
+            slider.style.transform = "translateX(-" + width + "px)";
           }
         }
 
-        setTimeout(() => {
-          slider.style.transition = 'none';
-          slider.classList.remove('duration-200', 'ease-out');
-          accountCard.style.order = '';
-          monthlyCard.style.order = '';
-          slider.style.transform = currentSummaryCard === 'account' ? 'translateX(0px)' : `translateX(-${width}px)`;
+        setTimeout(function () {
+          slider.style.transition = "none";
+          slider.classList.remove("duration-200", "ease-out");
+          accountCard.style.order = "";
+          monthlyCard.style.order = "";
+          slider.style.transform = currentSummaryCard === "account" ? "translateX(0px)" : "translateX(-" + width + "px)";
         }, 200);
       }
       window.addEventListener('resize', () => { if (currentViewState === 'transactions-detail') relocateAccountSummaryCard(); });
@@ -7433,15 +7425,16 @@ This action can be undone by cancelling your edits.`,
                 slider.style.transition = '';
                 slider.classList.add('duration-200', 'ease-out');
 
-                const baseOffset = currentSummaryCard === 'monthly' ? -width : 0;
-                const deltaX = cardTranslation - baseOffset;
+                // Evaluate displacement directly from raw finger touch movements to prevent order-swapping direction flips
+                const touch = e.changedTouches.item(0);
+                const rawDeltaX = touch ? touch.clientX - cardTouchStartX : 0;
 
-                if (Math.abs(deltaX) > swipeThreshold) {
-                  const direction = deltaX < 0 ? 'left' : 'right';
-                  if (currentSummaryCard === 'account') {
-                    executeSummaryCardSwitch('monthly', direction);
+                if (Math.abs(rawDeltaX) > swipeThreshold) {
+                  const direction = rawDeltaX < 0 ? "left" : "right";
+                  if (currentSummaryCard === "account") {
+                    executeSummaryCardSwitch("monthly", direction);
                   } else {
-                    executeSummaryCardSwitch('account', direction);
+                    executeSummaryCardSwitch("account", direction);
                   }
                 } else {
                   snapBackSummaryCard();

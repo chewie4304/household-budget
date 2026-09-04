@@ -17,6 +17,11 @@ All notable changes to this project will be documented in this file.
 - **Streamlined Accordion Submenu:** Purged the redundant All Accounts item inside the context-aware accordion list, keeping the inner dropdown menu focused strictly on active financial accounts.
 - **Dropdown Typography and Scaling Adjustments:** Scaled up font sizes inside the floating dropdown, making the Home and Add Transaction core button blocks highly prominent text-xl and nesting individual account selection buttons at a highly readable text-sm (increased from text-xs).
 - **Accounts Sub-menu Heading Icon Refinement:** Transitioned the Accounts submenu accordion icon from the home emoji to the bank emoji to establish a distinct visual separation from the main brand-logo Home button.
+- **Dynamic Programmatic Card Heights:** Configured relocateAccountSummaryCard() to dynamically control card height styles. Both the global Monthly Summary and the Account-Specific Summary cards are locked to exactly 188px on desktop viewports to align perfectly with the balances card and preserve spacious internal padding, while expanding to full height inside the mobile slider.
+- **Consolidated Action Card Button Placement:** Relocated the Add Transaction button completely inside the primary balances-card container. This absorbs the vertical button heights on desktop, locking the balances card to exactly 188px with zero layout overflow and allowing subsequent ledger elements to sit perfectly flush with the left column cards.
+
+### Fixed
+- **Inversion-Free Carousel Physics:** Corrected card swipe endpoints to parse raw finger offsets directly from the changedTouches touchstart delta instead of translating the CSS transform position. This prevents calculations from inverting during carousel loop orders, ensuring the active card glides smoothly in the direction of the swipe with zero visual jumping or rebound snapping.
 
 ## [1.6.5] - 2026-09-03
 
