@@ -2812,10 +2812,10 @@
           const tagsHtml = tags.length > 0 ? `
             <div class="flex flex-wrap gap-1 mt-1.5">
               ${tags.map(t => {
-                const displayName = getLabelDisplayName(t);
-                const colorClass = getLabelColorStyle(t);
-                return `<span class="text-xs px-2 py-0.5 rounded-lg font-black tracking-wide ${colorClass}">${displayName}</span>`;
-              }).join("")}
+            const displayName = getLabelDisplayName(t);
+            const colorClass = getLabelColorStyle(t);
+            return `<span class="text-xs px-2 py-0.5 rounded-lg font-black tracking-wide ${colorClass}">${displayName}</span>`;
+          }).join("")}
             </div>
           ` : "";
 
@@ -2831,17 +2831,20 @@
             </div>
           ` : "";
 
+          // Render the transaction card with all its details
           return `
             <div id="tx-row-${tx.id}" onclick="openTxModal('${tx.id}')" class="${isTransfer ? "bg-purple-50 border border-purple-200 shadow-sm" : "bg-white border border-slate-200 shadow-sm"} p-4 rounded-2xl cursor-pointer hover:border-blue-300 transition-all duration-150">
               <div class="flex justify-between items-start gap-3">
                 <div class="min-w-0 flex-1 pr-2">
                   <div class="flex items-center gap-2">
-                    <!-- Upscaled payee text matching Accounts list visual weights -->
+                    <!-- Payee on transaction card -->
                     <p class="font-black text-slate-900 text-lg">${tx.payee || "Transaction"}</p>
                   </div>
                   ${receiptBtn}
-                  <!-- Standardized account and date labels with expanded font layout tracking -->
-                  <p class="mt-1 text-xs font-extrabold text-slate-400 uppercase tracking-widest">${acc ? acc.name : "Account"} • ${tx.date || "No date"}</p>
+                  <!-- Account name on transaction card -->
+                  <p class="mt-1 text-xs font-extrabold text-slate-400 uppercase tracking-widest">${acc ? acc.name : "Account"}</p>
+                  <!-- Date on transaction card -->
+                  <p class="mt-0.5 text-xs font-extrabold text-slate-400 uppercase tracking-widest">${tx.date || "No date"}</p>
                   ${tx.description && tx.description !== tx.payee ? `<p class="text-xs text-gray-500 font-medium mt-0.5">${tx.description}</p>` : ""}
                   ${tagsHtml}
                   ${renderSplitDetails(tx)}
@@ -3977,7 +3980,8 @@
                 </div>
                 ${receiptBtn}
                 ${subTitle ? `<p class="text-xs text-gray-500 font-medium mt-0.5">${subTitle}</p>` : ''}
-                <p class="mt-1 text-[11px] text-slate-500 uppercase tracking-[0.14em]">${tx.date}</p>
+                <!-- Date on transaction card -->
+                <p class="mt-1 text-xs font-extrabold text-slate-400 uppercase tracking-widest">${tx.date}</p>
                 ${tagsHtml}
                 ${renderSplitDetails(tx)}
               </div>
