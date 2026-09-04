@@ -9,15 +9,14 @@ All notable changes to this project will be documented in this file.
 - **Header Dropdown Home Choice:** Added a prominent, main-level navigation action labeled Home inside the floating menu dropdown, positioned directly above "+ Add Transaction" for maximum visibility.
 - **High-Fidelity Brand Menu Icon:** Swapped out the standard Home emoji for your custom icon-192.png brand emblem inside the newly added Home dropdown button, scaling it cleanly to a height and width of 6 units with rounded corners and a soft drop shadow to match native application aesthetics.
 - **Persistent Dropdown Accounts Sub-Menu:** Standardized the dropdown navigation structure so the Accounts submenu remains persistently displayed across both home cockpit dashboard states and individual ledger details views.
+- **Infinite Carousel Summary Deck:** Embedded a high-performance double-card infinite carousel slider inside the mobile ledger view, allowing users to swipe infinitely in either direction to cycle between Account-Specific and global Monthly Summaries.
+- **Frictionless Touch Delegation:** Programmed smart gesture delegation that isolates horizontal finger swipes. Touches starting on the header summary deck trigger custom elastic order-swapping transformations, while swipes elsewhere on the screen continue to sweep chronological ledger feeds for effortless account cycling.
 
 ### Changed
 - **Home Landing View Enforcement:** Modified applySavedViewState() to ignore deep-linked active account views during initial application boots. The app will now consistently initialize onto the Home accounts cockpit or global transactions page.
 - **Streamlined Accordion Submenu:** Purged the redundant All Accounts item inside the context-aware accordion list, keeping the inner dropdown menu focused strictly on active financial accounts.
 - **Dropdown Typography and Scaling Adjustments:** Scaled up font sizes inside the floating dropdown, making the Home and Add Transaction core button blocks highly prominent text-xl and nesting individual account selection buttons at a highly readable text-sm (increased from text-xs).
 - **Accounts Sub-menu Heading Icon Refinement:** Transitioned the Accounts submenu accordion icon from the home emoji to the bank emoji to establish a distinct visual separation from the main brand-logo Home button.
-
-### Fixed
-- **Buttery-Smooth Swipe Animations:** Resolved an animation direction glitch where card transition-transform styles were fighting active Tailwind transition properties. By binding temporary inline transition-none properties on touchstart and during teleportation phases, the active card now exits in the direction of the swipe while the incoming card teleports instantly and glides smoothly into focus from the physically expected side with zero visual stuttering.
 
 ## [1.6.5] - 2026-09-03
 

@@ -227,56 +227,57 @@
 
         <!-- LEFT 2 COLUMNS: Static Financial Cockpit (Always visible on Desktop) -->
         <section id="cockpit-sidebar" class="lg:col-span-2 flex flex-col gap-0 lg:gap-4 lg:flex">
+          <!-- Placeholder to return Monthly Summary back home on desktop/home viewports -->
+          <div id="cockpit-monthly-summary-placeholder">
+            <!-- Widget 1: Monthly Summary (Sized and configured for dynamic carousel placement) -->
+            <div id="monthly-summary"
+              class="hidden w-full h-48 shrink-0 rounded-3xl border border-slate-200 bg-gradient-to-br from-slate-50 via-white to-blue-50 shadow-sm p-4 sm:p-5 space-y-2 sm:space-y-3 flex flex-col justify-between">
+              <!-- Summary Header (Aligned in-row on both mobile & desktop) -->
+              <div class="flex items-center lg:items-end justify-between w-full gap-x-3 gap-y-1.5 shrink-0">
+                <!-- Left: Title Stack -->
+                <div class="flex flex-col leading-tight min-w-0">
+                  <p class="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500 truncate">Monthly Summary
+                  </p>
+                  <p id="monthly-summary-month"
+                    class="text-sm sm:text-base font-bold text-slate-800 leading-tight truncate">This Month</p>
+                </div>
+                <!-- Right on Mobile / Far Right on Desktop: Dropdown Selector -->
+                <div class="flex items-center gap-2 shrink-0 lg:mb-1">
+                  <select id="summary-month-select" onchange="setSelectedSummaryMonth(this.value)"
+                    class="rounded-xl border border-slate-200 bg-white px-2 py-1 pr-8 text-xs font-semibold text-slate-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-300">
+                  </select>
+                </div>
+              </div> <!-- End of Summary Header -->
 
-          <!-- Widget 1: Monthly Summary (Spans full width of cockpit) -->
-          <div id="monthly-summary"
-            class="hidden rounded-3xl border border-slate-200 bg-gradient-to-br from-slate-50 via-white to-blue-50 shadow-sm p-4 sm:p-5 space-y-2 sm:space-y-3 flex flex-col justify-between h-[188px]">
-
-            <!-- Summary Header (Aligned in-row on both mobile & desktop) -->
-            <div class="flex items-center lg:items-end justify-between w-full gap-x-3 gap-y-1.5 shrink-0">
-              <!-- Left: Title Stack -->
-              <div class="flex flex-col leading-tight min-w-0">
-                <p class="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500 truncate">Monthly Summary</p>
-                <p id="monthly-summary-month"
-                  class="text-sm sm:text-base font-bold text-slate-800 leading-tight truncate">This Month</p>
-              </div>
-              <!-- Right on Mobile / Far Right on Desktop: Dropdown Selector -->
-              <div class="flex items-center gap-2 shrink-0 lg:mb-1">
-                <select id="summary-month-select" onchange="setSelectedSummaryMonth(this.value)"
-                  class="rounded-xl border border-slate-200 bg-white px-2 py-1 pr-8 text-xs font-semibold text-slate-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-300">
-                </select>
-              </div>
-            </div> <!-- End of Summary Header -->
-
-            <!-- Summary Totals Grid (Tighter padding & margins on mobile) -->
-            <div class="grid grid-cols-3 gap-2 text-center shrink-0">
-              <button type="button" onclick="showAllTransactions('income')"
-                class="rounded-2xl border border-emerald-200 bg-emerald-50 p-2 sm:p-3 text-left transition hover:bg-emerald-100 hover:shadow-sm">
-                <p class="text-[10px] font-bold uppercase tracking-[0.18em] text-emerald-700">Income</p>
-                <p id="monthly-income"
-                  class="mt-1 sm:mt-2 text-right text-sm sm:text-base font-extrabold text-emerald-700 sm:text-lg">
-                  $0.00</p>
-              </button>
-              <button type="button" onclick="showAllTransactions('expense')"
-                class="rounded-2xl border border-red-200 bg-red-50 p-2 sm:p-3 text-left transition hover:bg-red-100 hover:shadow-sm">
-                <p class="text-[10px] font-bold uppercase tracking-[0.18em] text-red-700">Expenses</p>
-                <p id="monthly-expenses"
-                  class="mt-1 sm:mt-2 text-right text-sm sm:text-base font-extrabold text-red-700 sm:text-lg">$0.00
-                </p>
-              </button>
-              <button type="button" onclick="showAllTransactions(null)"
-                class="rounded-2xl border border-blue-200 bg-blue-50 p-2 sm:p-3 text-left transition hover:bg-blue-100 hover:shadow-sm">
-                <p class="text-[10px] font-bold uppercase tracking-[0.18em] text-blue-700">Remaining</p>
-                <p id="monthly-remaining"
-                  class="mt-1 sm:mt-2 text-right text-sm sm:text-base font-extrabold text-blue-700 sm:text-lg">
-                  $0.00</p>
-              </button>
-            </div> <!-- End of Monthly Summary Buttons Container -->
-          </div> <!-- End of Monthly Summary Section -->
+              <!-- Summary Totals Grid (Tighter padding & margins on mobile) -->
+              <div class="grid grid-cols-3 gap-2 text-center shrink-0">
+                <button type="button" onclick="showAllTransactions('income')"
+                  class="rounded-2xl border border-emerald-200 bg-emerald-50 p-2 sm:p-3 text-left transition hover:bg-emerald-100 hover:shadow-sm">
+                  <p class="text-[10px] font-bold uppercase tracking-[0.18em] text-emerald-700">Income</p>
+                  <p id="monthly-income"
+                    class="mt-1 sm:mt-2 text-right text-sm sm:text-base font-extrabold text-emerald-700 sm:text-lg">
+                    $0.00</p>
+                </button>
+                <button type="button" onclick="showAllTransactions('expense')"
+                  class="rounded-2xl border border-red-200 bg-red-50 p-2 sm:p-3 text-left transition hover:bg-red-100 hover:shadow-sm">
+                  <p class="text-[10px] font-bold uppercase tracking-[0.18em] text-red-700">Expenses</p>
+                  <p id="monthly-expenses"
+                    class="mt-1 sm:mt-2 text-right text-sm sm:text-base font-extrabold text-red-700 sm:text-lg">$0.00
+                  </p>
+                </button>
+                <button type="button" onclick="showAllTransactions(null)"
+                  class="rounded-2xl border border-blue-200 bg-blue-50 p-2 sm:p-3 text-left transition hover:bg-blue-100 hover:shadow-sm">
+                  <p class="text-[10px] font-bold uppercase tracking-[0.18em] text-blue-700">Remaining</p>
+                  <p id="monthly-remaining"
+                    class="mt-1 sm:mt-2 text-right text-sm sm:text-base font-extrabold text-blue-700 sm:text-lg">
+                    $0.00</p>
+                </button>
+              </div> <!-- End of Monthly Summary Buttons Container -->
+            </div> <!-- End of Monthly Summary Section -->
+          </div> <!-- End of cockpit-monthly-summary-placeholder -->
 
           <!-- Slot the Account Summary card relocates into when viewing Account Details on desktop -->
           <div id="cockpit-account-summary-slot" class="hidden"></div>
-
           <!-- Sub-Grid for Secondary Dashboard Widgets (1-Column Wide on Desktop) -->
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
 
@@ -440,67 +441,76 @@
               <div id="tx-view-content" class="w-full space-y-3 transition-transform duration-200 ease-out">
 
                 <!-- Default home for the Account Summary card; relocated into the cockpit sidebar on desktop -->
-                <div id="ledger-account-summary-wrapper">
-                  <!-- Account-Specific Monthly Summary Card -->
-                  <div id="account-monthly-summary"
-                    class="rounded-3xl border border-slate-200 bg-gradient-to-br from-slate-50 via-white to-blue-50 shadow-sm p-4 sm:p-5 flex flex-col justify-between h-[188px]">
+                <!-- Configured wrapper with relative clipping and fixed height -->
+                <div id="ledger-account-summary-wrapper"
+                  class="w-full overflow-hidden rounded-3xl h-48 relative hidden">
+                  <!-- Dynamic slider container populated by the relocation engine on mobile details views -->
+                  <div id="summary-cards-slider" class="flex w-full h-full transition-transform duration-200 ease-out"
+                    style="transform: translateX(0%);">
 
-                    <!-- Summary Header Wrapper -->
-                    <div
-                      class="flex flex-col justify-between flex-1 mb-2 lg:flex-row lg:flex-nowrap lg:items-end lg:justify-between lg:h-auto lg:flex-initial lg:mb-0 w-full gap-x-3 gap-y-1.5 shrink-0">
-                      <div class="flex items-center justify-between w-full lg:contents">
-                        <div class="flex flex-col leading-tight min-w-0 lg:shrink-0">
-                          <p class="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500 truncate">Account
-                            Summary</p>
-                          <p id="account-summary-month-label"
-                            class="text-sm sm:text-base font-bold text-slate-800 leading-tight truncate">This Month</p>
+                    <!-- Account-Specific Monthly Summary Card (Added w-full h-full shrink-0 to sit seamlessly inside slider) -->
+                    <div id="account-monthly-summary"
+                      class="w-full h-full shrink-0 rounded-3xl border border-slate-200 bg-gradient-to-br from-slate-50 via-white to-blue-50 shadow-sm p-4 sm:p-5 flex flex-col justify-between">
+
+                      <!-- Summary Header Wrapper -->
+                      <div
+                        class="flex flex-col justify-between flex-1 mb-2 lg:flex-row lg:flex-nowrap lg:items-end lg:justify-between lg:h-auto lg:flex-initial lg:mb-0 w-full gap-x-3 gap-y-1.5 shrink-0">
+                        <div class="flex items-center justify-between w-full lg:contents">
+                          <div class="flex flex-col leading-tight min-w-0 lg:shrink-0">
+                            <p class="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500 truncate">Account
+                              Summary</p>
+                            <p id="account-summary-month-label"
+                              class="text-sm sm:text-base font-bold text-slate-800 leading-tight truncate">This Month
+                            </p>
+                          </div>
+                          <div class="flex items-center gap-2 shrink-0 lg:order-last lg:mb-1">
+                            <!-- 🌟 Routed onchange event to call the independent setSelectedAccountMonth instead -->
+                            <select id="account-summary-month-select" onchange="setSelectedAccountMonth(this.value)"
+                              class="rounded-xl border border-slate-200 bg-white px-2 py-1 pr-8 text-xs font-semibold text-slate-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-300">
+                            </select>
+                          </div>
                         </div>
-                        <div class="flex items-center gap-2 shrink-0 lg:order-last lg:mb-1">
-                          <!-- 🌟 Routed onchange event to call the independent setSelectedAccountMonth instead -->
-                          <select id="account-summary-month-select" onchange="setSelectedAccountMonth(this.value)"
-                            class="rounded-xl border border-slate-200 bg-white px-2 py-1 pr-8 text-xs font-semibold text-slate-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-300">
-                          </select>
+                        <div id="tx-acc-credit-limit-container"
+                          class="hidden w-full lg:w-auto lg:flex-1 lg:max-w-xs space-y-1 shrink-0 lg:mb-1">
+                          <div class="flex justify-between text-[10px] font-semibold leading-none">
+                            <span class="text-slate-400">Credit Remaining</span>
+                            <span id="tx-acc-credit-remaining-label" class="text-slate-700 font-extrabold"></span>
+                          </div>
+                          <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
+                            <div id="tx-acc-credit-progress" class="h-full rounded-full transition-all duration-300"
+                              style="width: 0%;"></div>
+                          </div>
                         </div>
                       </div>
-                      <div id="tx-acc-credit-limit-container"
-                        class="hidden w-full lg:w-auto lg:flex-1 lg:max-w-xs space-y-1 shrink-0 lg:mb-1">
-                        <div class="flex justify-between text-[10px] font-semibold leading-none">
-                          <span class="text-slate-400">Credit Remaining</span>
-                          <span id="tx-acc-credit-remaining-label" class="text-slate-700 font-extrabold"></span>
-                        </div>
-                        <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
-                          <div id="tx-acc-credit-progress" class="h-full rounded-full transition-all duration-300"
-                            style="width: 0%;"></div>
-                        </div>
-                      </div>
-                    </div>
 
-                    <!-- Summary Totals Grid -->
-                    <div class="grid grid-cols-3 gap-2 text-center shrink-0">
-                      <button type="button" id="account-income-card" onclick="setAccountSummaryTypeFilter('income')"
-                        class="rounded-2xl border border-emerald-200 bg-emerald-50 p-2 sm:p-3 text-left transition hover:bg-emerald-100 hover:shadow-sm">
-                        <p class="text-[10px] font-bold uppercase tracking-[0.18em] text-emerald-700">Income</p>
-                        <p id="account-monthly-income"
-                          class="mt-1 sm:mt-2 text-right text-sm sm:text-base font-extrabold text-emerald-700 sm:text-lg">
-                          $0.00</p>
-                      </button>
-                      <button type="button" id="account-expenses-card" onclick="setAccountSummaryTypeFilter('expense')"
-                        class="rounded-2xl border border-red-200 bg-red-50 p-2 sm:p-3 text-left transition hover:bg-red-100 hover:shadow-sm">
-                        <p class="text-[10px] font-bold uppercase tracking-[0.18em] text-red-700">Expenses</p>
-                        <p id="account-monthly-expenses"
-                          class="mt-1 sm:mt-2 text-right text-sm sm:text-base font-extrabold text-red-700 sm:text-lg">
-                          $0.00</p>
-                      </button>
-                      <button type="button" id="account-remaining-card" onclick="setAccountSummaryTypeFilter(null)"
-                        class="rounded-2xl border border-blue-200 bg-blue-50 p-2 sm:p-3 text-left transition hover:bg-blue-100 hover:shadow-sm">
-                        <p class="text-[10px] font-bold uppercase tracking-[0.18em] text-blue-700">Remaining</p>
-                        <p id="account-monthly-remaining"
-                          class="mt-1 sm:mt-2 text-right text-sm sm:text-base font-extrabold text-blue-700 sm:text-lg">
-                          $0.00</p>
-                      </button>
-                    </div> <!-- End of account summary cards -->
-                  </div> <!-- End of account summary section -->
-                </div> <!-- End of account summary container -->
+                      <!-- Summary Totals Grid -->
+                      <div class="grid grid-cols-3 gap-2 text-center shrink-0">
+                        <button type="button" id="account-income-card" onclick="setAccountSummaryTypeFilter('income')"
+                          class="rounded-2xl border border-emerald-200 bg-emerald-50 p-2 sm:p-3 text-left transition hover:bg-emerald-100 hover:shadow-sm">
+                          <p class="text-[10px] font-bold uppercase tracking-[0.18em] text-emerald-700">Income</p>
+                          <p id="account-monthly-income"
+                            class="mt-1 sm:mt-2 text-right text-sm sm:text-base font-extrabold text-emerald-700 sm:text-lg">
+                            $0.00</p>
+                        </button>
+                        <button type="button" id="account-expenses-card"
+                          onclick="setAccountSummaryTypeFilter('expense')"
+                          class="rounded-2xl border border-red-200 bg-red-50 p-2 sm:p-3 text-left transition hover:bg-red-100 hover:shadow-sm">
+                          <p class="text-[10px] font-bold uppercase tracking-[0.18em] text-red-700">Expenses</p>
+                          <p id="account-monthly-expenses"
+                            class="mt-1 sm:mt-2 text-right text-sm sm:text-base font-extrabold text-red-700 sm:text-lg">
+                            $0.00</p>
+                        </button>
+                        <button type="button" id="account-remaining-card" onclick="setAccountSummaryTypeFilter(null)"
+                          class="rounded-2xl border border-blue-200 bg-blue-50 p-2 sm:p-3 text-left transition hover:bg-blue-100 hover:shadow-sm">
+                          <p class="text-[10px] font-bold uppercase tracking-[0.18em] text-blue-700">Remaining</p>
+                          <p id="account-monthly-remaining"
+                            class="mt-1 sm:mt-2 text-right text-sm sm:text-base font-extrabold text-blue-700 sm:text-lg">
+                            $0.00</p>
+                        </button>
+                      </div> <!-- End of totals grid -->
+                    </div> <!-- End of account-monthly-summary -->
+                  </div> <!-- End of summary-cards-slider -->
+                </div> <!-- End of ledger-account-summary-wrapper -->
 
                 <!-- Balances & Quick Action Card -->
                 <div id="balances-card"
@@ -554,7 +564,8 @@
                   class="hidden bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm space-y-2">
                   <div class="flex items-center justify-between flex-wrap gap-2">
                     <div class="flex items-center gap-2.5">
-                      <span class="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Filter by Labels</span>
+                      <span class="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Filter by
+                        Labels</span>
                       <label
                         class="inline-flex items-center gap-1 text-[10px] font-bold text-slate-500 cursor-pointer select-none">
                         <input type="checkbox" id="tag-filter-match-all" onchange="toggleTagFilterMatchMode()"
@@ -1451,6 +1462,13 @@
       let isSwiping = false;
       let isScrolling = false;
       let currentTranslation = 0;
+
+      // Summary Card Deck swiping state variables
+      let isCardSwiping = false;
+      let cardTouchStartX = 0;
+      let cardTouchStartY = 0;
+      let cardTranslation = 0;
+      let currentSummaryCard = 'account'; // 'account' or 'monthly
 
 
       let transactions = [];
@@ -2644,11 +2662,8 @@
 
         if (!card || !monthLabel || !incomeEl || !expensesEl || !remainingEl) return;
 
-        // On desktop, keep global summary visible. On mobile, hide it in details view.
-        if (currentViewState === 'transactions-detail' && window.innerWidth < 1024) {
-          card.classList.add('hidden');
-          return;
-        }
+        // On mobile details view, we keep the card active as it lives inside our swipable carousel
+        card.classList.remove('hidden');
 
         if (selector && selector.options.length === 0) {
           buildMonthOptions();
@@ -3018,19 +3033,149 @@
 
       // Moves the Account Summary card into the cockpit sidebar on desktop (web view) Account Details, or back to the ledger panel otherwise
       function relocateAccountSummaryCard() {
-        const card = document.getElementById('account-monthly-summary');
-        const cockpitSlot = document.getElementById('cockpit-account-summary-slot');
-        const ledgerSlot = document.getElementById('ledger-account-summary-wrapper');
-        if (!card || !cockpitSlot || !ledgerSlot) return;
+        const accountCard = document.getElementById('account-monthly-summary');
+        const monthlyCard = document.getElementById('monthly-summary');
 
-        const isDesktopDetailView = window.innerWidth >= 1024 && currentViewState === 'transactions-detail';
-        if (isDesktopDetailView) {
-          cockpitSlot.appendChild(card);
-          cockpitSlot.classList.remove('hidden');
+        const cockpitAccountSlot = document.getElementById('cockpit-account-summary-slot');
+        const cockpitMonthlySlot = document.getElementById('cockpit-monthly-summary-placeholder');
+
+        const ledgerSlider = document.getElementById('summary-cards-slider');
+        const ledgerWrapper = document.getElementById('ledger-account-summary-wrapper');
+
+        if (!accountCard || !monthlyCard || !cockpitAccountSlot || !cockpitMonthlySlot || !ledgerSlider) return;
+
+        const isDesktop = window.innerWidth >= 1024;
+        const isDetailView = currentViewState === 'transactions-detail';
+
+        // Clean up order styles before rearranging
+        accountCard.style.order = '';
+        monthlyCard.style.order = '';
+
+        if (isDesktop && isDetailView) {
+          // Desktop Account Details: Stack them vertically inside the sidebar cockpit
+          cockpitAccountSlot.appendChild(accountCard);
+          cockpitAccountSlot.classList.remove('hidden');
+          accountCard.classList.remove('hidden');
+
+          cockpitMonthlySlot.appendChild(monthlyCard);
+          monthlyCard.classList.remove('hidden');
+
+          if (ledgerWrapper) ledgerWrapper.classList.add('hidden');
+        } else if (!isDesktop && isDetailView) {
+          // Mobile Account Details: Mount both cards inside the swipable header slider
+          ledgerSlider.appendChild(accountCard);
+          ledgerSlider.appendChild(monthlyCard);
+
+          accountCard.classList.remove('hidden');
+          monthlyCard.classList.remove('hidden');
+
+          cockpitAccountSlot.classList.add('hidden');
+          if (ledgerWrapper) ledgerWrapper.classList.remove('hidden');
         } else {
-          ledgerSlot.appendChild(card);
-          cockpitSlot.classList.add('hidden');
+          // Home Dashboard (Mobile or Desktop): Return cards to their native layouts
+          cockpitMonthlySlot.appendChild(monthlyCard);
+          monthlyCard.classList.remove('hidden');
+
+          ledgerSlider.appendChild(accountCard);
+          accountCard.classList.remove('hidden');
+
+          cockpitAccountSlot.classList.add('hidden');
+          if (ledgerWrapper) ledgerWrapper.classList.add('hidden');
         }
+      }
+      function executeSummaryCardSwitch(targetCard, direction) {
+        const slider = document.getElementById('summary-cards-slider');
+        const accountCard = document.getElementById('account-monthly-summary');
+        const monthlyCard = document.getElementById('monthly-summary');
+        const wrapper = document.getElementById('ledger-account-summary-wrapper');
+
+        if (!slider || !accountCard || !monthlyCard || !wrapper) return;
+
+        const width = wrapper.offsetWidth;
+        currentSummaryCard = targetCard;
+
+        slider.style.transition = 'none';
+        slider.classList.remove('duration-200', 'ease-out');
+
+        if (targetCard === 'monthly' && direction === 'left') {
+          accountCard.style.order = '';
+          monthlyCard.style.order = '';
+          slider.style.transform = 'translateX(0px)';
+          void slider.offsetWidth;
+          slider.style.transition = 'transform 0.2s ease-out';
+          slider.classList.add('duration-200', 'ease-out');
+          slider.style.transform = `translateX(-${width}px)`;
+        }
+        else if (targetCard === 'account' && direction === 'right') {
+          accountCard.style.order = '';
+          monthlyCard.style.order = '';
+          slider.style.transform = `translateX(-${width}px)`;
+          void slider.offsetWidth;
+          slider.style.transition = 'transform 0.2s ease-out';
+          slider.classList.add('duration-200', 'ease-out');
+          slider.style.transform = 'translateX(0px)';
+        }
+        else if (targetCard === 'monthly' && direction === 'right') {
+          monthlyCard.style.order = '-1';
+          accountCard.style.order = '1';
+          slider.style.transform = `translateX(-${width}px)`;
+          void slider.offsetWidth;
+          slider.style.transition = 'transform 0.2s ease-out';
+          slider.classList.add('duration-200', 'ease-out');
+          slider.style.transform = 'translateX(0px)';
+        }
+        else if (targetCard === 'account' && direction === 'left') {
+          monthlyCard.style.order = '1';
+          accountCard.style.order = '2';
+          slider.style.transform = 'translateX(0px)';
+          void slider.offsetWidth;
+          slider.style.transition = 'transform 0.2s ease-out';
+          slider.classList.add('duration-200', 'ease-out');
+          slider.style.transform = `translateX(-${width}px)`;
+        }
+
+        setTimeout(() => {
+          slider.style.transition = 'none';
+          slider.classList.remove('duration-200', 'ease-out');
+          accountCard.style.order = '';
+          monthlyCard.style.order = '';
+          slider.style.transform = currentSummaryCard === 'account' ? 'translateX(0px)' : `translateX(-${width}px)`;
+        }, 200);
+      }
+
+      function snapBackSummaryCard() {
+        const slider = document.getElementById('summary-cards-slider');
+        const accountCard = document.getElementById('account-monthly-summary');
+        const monthlyCard = document.getElementById('monthly-summary');
+        const wrapper = document.getElementById('ledger-account-summary-wrapper');
+
+        if (!slider || !accountCard || !monthlyCard || !wrapper) return;
+        const width = wrapper.offsetWidth;
+
+        slider.style.transition = 'transform 0.2s ease-out';
+        slider.classList.add('duration-200', 'ease-out');
+
+        if (currentSummaryCard === 'account') {
+          if (monthlyCard.style.order === '-1') {
+            slider.style.transform = `translateX(-${width}px)`;
+          } else {
+            slider.style.transform = 'translateX(0px)';
+          }
+        } else {
+          if (monthlyCard.style.order === '1') {
+            slider.style.transform = 'translateX(0px)';
+          } else {
+            slider.style.transform = `translateX(-${width}px)`;
+          }
+        }
+
+        setTimeout(() => {
+          slider.style.transition = 'none';
+          slider.classList.remove('duration-200', 'ease-out');
+          accountCard.style.order = '';
+          monthlyCard.style.order = '';
+          slider.style.transform = currentSummaryCard === 'account' ? 'translateX(0px)' : `translateX(-${width}px)`;
+        }, 200);
       }
       window.addEventListener('resize', () => { if (currentViewState === 'transactions-detail') relocateAccountSummaryCard(); });
 
@@ -3148,7 +3293,21 @@
         }
         if (activeAccountId !== accId) {
           selectedAccountTransactionType = null;
-          selectedAccountMonth = selectedSummaryMonth; // 🌟 Sync active ledger month starting state to home view
+          selectedAccountMonth = selectedSummaryMonth; // Sync active ledger month starting state to home view
+        }
+
+        // Reset the header summary card deck back to the default Account Summary card on load
+        currentSummaryCard = 'account';
+        const slider = document.getElementById('summary-cards-slider');
+        if (slider) {
+          slider.style.transition = 'none';
+          slider.style.transform = 'translateX(0px)';
+          const accountCard = document.getElementById('account-monthly-summary');
+          const monthlyCard = document.getElementById('monthly-summary');
+          if (accountCard && monthlyCard) {
+            accountCard.style.order = '';
+            monthlyCard.style.order = '';
+          }
         }
         activeAccountId = accId;
         activeTagFilters = [];
@@ -7151,32 +7310,47 @@ This action can be undone by cancelling your edits.`,
 
       // 2. Real-Time Mobile Drag & Sweep Listeners
       const txViewContainer = document.getElementById('transactions-view');
+
       if (txViewContainer) {
-        // Capture starting coordinates and instantly disable transition delay for lag-free tracking
         txViewContainer.addEventListener('touchstart', (e) => {
           if (currentViewState !== 'transactions-detail') return;
-          const [touch] = e.touches;
+          const touch = e.touches.item(0);
           if (!touch) return;
+
           touchStartX = touch.clientX;
           touchStartY = touch.clientY;
           isSwiping = false;
           isScrolling = false;
           currentTranslation = 0;
 
-          const contentEl = document.getElementById('tx-view-content');
-          if (contentEl) {
-            // Disable CSS transitions completely to ensure direct, lag-free tracking under finger
-            contentEl.style.transition = 'none';
+          // Check if the touch began inside our swipable summary cards deck
+          const isOnSummaryCard = !!e.target.closest('#ledger-account-summary-wrapper');
+          if (isOnSummaryCard && window.innerWidth < 1024) {
+            isCardSwiping = true;
+            cardTouchStartX = touch.clientX;
+            cardTouchStartY = touch.clientY;
+            cardTranslation = 0;
+
+            const slider = document.getElementById('summary-cards-slider');
+            if (slider) {
+              slider.style.transition = 'none';
+            }
+          } else {
+            isCardSwiping = false;
+            const contentEl = document.getElementById('tx-view-content');
+            if (contentEl) {
+              contentEl.style.transition = 'none';
+            }
           }
         }, { passive: true });
 
-        // Track finger movement and translate the card element 1-to-1 under the thumb
         txViewContainer.addEventListener('touchmove', (e) => {
           if (currentViewState !== 'transactions-detail' || isScrolling) return;
-          const [touch] = e.touches;
+          const touch = e.touches.item(0);
           if (!touch) return;
-          const deltaX = touch.clientX - touchStartX;
-          const deltaY = touch.clientY - touchStartY;
+
+          const deltaX = touch.clientX - (isCardSwiping ? cardTouchStartX : touchStartX);
+          const deltaY = touch.clientY - (isCardSwiping ? cardTouchStartY : touchStartY);
 
           // Isolate pure horizontal swipes from vertical page scrolls
           if (!isSwiping && !isScrolling) {
@@ -7190,45 +7364,116 @@ This action can be undone by cancelling your edits.`,
           }
 
           if (isSwiping) {
-            if (e.cancelable) e.preventDefault(); // Stop mobile elastic-bounce scroll conflicts
-            const contentEl = document.getElementById('tx-view-content');
-            if (contentEl) {
-              currentTranslation = deltaX;
-              contentEl.style.transform = `translateX(${currentTranslation}px)`;
-              // Fade out slightly as the card is swept away
-              const opacityPercent = Math.max(0.3, 1 - (Math.abs(currentTranslation) / 320));
-              contentEl.style.opacity = String(opacityPercent);
+            if (e.cancelable) e.preventDefault(); // Stop mobile elastic-scroll conflicts
+
+            if (isCardSwiping) {
+              // Swipe specifically the summary cards deck
+              const slider = document.getElementById('summary-cards-slider');
+              const wrapper = document.getElementById('ledger-account-summary-wrapper');
+              const accountCard = document.getElementById('account-monthly-summary');
+              const monthlyCard = document.getElementById('monthly-summary');
+
+              if (slider && wrapper && accountCard && monthlyCard) {
+                const width = wrapper.offsetWidth;
+
+                if (currentSummaryCard === 'account') {
+                  if (deltaX < 0) {
+                    // Dragging left (natural: monthly enters from right)
+                    accountCard.style.order = '';
+                    monthlyCard.style.order = '';
+                    cardTranslation = deltaX;
+                  } else {
+                    // Dragging right (infinite carousel: monthly enters from left)
+                    monthlyCard.style.order = '-1';
+                    accountCard.style.order = '1';
+                    cardTranslation = -width + deltaX;
+                  }
+                } else {
+                  // currentSummaryCard === 'monthly'
+                  if (deltaX > 0) {
+                    // Dragging right (natural: account enters from left)
+                    accountCard.style.order = '';
+                    monthlyCard.style.order = '';
+                    cardTranslation = -width + deltaX;
+                  } else {
+                    // Dragging left (infinite carousel: account enters from right)
+                    monthlyCard.style.order = '1';
+                    accountCard.style.order = '2';
+                    cardTranslation = deltaX;
+                  }
+                }
+
+                slider.style.transform = `translateX(${cardTranslation}px)`;
+              }
+            } else {
+              // Normal full-page account switcher swipe (exits left/prev, enters right/next)
+              const contentEl = document.getElementById('tx-view-content');
+              if (contentEl) {
+                currentTranslation = deltaX;
+                contentEl.style.transform = `translateX(${currentTranslation}px)`;
+                const opacityPercent = Math.max(0.3, 1 - (Math.abs(currentTranslation) / 320));
+                contentEl.style.opacity = String(opacityPercent);
+              }
             }
           }
         }, { passive: false });
 
-        // SINGLE, clean touchend event listener
         txViewContainer.addEventListener('touchend', (e) => {
           if (currentViewState !== 'transactions-detail') return;
-          const contentEl = document.getElementById('tx-view-content');
-          if (contentEl && isSwiping) {
-            // Restore transition styles so the card sweeps or snaps back smoothly
-            contentEl.style.transition = '';
-            contentEl.classList.add('duration-200', 'ease-out');
-            const swipeThreshold = 100; // Requires dragging 100px to commit account swap
 
-            if (Math.abs(currentTranslation) > swipeThreshold) {
-              const direction = currentTranslation > 0 ? 'prev' : 'next';
-              // Sweep in direction of drag (swipe right goes off right, swipe left goes off left)
-              const offscreenTarget = currentTranslation > 0 ? '100%' : '-100%';
-              contentEl.style.transform = `translateX(${offscreenTarget})`;
-              contentEl.style.opacity = '0';
-              setTimeout(() => {
-                executeSwipeAccountSwitch(direction);
-              }, 200);
+          if (isSwiping) {
+            const swipeThreshold = 85; // Drag distance required to trigger a card swap
+
+            if (isCardSwiping) {
+              const slider = document.getElementById('summary-cards-slider');
+              const wrapper = document.getElementById('ledger-account-summary-wrapper');
+              const width = wrapper ? wrapper.offsetWidth : window.innerWidth;
+
+              if (slider) {
+                slider.style.transition = '';
+                slider.classList.add('duration-200', 'ease-out');
+
+                const baseOffset = currentSummaryCard === 'monthly' ? -width : 0;
+                const deltaX = cardTranslation - baseOffset;
+
+                if (Math.abs(deltaX) > swipeThreshold) {
+                  const direction = deltaX < 0 ? 'left' : 'right';
+                  if (currentSummaryCard === 'account') {
+                    executeSummaryCardSwitch('monthly', direction);
+                  } else {
+                    executeSummaryCardSwitch('account', direction);
+                  }
+                } else {
+                  snapBackSummaryCard();
+                }
+              }
             } else {
-              // Snap back to center
-              contentEl.style.transform = 'translateX(0px)';
-              contentEl.style.opacity = '1';
+              // Normal full-page account switcher touchend
+              const contentEl = document.getElementById('tx-view-content');
+              if (contentEl) {
+                contentEl.style.transition = '';
+                contentEl.classList.add('duration-200', 'ease-out');
+                const swipeThresholdFull = 100;
+
+                if (Math.abs(currentTranslation) > swipeThresholdFull) {
+                  const direction = currentTranslation > 0 ? 'prev' : 'next';
+                  const offscreenTarget = currentTranslation > 0 ? '100%' : '-100%';
+                  contentEl.style.transform = `translateX(${offscreenTarget})`;
+                  contentEl.style.opacity = '0';
+                  setTimeout(() => {
+                    executeSwipeAccountSwitch(direction);
+                  }, 200);
+                } else {
+                  contentEl.style.transform = 'translateX(0px)';
+                  contentEl.style.opacity = '1';
+                }
+              }
             }
           }
+
           isSwiping = false;
           isScrolling = false;
+          isCardSwiping = false;
         }, { passive: true });
       }
 
