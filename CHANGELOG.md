@@ -5,10 +5,12 @@ All notable changes to this project will be documented in this file.
 ## [unreleased]
 
 ### Added
+- **Independent Account Calendar Filtering:** Declared a dedicated account-specific state tracker (`selectedAccountMonth`) and event pipeline (`setSelectedAccountMonth()`) inside your ledger dashboard. This allows the global dashboard overview card and the active account details panel to navigate historical timelines completely independently.
 - **Clickable Account Header Shortcut:** Converted the dynamic header typography context into an interactive button block (`#header-text-button`). Tapping or clicking the account details (name, bank, last 4 digits) inside any active ledger view instantly launches the "Edit Account" modal.
 - **Dynamic Context Cursor Switching:** Configured the application header button to alternate between standard text cursors (`cursor-default`) during dashboard cockpit views and clickable indicators (`cursor-pointer`) when viewing individual account ledgers.
 
 ### Changed
+- **Ledger Initial State Alignment:** Configured `showTransactionsView()` to sync the active ledger's calendar viewport to match the global dashboard's active month upon loading an individual card, ensuring a seamless, aligned starting point before enabling independent calendar adjustments.
 - **Widescreen Financial Cockpit Stack:** Refactored renderMonthlySummary() to keep the global Monthly Summary widget visible inside the desktop left column when inspecting individual account details. This establishes a vertical cockpit view displaying global budget totals and specific account balances stacked symmetrically.
 - **Header Alignment and Shifting Prevention:** Refactored the sticky application header to utilize a flexible branding spacer layout (`flex-1 min-w-0`). This absorbs all dynamic width adjustments when account titles change length, keeping the right-hand desktop navigation controls and menu trigger permanently locked and flush to the right margin with zero physical shifting.
 - **Header Typography Scaling:** Scaled up the sticky application header typography to improve legibility and visual prominence. Enlarged the main brand and dynamic account title (`#header-main-title`) from `text-lg` to `text-xl`, and enlarged the tagline and dynamic bank institution metadata subtitle (`#header-sub-title`) from `text-[10px]` to `text-xs`.

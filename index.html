@@ -447,7 +447,8 @@
                             class="text-sm sm:text-base font-bold text-slate-800 leading-tight truncate">This Month</p>
                         </div>
                         <div class="flex items-center gap-2 shrink-0 lg:order-last lg:mb-1">
-                          <select id="account-summary-month-select" onchange="setSelectedSummaryMonth(this.value)"
+                          <!-- 🌟 Routed onchange event to call the independent setSelectedAccountMonth instead -->
+                          <select id="account-summary-month-select" onchange="setSelectedAccountMonth(this.value)"
                             class="rounded-xl border border-slate-200 bg-white px-2 py-1 pr-8 text-xs font-semibold text-slate-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-300">
                           </select>
                         </div>
@@ -1389,6 +1390,10 @@
       const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJhdWpqc2tocnBybnlpZ2Zta3dxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY3Njk0NzEsImV4cCI6MjEwMjM0NTQ3MX0.jEjU9BOmzpQpm-A4UlD8xrP2dpeQSiIEjj7-IuMbiVE";
       const RECEIPTS_BUCKET = 'receipts';
 
+      // ================================
+      // --- Global Variables ---
+      // ================================
+
       // Standard initialization without custom global headers override
       const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
       const now = new Date();
@@ -1467,6 +1472,8 @@
       let pendingConfirmAction = null;
       let pendingAccountDeletion = null;
       let selectedSummaryMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+      // 🌟 Added dedicated ledger month state variable to decouple calendar selectors
+      let selectedAccountMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
       let selectedSummaryTransactionType = null;
       let selectedAccountTransactionType = null;
       let selectedAccountTypeFilter = 'all';
@@ -2311,10 +2318,9 @@
           document.getElementById('tx-acc-cleared').textContent = `$${roundCurrency(initialBal + clearedTxSum).toFixed(2)}`;
 
           // --- Dynamic Account-Specific Monthly Summary calculations ---
-          const [year, month] = selectedSummaryMonth.split('-').map(Number);
+          const [year, month] = selectedAccountMonth.split('-').map(Number); // 🌟 Swapped to selectedAccountMonth
           const monthStart = new Date(year, month - 1, 1);
           const monthEnd = new Date(year, month, 0, 23, 59, 59, 999);
-
           const monthTxForAccount = currentAccountTransactions.filter(tx => {
             const txDate = tx && tx.date ? new Date(tx.date + 'T00:00:00') : null;
             if (!txDate || Number.isNaN(txDate.getTime())) return false;
@@ -2346,10 +2352,10 @@
 
           // Toggle border colors of Account select dropdown when browsing current month
           if (accSelector) {
+            accSelector.value = selectedAccountMonth; // 🌟 Sync select input value to display state correctly
             const now = new Date();
             const currentMonthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-            const isCurrentMonth = selectedSummaryMonth === currentMonthKey;
-
+            const isCurrentMonth = selectedAccountMonth === currentMonthKey; // 🌟 Swapped to selectedAccountMonth
             if (isCurrentMonth) {
               accSelector.classList.remove('border-slate-200');
               accSelector.classList.add('border-blue-500', 'ring-2', 'ring-blue-100');
@@ -2569,52 +2575,51 @@
         const accSelector = document.getElementById('account-summary-month-select');
         const now = new Date();
         const options = [];
-
-        // Loop upwards from 0 to 11 to place the most recent/current month at the top of the list [2]
+        // Loop upwards from 0 to 11 to place the most recent/current month at the top of the list
         for (let i = 0; i < 12; i++) {
           const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
           const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
           const label = d.toLocaleString('en-US', { month: 'long', year: 'numeric' });
           options.push(`<option value="${key}">${label}</option>`);
         }
-
         const html = options.join('');
-
-        // Synchronously populate and select on both selectors if they exist [2, 3]
+        // Synchronously populate both, selecting their separate tracking months
         if (selector) {
           selector.innerHTML = html;
           selector.value = selectedSummaryMonth;
         }
         if (accSelector) {
           accSelector.innerHTML = html;
-          accSelector.value = selectedSummaryMonth;
+          accSelector.value = selectedAccountMonth; // 🌟 Populates with separate account month value
         }
       }
 
+      // 🌟 Cleaned up to only impact the global summary card
       function setSelectedSummaryMonth(monthKey) {
         selectedSummaryMonth = monthKey || selectedSummaryMonth;
         const selector = document.getElementById('summary-month-select');
-        const accSelector = document.getElementById('account-summary-month-select');
-
         if (selector) {
           selector.value = selectedSummaryMonth;
-          selector.blur(); // 🌟 Instantly removes focus highlight after selection
+          selector.blur(); // Instantly removes focus highlight after selection
         }
-        if (accSelector) {
-          accSelector.value = selectedSummaryMonth;
-          accSelector.blur(); // 🌟 Instantly removes focus highlight after selection
-        }
-
         if (currentViewState === 'home-transactions') {
           showAllTransactions(selectedSummaryTransactionType);
         } else {
           renderMonthlySummary();
-          renderAccounts(); // Keep the accounts view perfectly synchronized
+          renderAccounts(); // Keep the accounts list view synchronized
+        }
+      }
 
-          // If inside account details, instantly recalculate details for this specific month!
-          if (activeAccountId) {
-            fetchTransactions(activeAccountId);
-          }
+      // 🌟 New decoupled function to handle the active ledger view calendar actions independently
+      function setSelectedAccountMonth(monthKey) {
+        selectedAccountMonth = monthKey || selectedAccountMonth;
+        const accSelector = document.getElementById('account-summary-month-select');
+        if (accSelector) {
+          accSelector.value = selectedAccountMonth;
+          accSelector.blur();
+        }
+        if (activeAccountId) {
+          fetchTransactions(activeAccountId);
         }
       }
 
@@ -3153,6 +3158,7 @@
         }
         if (activeAccountId !== accId) {
           selectedAccountTransactionType = null;
+          selectedAccountMonth = selectedSummaryMonth; // 🌟 Sync active ledger month starting state to home view
         }
         activeAccountId = accId;
         activeTagFilters = [];
@@ -3706,8 +3712,7 @@
       function renderTransactions() {
         const list = document.getElementById('transactions-list');
         const heading = document.getElementById('feed-heading-title');
-
-        const [year, month] = selectedSummaryMonth.split('-').map(Number);
+        const [year, month] = selectedAccountMonth.split('-').map(Number); // 🌟 Swapped to selectedAccountMonth
         const monthStart = new Date(year, month - 1, 1);
         const monthEnd = new Date(year, month, 0, 23, 59, 59, 999);
         const monthName = new Date(year, month - 1, 1).toLocaleString('en-US', { month: 'long', year: 'numeric' });
@@ -5084,9 +5089,9 @@
         checkClearButtonVisibility('accMaxBalance', 'clear-accMaxBalance');
       }
 
-      //=====================================
+      // =====================================
       // --- Account Modal Logic ---
-      //=====================================
+      // =====================================
 
       function openAccountModal(accountId = null) {
         const form = document.getElementById('account-form');
@@ -6229,7 +6234,7 @@
       }
 
       // ==========================================
-      // DRAG AND DROP REORDER ENGINE
+      // --- DRAG AND DROP REORDER ENGINE ---
       // ==========================================
 
       function handleLabelDragStart(e, pathId) {
