@@ -2546,11 +2546,14 @@
         transactions = transactions.map(tx => tx.id === id ? { ...tx, status: updatedStatus } : tx);
         currentAccountTransactions = currentAccountTransactions.map(tx => tx.id === id ? { ...tx, status: updatedStatus } : tx);
 
+        // 🌟 Added renderAccounts() to all views to keep background account cards synchronized in real-time
         if (currentViewState === 'home-transactions') {
           renderAllTransactions();
           renderMonthlySummary();
+          renderAccounts();
         } else if (activeAccountId) {
           await fetchTransactions(activeAccountId);
+          renderAccounts();
         } else {
           renderAccounts();
         }
