@@ -1,4 +1,4 @@
-const CACHE_NAME = 'household-budget-v2';
+const CACHE_NAME = 'home-wealth-v1.6.5';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
