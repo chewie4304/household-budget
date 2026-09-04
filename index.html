@@ -2068,63 +2068,51 @@
 
       function checkAccountBalanceAlerts() {
         if (!Array.isArray(accounts)) return;
-
         accounts.forEach(acc => {
           const currentBalance = calculateAccountBalance(acc);
-          const { minBalance, maxBalance, minEnabled, maxEnabled, signedBalance, debtBalance, isCreditAccount } = getAccountAlertConfig(acc, currentBalance);
+          const { minBalance, maxBalance, minEnabled, maxEnabled, signedBalance, isCreditAccount } = getAccountAlertConfig(acc, currentBalance);
           const previousState = accountAlertState[acc.id] || { triggered: false };
-
           let breachType = null;
           let breachValue = null;
           const isDebtAccount = !!isCreditAccount;
 
-          // Correctly evaluate debt thresholds using positive debt balances
-          if (minEnabled) {
-            const minTriggered = isDebtAccount
-              ? debtBalance > minBalance
-              : signedBalance < minBalance;
-
-            if (minTriggered) {
-              breachType = isDebtAccount ? 'high' : 'low';
-              breachValue = isDebtAccount ? Math.abs(minBalance) : minBalance;
-            }
+          // 🌟 Signed Math: Checks if the balance falls BELOW the minimum threshold
+          if (minEnabled && signedBalance < minBalance) {
+            breachType = isDebtAccount ? 'high' : 'low'; // High Debt for credit, Low Balance for checking
+            breachValue = minBalance;
           }
 
-          if (!breachType && maxEnabled) {
-            const maxTriggered = isDebtAccount
-              ? debtBalance < maxBalance
-              : signedBalance > maxBalance;
-
-            if (maxTriggered) {
-              breachType = isDebtAccount ? 'low' : 'high';
-              breachValue = isDebtAccount ? Math.abs(maxBalance) : maxBalance;
-            }
+          // 🌟 Signed Math: Checks if the balance rises ABOVE the maximum threshold
+          if (!breachType && maxEnabled && signedBalance > maxBalance) {
+            breachType = isDebtAccount ? 'low' : 'high'; // Low Debt for credit, High Balance for checking
+            breachValue = maxBalance;
           }
 
           if (breachType) {
             const isSplashVisible = !!document.getElementById('brand-splash');
-
-            // Only pop up the alert modal if this is the active account whose detail view was loaded and splash is gone
             if (acc.id === activeAccountId && currentViewState === 'transactions-detail' && !isSplashVisible) {
               if (!previousState.triggered) {
-                const isHigh = breachType === 'high';
-                const label = isDebtAccount ? 'debt' : 'balance';
-                const displayAmount = isDebtAccount ? debtBalance : signedBalance;
-                const directionText = isHigh ? 'above' : 'below';
+                const isBelow = signedBalance < minBalance;
+                const directionText = isBelow ? 'below' : 'above';
+
+                // Formats the currency beautifully with the negative sign placed cleanly inside the dollar symbol
+                const formatAlertVal = (val) => val < 0 ? `-$${Math.abs(val).toFixed(2)}` : `$${val.toFixed(2)}`;
+
+                const alertTitle = isDebtAccount
+                  ? (isBelow ? 'High Debt Alert' : 'Low Debt Alert')
+                  : (isBelow ? 'Low Balance Alert' : 'High Balance Alert');
 
                 openCustomConfirm({
-                  title: 'Balance Alert',
-                  message: `${acc.name} ${label} is $${displayAmount.toFixed(2)} — ${directionText} your alert threshold of $${breachValue.toFixed(2)}.`,
+                  title: alertTitle,
+                  message: `${acc.name} balance is ${formatAlertVal(signedBalance)} — ${directionText} your alert threshold of ${formatAlertVal(breachValue)}.`,
                   confirmLabel: 'OK',
                   onConfirm: () => { }
                 });
-
                 accountAlertState[acc.id] = { triggered: true, type: breachType };
-                saveAccountAlertState(); // Persist the acknowledgment securely across page refreshes
+                saveAccountAlertState();
               }
             }
           } else {
-            // Clear trigger history if the balance goes back inside safe boundaries
             if (previousState.triggered) {
               accountAlertState[acc.id] = { triggered: false, type: null };
               saveAccountAlertState();
@@ -2939,43 +2927,39 @@
           }, 0);
 
           const clearedBal = roundCurrency(initialBal + clearedTxSum);
-          const { minBalance, maxBalance, minEnabled, maxEnabled, signedBalance, debtBalance, isCreditAccount } = getAccountAlertConfig(acc, currentBal);
+          const { minBalance, maxBalance, minEnabled, maxEnabled, signedBalance, isCreditAccount } = getAccountAlertConfig(acc, currentBal);
 
-          // 🌟 Initialize both variables safely to prevent ReferenceErrors!
           let alertBadge = '';
           let mobileAlertBadge = '';
 
-          // Synchronize card badges with the dynamic alert formulas
-          if (minEnabled) {
-            const minTriggered = isCreditAccount
-              ? debtBalance > minBalance
-              : signedBalance < minBalance;
-            if (minTriggered) {
-              const label = isCreditAccount ? 'High Debt' : 'Low Balance';
-              const formattedAmount = (isCreditAccount ? Math.abs(minBalance) : minBalance).toFixed(2);
+          const formatAlertVal = (val) => val < 0 ? `-$${Math.abs(val).toFixed(2)}` : `$${val.toFixed(2)}`;
 
-              // Desktop version (hidden on mobile)
-              alertBadge = `<div class="mt-2 hidden lg:inline-flex items-center rounded-full border border-red-200 bg-red-100 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-red-700">${label}: $${formattedAmount}</div>`;
+          // 🌟 Check below-minimum threshold (Low Checking Balance OR High Card Debt)
+          if (minEnabled && signedBalance < minBalance) {
+            const label = isCreditAccount ? 'High Debt' : 'Low Balance';
+            const formattedAmount = formatAlertVal(minBalance);
 
-              // Mobile version (using block div and mt-2 for perfect spacing, hidden on desktop)
-              mobileAlertBadge = `<div class="mt-2 inline-flex lg:hidden items-center rounded-full border border-red-200 bg-red-100 px-1.5 py-0.5 text-[9px] font-extrabold uppercase tracking-wider text-red-700 shrink-0 select-none">${label}: $${formattedAmount}</div>`;
-            }
+            // High Debt and Low Balance are critical events (Red warnings)
+            const borderClass = 'border-red-200';
+            const bgClass = 'bg-red-100';
+            const textClass = 'text-red-700';
+
+            alertBadge = `<div class="mt-2 hidden lg:inline-flex items-center rounded-full border ${borderClass} ${bgClass} px-2 py-1 text-[10px] font-bold uppercase tracking-wider ${textClass}">${label}: ${formattedAmount}</div>`;
+            mobileAlertBadge = `<div class="mt-2 inline-flex lg:hidden items-center rounded-full border ${borderClass} ${bgClass} px-1.5 py-0.5 text-[9px] font-extrabold uppercase tracking-wider ${textClass} shrink-0 select-none">${label}: ${formattedAmount}</div>`;
           }
 
-          if (!alertBadge && maxEnabled) {
-            const maxTriggered = isCreditAccount
-              ? debtBalance < maxBalance
-              : signedBalance > maxBalance;
-            if (maxTriggered) {
-              const label = isCreditAccount ? 'Low Debt' : 'High Balance';
-              const formattedAmount = (isCreditAccount ? Math.abs(maxBalance) : maxBalance).toFixed(2);
+          // 🌟 Check above-maximum threshold (High Checking Balance OR Low Card Debt)
+          if (!alertBadge && maxEnabled && signedBalance > maxBalance) {
+            const label = isCreditAccount ? 'Low Debt' : 'High Balance';
+            const formattedAmount = formatAlertVal(maxBalance);
 
-              // Desktop version (hidden on mobile)
-              alertBadge = `<div class="mt-2 hidden lg:inline-flex items-center rounded-full border border-amber-200 bg-amber-100 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-amber-700">${label}: $${formattedAmount}</div>`;
+            // Low Debt and High Balance are informational events (Amber notifications)
+            const borderClass = 'border-amber-200';
+            const bgClass = 'bg-amber-100';
+            const textClass = 'text-amber-700';
 
-              // Mobile version (using block div and mt-2 for perfect spacing, hidden on desktop)
-              mobileAlertBadge = `<div class="mt-2 inline-flex lg:hidden items-center rounded-full border border-amber-200 bg-amber-100 px-1.5 py-0.5 text-[9px] font-extrabold uppercase tracking-wider text-amber-700 shrink-0 select-none">${label}: $${formattedAmount}</div>`;
-            }
+            alertBadge = `<div class="mt-2 hidden lg:inline-flex items-center rounded-full border ${borderClass} ${bgClass} px-2 py-1 text-[10px] font-bold uppercase tracking-wider ${textClass}">${label}: ${formattedAmount}</div>`;
+            mobileAlertBadge = `<div class="mt-2 inline-flex lg:hidden items-center rounded-full border ${borderClass} ${bgClass} px-1.5 py-0.5 text-[9px] font-extrabold uppercase tracking-wider ${textClass} shrink-0 select-none">${label}: ${formattedAmount}</div>`;
           }
 
           const numText = acc.account_number ? `${acc.account_number}` : '';
