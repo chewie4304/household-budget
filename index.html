@@ -563,24 +563,28 @@
                       </div>
                     </div> <!-- End of Row 1 -->
 
-                    <!-- Row 2: Load Portal and + Add Tx (Compact side-by-side text-xs action blocks) -->
-                    <div class="grid grid-cols-2 gap-2 h-9 shrink-0">
-                      <!-- Portal Trigger -->
-                      <div class="h-full">
-                        <a id="tx-acc-external-btn" href="#" target="_blank" rel="noopener noreferrer"
-                          class="hidden w-full h-full text-center inline-flex items-center justify-center gap-1 bg-white border border-slate-200 rounded-xl text-xs font-black text-slate-700 hover:bg-slate-50 transition shadow-sm">
-                          <span>🔗</span> Portal
-                        </a>
-                        <div id="tx-acc-external-placeholder"
-                          class="w-full h-full text-center flex items-center justify-center text-xs font-black text-slate-300 border border-dashed border-slate-200 rounded-xl select-none">
-                          No Portal
-                        </div>
+                    <!-- Row 2: Load Portal and + Add Tx (Framed exactly like the switcher tab on the homepage) -->
+                    <div
+                      class="w-full flex gap-2 rounded-2xl bg-slate-200 p-1 shadow-inner h-[42px] items-center shrink-0">
+
+                      <!-- Portal Trigger (Visible as an inactive tab when configured) -->
+                      <a id="tx-acc-external-btn" href="#" target="_blank" rel="noopener noreferrer"
+                        class="hidden flex-1 h-full text-center inline-flex items-center justify-center gap-1 bg-white text-slate-700 rounded-xl text-xs font-black shadow-sm hover:bg-slate-50 transition">
+                        <span>🔗</span> Portal
+                      </a>
+
+                      <!-- Portal Placeholder (Visible as a transparent, unselectable slot when unconfigured) -->
+                      <div id="tx-acc-external-placeholder"
+                        class="flex-1 h-full text-center flex items-center justify-center text-xs font-black text-slate-400 select-none bg-transparent">
+                        No Portal
                       </div>
-                      <!-- Quick Transaction Entry -->
+
+                      <!-- Quick Transaction Entry (Visible as the active blue tab) -->
                       <button onclick="openTxModal()"
-                        class="w-full h-full bg-blue-600 hover:bg-blue-700 text-white rounded-xl transition flex items-center justify-center gap-1 shadow-sm text-xs font-black">
+                        class="flex-1 h-full bg-blue-600 hover:bg-blue-700 text-white rounded-xl transition flex items-center justify-center gap-1 shadow-sm text-xs font-black">
                         <span class="text-xs leading-none">+</span> Add Tx
                       </button>
+
                     </div> <!-- End of Row 2 -->
 
                     <!-- Row 3: Account-Specific Search Transactions Input Field (Standardized height, shape, and typography) -->
@@ -669,9 +673,10 @@
           <div>
             <label class="text-xs font-semibold text-gray-600">Account Name</label>
             <div class="relative mt-1">
+              <!-- Upgraded to rounded-2xl to standardize input shapes -->
               <input type="text" id="accName" placeholder="e.g., Main Checking, Freedom Card" required
                 oninput="checkClearButtonVisibility('accName', 'clear-accName')"
-                class="w-full border pl-2 pr-8 py-2 rounded-lg font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-300" />
+                class="w-full border pl-3 pr-8 py-2 rounded-2xl font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-300" />
               <button type="button" id="clear-accName" onclick="clearAndFocusInput('accName', 'clear-accName')"
                 class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 w-5 h-5 items-center justify-center text-lg leading-none text-slate-400 hover:text-slate-600 transition-colors"
                 aria-label="Clear account name">&times;</button>
@@ -684,7 +689,7 @@
             <div class="relative mt-1">
               <input type="text" id="accInstitution" placeholder="e.g., Chase, Wells Fargo, Local CU"
                 oninput="checkClearButtonVisibility('accInstitution', 'clear-accInstitution')"
-                class="w-full border pl-2 pr-8 py-2 rounded-lg font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-300" />
+                class="w-full border pl-2 pr-8 py-2 rounded-2xl font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-300" />
               <button type="button" id="clear-accInstitution"
                 onclick="clearAndFocusInput('accInstitution', 'clear-accInstitution')"
                 class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 w-5 h-5 items-center justify-center text-lg leading-none text-slate-400 hover:text-slate-600 transition-colors"
@@ -698,7 +703,7 @@
             <div class="relative mt-1">
               <input type="text" id="accNumber" placeholder="e.g., 1234" inputmode="numeric" pattern="*"
                 oninput="checkClearButtonVisibility('accNumber', 'clear-accNumber')"
-                class="w-full border pl-2 pr-8 py-2 rounded-lg font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-300" />
+                class="w-full border pl-3 pr-8 py-2 rounded-2xl font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-300" />
               <button type="button" id="clear-accNumber" onclick="clearAndFocusInput('accNumber', 'clear-accNumber')"
                 class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 w-5 h-5 items-center justify-center text-lg leading-none text-slate-400 hover:text-slate-600 transition-colors"
                 aria-label="Clear account number">&times;</button>
@@ -710,7 +715,7 @@
             <div>
               <label class="text-xs font-semibold text-gray-600">Account Type</label>
               <select id="accType" onchange="toggleAccountDueDateField()"
-                class="w-full border p-2 rounded-lg mt-1 bg-white font-semibold text-gray-800">
+                class="w-full border p-2.5 rounded-2xl mt-1 bg-white font-semibold text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-300">
                 <option value="cash">Cash</option>
                 <option value="checking">Checking</option>
                 <option value="credit">Credit Card</option>
@@ -727,7 +732,7 @@
                   oninput="restrictToMathInput(this); checkClearButtonVisibility('accBalance', 'clear-accBalance')"
                   onfocus="this.classList.remove('border-red-500', 'focus:ring-red-200')"
                   onblur="handleMathEvaluation(this)"
-                  class="w-full border pl-2 pr-8 py-2 rounded-lg font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-300" />
+                  class="w-full border pl-2 pr-8 py-2 rounded-2xl font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-300" />
                 <button type="button" id="clear-accBalance"
                   onclick="clearAndFocusInput('accBalance', 'clear-accBalance')"
                   class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 w-5 h-5 items-center justify-center text-lg leading-none text-slate-400 hover:text-slate-600 transition-colors"
@@ -742,7 +747,7 @@
             <div class="relative mt-1">
               <input type="text" id="accDueDate" readonly placeholder="Select Day of Month (1-31)"
                 onclick="openDueDateCalendarModal()"
-                class="w-full border p-2 rounded-lg mt-1 bg-white cursor-pointer font-medium text-gray-800" />
+                class="w-full border p-2 rounded-2xl mt-1 bg-white cursor-pointer font-medium text-gray-800" />
               <button type="button" onclick="openDueDateCalendarModal()"
                 class="absolute right-3 top-[17px] text-gray-400 hover:text-gray-600">
                 📅
@@ -758,7 +763,7 @@
                 oninput="restrictToMathInput(this); checkClearButtonVisibility('accCreditLimit', 'clear-accCreditLimit')"
                 onfocus="this.classList.remove('border-red-500', 'focus:ring-red-200')"
                 onblur="handleMathEvaluation(this)"
-                class="w-full border pl-2 pr-8 py-2 rounded-lg font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-300" />
+                class="w-full border pl-2 pr-8 py-2 rounded-2xl font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-300" />
               <button type="button" id="clear-accCreditLimit"
                 onclick="clearAndFocusInput('accCreditLimit', 'clear-accCreditLimit')"
                 class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 w-5 h-5 items-center justify-center text-lg leading-none text-slate-400 hover:text-slate-600 transition-colors"
@@ -779,7 +784,7 @@
                   oninput="restrictToMathInput(this); checkClearButtonVisibility('accMinBalance', 'clear-accMinBalance')"
                   onfocus="this.classList.remove('border-red-500', 'focus:ring-red-200')"
                   onblur="handleMathEvaluation(this)"
-                  class="w-full border pl-2 pr-8 py-2 rounded-lg font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-300" />
+                  class="w-full border pl-2 pr-8 py-2 rounded-2xl font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-300" />
                 <button type="button" id="clear-accMinBalance"
                   onclick="clearAndFocusInput('accMinBalance', 'clear-accMinBalance')"
                   class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 w-5 h-5 items-center justify-center text-lg leading-none text-slate-400 hover:text-slate-600 transition-colors"
@@ -801,7 +806,7 @@
                   oninput="restrictToMathInput(this); checkClearButtonVisibility('accMaxBalance', 'clear-accMaxBalance')"
                   onfocus="this.classList.remove('border-red-500', 'focus:ring-red-200')"
                   onblur="handleMathEvaluation(this)"
-                  class="w-full border pl-2 pr-8 py-2 rounded-lg font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-300" />
+                  class="w-full border pl-2 pr-8 py-2 rounded-2xl font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-300" />
                 <button type="button" id="clear-accMaxBalance"
                   onclick="clearAndFocusInput('accMaxBalance', 'clear-accMaxBalance')"
                   class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 w-5 h-5 items-center justify-center text-lg leading-none text-slate-400 hover:text-slate-600 transition-colors"
