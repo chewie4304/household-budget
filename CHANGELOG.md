@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## [unreleased]
 
+## [1.6.6] - 2026-09-04
+
 ### Added
 - **Interactive Logo Home Link:** Configured an interactive onclick="showAccountsView()" event handler on the top-left sticky application header logo, providing a fast, tactile shortcut back to the primary dashboard.
 - **Header Dropdown Home Choice:** Added a prominent, main-level navigation action labeled Home inside the floating menu dropdown, positioned directly above "+ Add Transaction" for maximum visibility.
