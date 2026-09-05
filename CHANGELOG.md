@@ -39,6 +39,7 @@ All notable changes to this project will be documented in this file.
 - **Aligned Mobile Filter Transitions:** Refactored the homepage right-column feed container to utilize responsive gap constraints of 12px on mobile screens and 16px on desktop screens. This perfectly matches the ledger feed vertical space-y-3 spacing structure, eliminating the 4px vertical shift when navigating between the homepage and individual account details views.
 - **Ledger Header Syntax Error:** Resolved a duplicate heading check inside renderTransactions() that caused an unexpected end of input syntax error crash on load.
 - **Ledger Controls Duplication Leak:** Fixed a layout nesting error where the homepage controls card container had duplicated itself inside individual account details feeds. Replaced the duplicated container with the correct balances-card opening structure to restore independent ledger actions and search fields.
+- **Locked Cockpit Vertical Parity:** Synchronized the vertical height footprint of Row 1 inside the ledger balances card to match the homepage switcher title block. This ensures flex-wrap whitespace distribution is identical across both layouts, completely eliminating the remaining 4px shifting of buttons and search inputs when toggling panels.
 
 ## [1.6.5] - 2026-09-03
 
