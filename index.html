@@ -539,180 +539,118 @@
                   </div> <!-- End of summary-cards-slider -->
                 </div> <!-- End of ledger-account-summary-wrapper -->
 
-                <!-- Home Controls Container: Standardized to exactly match Balances & Quick Action Card layout structure -->
-                <div id="home-controls-container"
-                  class="rounded-3xl border border-slate-200 bg-gradient-to-br from-slate-50 via-white to-blue-50 shadow-sm p-5 flex flex-col justify-between shrink-0 lg:!mt-0"
+                <!-- Balances & Quick Action Card (Symmetrically re-shuffled into a three-row financial cockpit) -->
+                <div id="balances-card"
+                  class="bg-gradient-to-br from-slate-50 via-white to-blue-50 rounded-3xl border border-slate-200 shadow-sm p-5 flex flex-col justify-between shrink-0 lg:!mt-0"
                   style="height: 188px;">
 
                   <div class="flex flex-col h-full justify-between gap-2.5">
 
-                    <!-- Row 1: Title & New Account Button -->
-                    <div id="home-view-title-wrap" class="flex items-center justify-between gap-3 shrink-0"
-                      style="min-height: 38px;">
-                      <h2 id="home-view-title" class="text-2xl font-black tracking-tight text-slate-800">Your Accounts
-                      </h2>
-                      <button id="new-account-button" onclick="openAccountModal()"
-                        class="inline-flex shrink-0 items-center gap-1 rounded-xl border border-slate-200 bg-white px-2.5 py-2 text-xs font-bold text-slate-600 shadow-sm transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700 sm:px-3 sm:text-sm">
-                        <span class="text-base leading-none text-blue-600" aria-hidden="true">+</span>
-                        <span>New account</span>
-                      </button>
-
-                      <!-- 🌟 Added Add Transaction button to replace New Account button in Transactions View -->
-                      <button id="home-add-transaction-button" onclick="openTxModal()"
-                        class="hidden inline-flex shrink-0 items-center gap-1 rounded-xl border border-slate-200 bg-white px-2.5 py-2 text-xs font-bold text-slate-600 shadow-sm transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700 sm:px-3 sm:text-sm">
-                        <span class="text-base leading-none text-blue-600" aria-hidden="true">+</span>
-                        <span>Add Transaction</span>
-                      </button>
+                    <!-- Row 1: Current Balance (Left) and Cleared Balance (Right) -->
+                    <div class="grid grid-cols-2 gap-3 shrink-0">
+                      <!-- Current Balance Info -->
+                      <div class="flex flex-col">
+                        <div id="tx-acc-balance" class="text-xl font-black tracking-tight text-slate-900 leading-none">
+                          $0.00</div>
+                        <div class="text-[10px] font-black uppercase tracking-wider text-slate-400 leading-none mt-1">
+                          Current Balance</div>
+                      </div>
+                      <!-- Cleared Balance Info with Pencil Trigger -->
+                      <div class="flex flex-col text-right">
+                        <div class="flex items-center justify-end gap-1 leading-none">
+                          <div id="tx-acc-cleared"
+                            class="text-xl font-black tracking-tight text-emerald-600 leading-none">
+                            $0.00</div>
+                          <button type="button" onclick="openClearedBalanceModal()" title="Edit cleared balance"
+                            class="text-emerald-600 hover:text-emerald-800 text-xs leading-none">✎</button>
+                        </div>
+                        <div class="text-[10px] font-black uppercase tracking-wider text-emerald-700 leading-none mt-1">
+                          Cleared Balance</div>
+                      </div>
                     </div> <!-- End of Row 1 -->
 
-                    <!-- Row 2: Accounts/Transactions View Switcher Toggle -->
-                    <div id="home-tabs-switcher"
-                      class="w-full flex gap-2 rounded-2xl bg-slate-200 p-1 shadow-inner items-center shrink-0"
+                    <!-- Row 2: Load Portal and + Add Tx (Framed exactly like the switcher tab on the homepage with zero brackets) -->
+                    <div class="w-full flex gap-2 rounded-2xl bg-slate-200 p-1 shadow-inner items-center shrink-0"
                       style="height: 42px;">
-                      <button id="home-accounts-tab" onclick="showHomeAccounts()"
-                        class="flex-1 bg-blue-600 text-white px-3 py-1.5 rounded-xl text-sm font-semibold shadow-sm h-full transition-all">
-                        Accounts
+                      <!-- Portal Trigger (Visible as an inactive tab when configured) -->
+                      <a id="tx-acc-external-btn" href="#" target="_blank" rel="noopener noreferrer"
+                        class="hidden flex-1 h-full text-center inline-flex items-center justify-center gap-1 bg-white text-slate-700 rounded-xl text-xs font-black shadow-sm hover:bg-slate-50 transition">
+                        <span>🔗</span> Portal
+                      </a>
+
+                      <!-- Portal Placeholder (Visible as a transparent, unselectable slot when unconfigured) -->
+                      <div id="tx-acc-external-placeholder"
+                        class="flex-1 h-full text-center flex items-center justify-center text-xs font-black text-slate-400 select-none bg-transparent">
+                        No Portal
+                      </div>
+
+                      <!-- Quick Transaction Entry (Visible as the active blue tab) -->
+                      <button onclick="openTxModal()"
+                        class="flex-1 h-full bg-blue-600 hover:bg-blue-700 text-white rounded-xl transition flex items-center justify-center gap-1 shadow-sm text-xs font-black">
+                        <span class="text-xs leading-none">+</span> Add Tx
                       </button>
-                      <button id="home-transactions-tab" onclick="showAllTransactions()"
-                        class="flex-1 bg-transparent text-slate-700 px-3 py-1.5 rounded-xl text-sm font-semibold h-full transition-all">
-                        Transactions
-                      </button>
+
                     </div> <!-- End of Row 2 -->
 
-                    <!-- Row 3: Active Search Field (Matches Row 3 of balances-card exactly) -->
-                    <div class="relative w-full shrink-0" style="height: 42px;">
-                      <!-- Search Accounts Input Field -->
-                      <div id="account-search-wrap" class="w-full h-full relative">
-                        <input id="account-search" type="text"
-                          oninput="renderAccounts(); checkClearButtonVisibility('account-search', 'clear-account-search')"
-                          placeholder="Search accounts..."
-                          class="w-full border border-slate-200 bg-white pl-9 pr-10 py-2 rounded-2xl text-sm font-semibold text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-200 shadow-sm h-full" />
-                        <span
-                          class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm select-none">🔎</span>
-                        <button type="button" id="clear-account-search"
-                          onclick="clearAndFocusInput('account-search', 'clear-account-search', () => renderAccounts())"
-                          class="hidden absolute right-3.5 top-1/2 -translate-y-1/2 w-5 h-5 items-center justify-center text-lg leading-none text-slate-400 hover:text-slate-600 transition-colors">&times;</button>
-                      </div>
-
-                      <!-- Search Transactions Input Field (Hidden by default on Accounts tab) -->
-                      <div id="transaction-search-wrap" class="w-full h-full relative hidden">
-                        <input id="transaction-search" type="text"
-                          oninput="renderAllTransactions(); checkClearButtonVisibility('transaction-search', 'clear-transaction-search')"
-                          placeholder="Search transactions..."
-                          class="w-full border border-slate-200 bg-white pl-9 pr-10 py-2 rounded-2xl text-sm font-semibold text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-200 shadow-sm h-full" />
-                        <span
-                          class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm select-none">🔎</span>
-                        <button type="button" id="clear-transaction-search"
-                          onclick="clearAndFocusInput('transaction-search', 'clear-transaction-search', () => renderAllTransactions())"
-                          class="hidden absolute right-3.5 top-1/2 -translate-y-1/2 w-5 h-5 items-center justify-center text-lg leading-none text-slate-400 hover:text-slate-600 transition-colors">&times;</button>
-                      </div>
+                    <!-- Row 3: Account-Specific Search Transactions Input Field (Standardized height, shape, and typography) -->
+                    <div class="relative w-full h-[42px] shrink-0">
+                      <input id="ledger-search" type="text"
+                        oninput="renderTransactions(); checkClearButtonVisibility('ledger-search', 'clear-ledger-search')"
+                        placeholder="Search transactions..."
+                        class="w-full border border-slate-200 bg-white pl-9 pr-10 py-2 rounded-2xl text-sm font-semibold text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-200 shadow-sm h-full" />
+                      <span
+                        class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm select-none">🔎</span>
+                      <button type="button" id="clear-ledger-search"
+                        onclick="clearAndFocusInput('ledger-search', 'clear-ledger-search', () => renderTransactions())"
+                        class="hidden absolute right-3.5 top-1/2 -translate-y-1/2 w-5 h-5 items-center justify-center text-lg leading-none text-slate-400 hover:text-slate-600 transition-colors">&times;</button>
                     </div> <!-- End of Row 3 -->
-
                   </div> <!-- End of inner flex column -->
-                </div> <!-- End of Home Controls Container -->
+                </div> <!-- End of Balances & Quick Action Card -->
 
-                <!-- Row 1: Current Balance (Left) and Cleared Balance (Right) -->
-                <div class="grid grid-cols-2 gap-3 shrink-0">
-                  <!-- Current Balance Info -->
-                  <div class="flex flex-col">
-                    <div id="tx-acc-balance" class="text-xl font-black tracking-tight text-slate-900 leading-none">
-                      $0.00</div>
-                    <div class="text-[10px] font-black uppercase tracking-wider text-slate-400 leading-none mt-1">
-                      Current Balance</div>
-                  </div>
-                  <!-- Cleared Balance Info with Pencil Trigger -->
-                  <div class="flex flex-col text-right">
-                    <div class="flex items-center justify-end gap-1 leading-none">
-                      <div id="tx-acc-cleared" class="text-xl font-black tracking-tight text-emerald-600 leading-none">
-                        $0.00</div>
-                      <button type="button" onclick="openClearedBalanceModal()" title="Edit cleared balance"
-                        class="text-emerald-600 hover:text-emerald-800 text-xs leading-none">✎</button>
+                <!-- Account-specific tag filter container -->
+                <div id="tag-filter-container"
+                  class="hidden bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm space-y-2">
+                  <div class="flex items-center justify-between flex-wrap gap-2">
+                    <div class="flex items-center gap-2.5">
+                      <span class="text-xs font-bold text-gray-500 uppercase tracking-wider">Filter by Labels</span>
+                      <label
+                        class="inline-flex items-center gap-1 text-xs font-bold text-slate-500 cursor-pointer select-none">
+                        <input type="checkbox" id="tag-filter-match-all" onchange="toggleTagFilterMatchMode()"
+                          class="h-3.5 w-3.5 rounded border-slate-300 text-blue-600 focus:ring-blue-500" />
+                        <span>Match All (AND)</span>
+                      </label>
                     </div>
-                    <div class="text-[10px] font-black uppercase tracking-wider text-emerald-700 leading-none mt-1">
-                      Cleared Balance</div>
-                  </div>
-                </div> <!-- End of Row 1 -->
-
-                <!-- Row 2: Load Portal and + Add Tx (Framed exactly like the switcher tab on the homepage with zero brackets) -->
-                <div class="w-full flex gap-2 rounded-2xl bg-slate-200 p-1 shadow-inner items-center shrink-0"
-                  style="height: 42px;">
-                  <!-- Portal Trigger (Visible as an inactive tab when configured) -->
-                  <a id="tx-acc-external-btn" href="#" target="_blank" rel="noopener noreferrer"
-                    class="hidden flex-1 h-full text-center inline-flex items-center justify-center gap-1 bg-white text-slate-700 rounded-xl text-xs font-black shadow-sm hover:bg-slate-50 transition">
-                    <span>🔗</span> Portal
-                  </a>
-
-                  <!-- Portal Placeholder (Visible as a transparent, unselectable slot when unconfigured) -->
-                  <div id="tx-acc-external-placeholder"
-                    class="flex-1 h-full text-center flex items-center justify-center text-xs font-black text-slate-400 select-none bg-transparent">
-                    No Portal
+                    <button type="button" onclick="openLabelPicker('filter')"
+                      class="text-xs font-bold text-blue-600 hover:text-blue-700 transition">🏷️ Select</button>
                   </div>
 
-                  <!-- Quick Transaction Entry (Visible as the active blue tab) -->
-                  <button onclick="openTxModal()"
-                    class="flex-1 h-full bg-blue-600 hover:bg-blue-700 text-white rounded-xl transition flex items-center justify-center gap-1 shadow-sm text-xs font-black">
-                    <span class="text-xs leading-none">+</span> Add Tx
-                  </button>
+                  <div class="relative">
+                    <!-- Parent wrapper up-rounded to rounded-2xl to match cockpit design styles -->
+                    <div onclick="document.getElementById('tag-filter-search-input').focus()"
+                      class="flex flex-wrap items-center gap-1 min-h-9 p-1.5 rounded-2xl border border-slate-200 bg-white cursor-text">
+                      <div id="tag-filter-preview" class="contents"></div>
+                      <input type="text" id="tag-filter-search-input" placeholder="Type to filter..."
+                        class="flex-1 min-w-2 text-xs font-semibold bg-transparent border-0 p-0 focus:ring-0 focus:outline-none text-slate-800"
+                        oninput="handleTagFilterSearchTyping(this.value)"
+                        onkeydown="handleTagFilterSearchKeydown(event)" />
+                    </div>
+                    <!-- Container dropdown up-rounded to rounded-2xl -->
+                    <div id="tag-filter-autocomplete-dropdown"
+                      class="hidden absolute left-0 right-0 mt-1 max-h-40 overflow-y-auto bg-white border border-slate-200 rounded-2xl shadow-lg z-50">
+                    </div>
+                  </div> <!-- End of tag filter autocomplete dropdown container -->
+                </div> <!-- End of tag filter section -->
 
-                </div> <!-- End of Row 2 -->
-
-                <!-- Row 3: Account-Specific Search Transactions Input Field (Standardized height, shape, and typography) -->
-                <div class="relative w-full h-[42px] shrink-0">
-                  <input id="ledger-search" type="text"
-                    oninput="renderTransactions(); checkClearButtonVisibility('ledger-search', 'clear-ledger-search')"
-                    placeholder="Search transactions..."
-                    class="w-full border border-slate-200 bg-white pl-9 pr-10 py-2 rounded-2xl text-sm font-semibold text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-200 shadow-sm h-full" />
-                  <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm select-none">🔎</span>
-                  <button type="button" id="clear-ledger-search"
-                    onclick="clearAndFocusInput('ledger-search', 'clear-ledger-search', () => renderTransactions())"
-                    class="hidden absolute right-3.5 top-1/2 -translate-y-1/2 w-5 h-5 items-center justify-center text-lg leading-none text-slate-400 hover:text-slate-600 transition-colors">&times;</button>
-                </div> <!-- End of Row 3 -->
-              </div> <!-- End of inner flex column -->
-            </div> <!-- End of Balances & Quick Action Card -->
-
-            <!-- Account-specific tag filter container -->
-            <div id="tag-filter-container"
-              class="hidden bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm space-y-2">
-              <div class="flex items-center justify-between flex-wrap gap-2">
-                <div class="flex items-center gap-2.5">
-                  <span class="text-xs font-bold text-gray-500 uppercase tracking-wider">Filter by Labels</span>
-                  <label
-                    class="inline-flex items-center gap-1 text-xs font-bold text-slate-500 cursor-pointer select-none">
-                    <input type="checkbox" id="tag-filter-match-all" onchange="toggleTagFilterMatchMode()"
-                      class="h-3.5 w-3.5 rounded border-slate-300 text-blue-600 focus:ring-blue-500" />
-                    <span>Match All (AND)</span>
-                  </label>
-                </div>
-                <button type="button" onclick="openLabelPicker('filter')"
-                  class="text-xs font-bold text-blue-600 hover:text-blue-700 transition">🏷️ Select</button>
-              </div>
-
-              <div class="relative">
-                <!-- Parent wrapper up-rounded to rounded-2xl to match cockpit design styles -->
-                <div onclick="document.getElementById('tag-filter-search-input').focus()"
-                  class="flex flex-wrap items-center gap-1 min-h-9 p-1.5 rounded-2xl border border-slate-200 bg-white cursor-text">
-                  <div id="tag-filter-preview" class="contents"></div>
-                  <input type="text" id="tag-filter-search-input" placeholder="Type to filter..."
-                    class="flex-1 min-w-2 text-xs font-semibold bg-transparent border-0 p-0 focus:ring-0 focus:outline-none text-slate-800"
-                    oninput="handleTagFilterSearchTyping(this.value)" onkeydown="handleTagFilterSearchKeydown(event)" />
-                </div>
-                <!-- Container dropdown up-rounded to rounded-2xl -->
-                <div id="tag-filter-autocomplete-dropdown"
-                  class="hidden absolute left-0 right-0 mt-1 max-h-40 overflow-y-auto bg-white border border-slate-200 rounded-2xl shadow-lg z-50">
-                </div>
-              </div> <!-- End of tag filter autocomplete dropdown container -->
-            </div> <!-- End of tag filter section -->
-
-            <div class="space-y-1">
-              <h3 id="feed-heading-title" class="text-sm font-extrabold text-slate-800">Ledger</h3>
-              <div id="transactions-list" class="space-y-3">
-                <p class="text-sm text-gray-500">Loading transactions...</p>
-              </div> <!-- End of transactions list -->
-            </div> <!-- End of Ledger space-y-1 container -->
-          </div> <!-- End of tx-view-content (New Swiping Wrapper) -->
-      </div> <!-- End of transactions-view (New Swiping Wrapper) -->
-      </div> <!-- End of ledger-feed-panel -->
-      <!-- Rest of original outer closing tags -->
+                <div class="space-y-1">
+                  <h3 id="feed-heading-title" class="text-sm font-extrabold text-slate-800">Ledger</h3>
+                  <div id="transactions-list" class="space-y-3">
+                    <p class="text-sm text-gray-500">Loading transactions...</p>
+                  </div> <!-- End of transactions list -->
+                </div> <!-- End of Ledger space-y-1 container -->
+              </div> <!-- End of tx-view-content (New Swiping Wrapper) -->
+            </div> <!-- End of transactions-view (New Swiping Wrapper) -->
+          </div> <!-- End of ledger-feed-panel -->
+          <!-- Rest of original outer closing tags -->
       </div> <!-- End of main content container -->
       </div> <!-- End of secondary content container -->
       </div> <!-- End of page content container -->
