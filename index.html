@@ -51,6 +51,12 @@
       opacity: 1 !important;
     }
 
+    /* Prevent mobile browsers from automatically inflating text sizes */
+    body {
+      -webkit-text-size-adjust: 100%;
+      text-size-adjust: 100%;
+    }
+
     input:not([type="hidden"]):not([type="file"]),
     select,
     textarea {
