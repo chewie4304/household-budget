@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [unreleased]
 
+### Added
+- (v1.6.7-dev) Started development cycle for targeted UI polish & contrast improvements.
+
+### Changed
+- **Consolidated Expense Natures:** Merged the legacy "Must" category into "Need" for a streamlined, three-tiered budget taxonomy (Need, Want, N/A).
+
 ## [1.6.6] - 2026-09-04
 
 ### Added
