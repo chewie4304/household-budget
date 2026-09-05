@@ -120,18 +120,27 @@
           <p id="header-main-title" class="truncate text-xl font-extrabold tracking-tight text-slate-900">Home Wealth
           </p>
           <div style="
-  width: 100px;
-  height: 100px;
-  background: yellow;
-  color: black;
-  font-size: 20px;
-  font-family: monospace;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 99999;
+  background: black;
+  color: white;
+  padding: 8px;
+  font-size: 14px;
 ">
-  100px
+  <span id="debug-info">checking...</span>
 </div>
+
+<script>
+  setTimeout(() => {
+    document.getElementById('debug-info').textContent =
+      'ROOT: ' +
+      getComputedStyle(document.documentElement).fontSize +
+      ' | BODY: ' +
+      getComputedStyle(document.body).fontSize;
+  }, 500);
+</script>
           <!-- Subtitle -->
           <p id="header-sub-title" class="truncate text-xs font-bold uppercase tracking-[0.2em] text-slate-400">Your
             Money. Your Way.</p>
