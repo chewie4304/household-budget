@@ -4037,7 +4037,7 @@
             <div class="flex justify-between items-start gap-3">
               <div class="min-w-0 flex-1 pr-2">
                 <div class="flex items-center gap-2">
-                  <p class="font-bold text-slate-900 text-base">${displayTitle}</p>
+                  <p class="font-bold text-slate-900 text-lg">${displayTitle}</p>
                 </div>
                 ${receiptBtn}
                 ${subTitle ? `<p class="text-xs text-gray-500 font-medium mt-0.5">${subTitle}</p>` : ''}
@@ -4047,7 +4047,7 @@
                 ${renderSplitDetails(tx)}
               </div>
               <div class="flex shrink-0 self-stretch flex-col items-end justify-between gap-2">
-                <span class="text-lg font-extrabold ${isPositive ? 'text-emerald-600' : 'text-slate-900'}">
+                <span class="text-xl font-black ${isPositive ? 'text-emerald-600' : 'text-slate-900'}">
                   ${isPositive ? '+' : ''}$${amt.toFixed(2)}
                 </span>
                 <div class="flex flex-col items-end gap-1">

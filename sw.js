@@ -1,4 +1,4 @@
-const CACHE_NAME = 'home-wealth-v1.6.6-evict2';
+const CACHE_NAME = 'home-wealth-v1.6.6-evict4';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
