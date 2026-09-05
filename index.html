@@ -254,10 +254,10 @@
                     This Month</p>
                 </div>
 
-                <!-- Right on Mobile / Far Right on Desktop: Dropdown Selector -->
+                <!-- Right on Mobile / Far Right on Desktop: Dropdown Selector (Standardized to rounded-2xl) -->
                 <div class="flex items-center gap-2 shrink-0 lg:mb-1">
                   <select id="summary-month-select" onchange="setSelectedSummaryMonth(this.value)"
-                    class="rounded-xl border border-slate-200 bg-white px-2 py-1 pr-8 text-xs font-semibold text-slate-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-300">
+                    class="rounded-2xl border border-slate-200 bg-white px-2.5 py-1 pr-8 text-xs font-semibold text-slate-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-300">
                   </select>
                 </div>
               </div> <!-- End of Summary Header -->
@@ -362,26 +362,28 @@
                 </button>
               </div>
 
-              <!-- Search Accounts Input Field -->
+              <!-- Search Accounts Input Field (Standardized to rounded-2xl with absolute magnifying glass) -->
               <div id="account-search-wrap" class="flex-1 w-full relative shrink-0">
                 <input id="account-search" type="text"
                   oninput="renderAccounts(); checkClearButtonVisibility('account-search', 'clear-account-search')"
                   placeholder="Search accounts..."
-                  class="w-full border border-slate-200 bg-white pl-3 pr-10 py-2 rounded-xl text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-200 shadow-sm h-[42px]" />
+                  class="w-full border border-slate-200 bg-white pl-9 pr-10 py-2 rounded-2xl text-sm font-semibold text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-200 shadow-sm h-[42px]" />
+                <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm select-none">🔎</span>
                 <button type="button" id="clear-account-search"
                   onclick="clearAndFocusInput('account-search', 'clear-account-search', () => renderAccounts())"
-                  class="hidden absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 items-center justify-center text-lg leading-none text-slate-400 hover:text-slate-600 transition-colors">&times;</button>
+                  class="hidden absolute right-3.5 top-1/2 -translate-y-1/2 w-5 h-5 items-center justify-center text-lg leading-none text-slate-400 hover:text-slate-600 transition-colors">&times;</button>
               </div>
 
-              <!-- Search Transactions Input Field (Hidden by default on Accounts tab) -->
+              <!-- Search Transactions Input Field (Standardized to rounded-2xl with absolute magnifying glass) -->
               <div id="transaction-search-wrap" class="flex-1 w-full relative shrink-0 hidden">
                 <input id="transaction-search" type="text"
                   oninput="renderAllTransactions(); checkClearButtonVisibility('transaction-search', 'clear-transaction-search')"
                   placeholder="Search transactions..."
-                  class="w-full border border-slate-200 bg-white pl-3 pr-10 py-2 rounded-xl text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-200 shadow-sm h-[42px]" />
+                  class="w-full border border-slate-200 bg-white pl-9 pr-10 py-2 rounded-2xl text-sm font-semibold text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-200 shadow-sm h-[42px]" />
+                <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm select-none">🔎</span>
                 <button type="button" id="clear-transaction-search"
                   onclick="clearAndFocusInput('transaction-search', 'clear-transaction-search', () => renderAllTransactions())"
-                  class="hidden absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 items-center justify-center text-lg leading-none text-slate-400 hover:text-slate-600 transition-colors">&times;</button>
+                  class="hidden absolute right-3.5 top-1/2 -translate-y-1/2 w-5 h-5 items-center justify-center text-lg leading-none text-slate-400 hover:text-slate-600 transition-colors">&times;</button>
               </div>
             </div> <!-- End of search input fields wrapper -->
           </div>
@@ -398,8 +400,9 @@
                 </div>
               </div>
               <div class="relative">
+                <!-- Standardized selector to rounded-2xl -->
                 <select id="account-type-select" onchange="setAccountTypeFilter(this.value)"
-                  class="w-full border border-slate-200 bg-white px-2.5 py-1 rounded-xl text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-100 shadow-sm h-[36px] appearance-none cursor-pointer pr-8">
+                  class="w-full border border-slate-200 bg-white px-2.5 py-1 rounded-2xl text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-100 shadow-sm h-[36px] appearance-none cursor-pointer pr-8">
                 </select>
                 <!-- Customized Dropdown Chevron Arrow scaled for h-[36px] -->
                 <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-slate-400">
@@ -431,16 +434,18 @@
                   class="text-xs font-bold text-blue-600 hover:text-blue-700 transition">🏷️ Select</button>
               </div>
               <div class="relative">
+                <!-- Parent wrapper up-rounded to rounded-2xl to match cockpit design styles -->
                 <div onclick="document.getElementById('global-tag-filter-search-input').focus()"
-                  class="flex flex-wrap items-center gap-1 min-h-9 p-1.5 rounded-xl border border-slate-200 bg-white cursor-text">
+                  class="flex flex-wrap items-center gap-1 min-h-9 p-1.5 rounded-2xl border border-slate-200 bg-white cursor-text">
                   <div id="global-tag-filter-preview" class="contents"></div>
                   <input type="text" id="global-tag-filter-search-input" placeholder="Type to filter..."
                     class="flex-1 min-w-2 text-xs font-semibold bg-transparent border-0 p-0 focus:ring-0 focus:outline-none text-slate-800"
                     oninput="handleGlobalTagFilterSearchTyping(this.value)"
                     onkeydown="handleGlobalTagFilterSearchKeydown(event)" />
                 </div>
+                <!-- Container dropdown up-rounded to rounded-2xl -->
                 <div id="global-tag-filter-autocomplete-dropdown"
-                  class="hidden absolute left-0 right-0 mt-1 max-h-40 overflow-y-auto bg-white border border-slate-200 rounded-xl shadow-lg z-50">
+                  class="hidden absolute left-0 right-0 mt-1 max-h-40 overflow-y-auto bg-white border border-slate-200 rounded-2xl shadow-lg z-50">
                 </div>
               </div> <!-- End of global tag filter autocomplete dropdown wrapper -->
             </div> <!-- End of global tag filter wrapper -->
@@ -479,10 +484,10 @@
                             <p id="account-summary-month-label"
                               class="text-lg font-black text-slate-800 leading-none mt-1 truncate">This Month</p>
                           </div>
+                          <!-- Dropdown Selector (Standardized to rounded-2xl) -->
                           <div class="flex items-center gap-2 shrink-0 lg:order-last lg:mb-1">
-                            <!-- 🌟 Routed onchange event to call the independent setSelectedAccountMonth instead -->
                             <select id="account-summary-month-select" onchange="setSelectedAccountMonth(this.value)"
-                              class="rounded-xl border border-slate-200 bg-white px-2 py-1 pr-8 text-xs font-semibold text-slate-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-300">
+                              class="rounded-2xl border border-slate-200 bg-white px-2.5 py-1 pr-8 text-xs font-semibold text-slate-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-300">
                             </select>
                           </div>
                         </div>
@@ -578,16 +583,17 @@
                       </button>
                     </div> <!-- End of Row 2 -->
 
-                    <!-- Row 3: Account-Specific Search Transactions Input Field -->
-                    <div class="relative w-full h-9 shrink-0">
+                    <!-- Row 3: Account-Specific Search Transactions Input Field (Standardized height, shape, and typography) -->
+                    <div class="relative w-full h-[42px] shrink-0">
                       <input id="ledger-search" type="text"
                         oninput="renderTransactions(); checkClearButtonVisibility('ledger-search', 'clear-ledger-search')"
                         placeholder="Search transactions..."
-                        class="w-full border border-slate-200 bg-white pl-8 pr-10 py-1.5 rounded-xl text-xs font-semibold text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-200 shadow-sm h-full" />
-                      <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs">🔎</span>
+                        class="w-full border border-slate-200 bg-white pl-9 pr-10 py-2 rounded-2xl text-sm font-semibold text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-200 shadow-sm h-full" />
+                      <span
+                        class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm select-none">🔎</span>
                       <button type="button" id="clear-ledger-search"
                         onclick="clearAndFocusInput('ledger-search', 'clear-ledger-search', () => renderTransactions())"
-                        class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 w-5 h-5 items-center justify-center text-lg leading-none text-slate-400 hover:text-slate-600 transition-colors">&times;</button>
+                        class="hidden absolute right-3.5 top-1/2 -translate-y-1/2 w-5 h-5 items-center justify-center text-lg leading-none text-slate-400 hover:text-slate-600 transition-colors">&times;</button>
                     </div> <!-- End of Row 3 -->
                   </div> <!-- End of inner flex column -->
                 </div> <!-- End of Balances & Quick Action Card -->
@@ -610,16 +616,18 @@
                   </div>
 
                   <div class="relative">
+                    <!-- Parent wrapper up-rounded to rounded-2xl to match cockpit design styles -->
                     <div onclick="document.getElementById('tag-filter-search-input').focus()"
-                      class="flex flex-wrap items-center gap-1 min-h-9 p-1.5 rounded-xl border border-slate-200 bg-white cursor-text">
+                      class="flex flex-wrap items-center gap-1 min-h-9 p-1.5 rounded-2xl border border-slate-200 bg-white cursor-text">
                       <div id="tag-filter-preview" class="contents"></div>
                       <input type="text" id="tag-filter-search-input" placeholder="Type to filter..."
                         class="flex-1 min-w-2 text-xs font-semibold bg-transparent border-0 p-0 focus:ring-0 focus:outline-none text-slate-800"
                         oninput="handleTagFilterSearchTyping(this.value)"
                         onkeydown="handleTagFilterSearchKeydown(event)" />
                     </div>
+                    <!-- Container dropdown up-rounded to rounded-2xl -->
                     <div id="tag-filter-autocomplete-dropdown"
-                      class="hidden absolute left-0 right-0 mt-1 max-h-40 overflow-y-auto bg-white border border-slate-200 rounded-xl shadow-lg z-50">
+                      class="hidden absolute left-0 right-0 mt-1 max-h-40 overflow-y-auto bg-white border border-slate-200 rounded-2xl shadow-lg z-50">
                     </div>
                   </div> <!-- End of tag filter autocomplete dropdown container -->
                 </div> <!-- End of tag filter section -->
@@ -1100,7 +1108,7 @@
                 <label class="text-xs font-semibold text-gray-600">Type</label>
               </div>
               <select id="txType" onchange="handleTypeChange()"
-                class="h-[42px] w-full border p-2 rounded-lg mt-1 bg-white font-medium text-gray-800">
+                class="h-[42px] w-full border p-2 rounded-2xl mt-1 bg-white font-medium text-gray-800">
                 <option value="expense">Expense (-)</option>
                 <option value="income">Income (+)</option>
                 <option value="transfer">Transfer</option>
@@ -1122,7 +1130,7 @@
                 <input type="text" id="txAmount" placeholder="0.00" required inputmode="decimal"
                   oninput="restrictToMathInput(this); checkClearButtonVisibility('txAmount', 'clear-txAmount')"
                   onfocus="this.classList.remove('border-red-500', 'focus:ring-red-200')"
-                  class="h-[42px] w-full border pl-2 pr-8 rounded-lg font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-200" />
+                  class="h-[42px] w-full border pl-2 pr-8 rounded-2xl font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-200" />
                 <button type="button" id="clear-txAmount"
                   onclick="clearAndFocusInput('txAmount', 'clear-txAmount', () => { updateSplitRemainder(); })"
                   class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 w-5 h-5 items-center justify-center text-lg leading-none text-slate-400 hover:text-slate-600 transition-colors"
@@ -1149,7 +1157,7 @@
           <div>
             <label id="tx-account-label" class="text-xs font-semibold text-gray-600">Account</label>
             <select id="txAccount" required onchange="autoSelectPaymentMethod(); populateTargetAccountDropdown();"
-              class="w-full border p-2 rounded-lg mt-1 bg-white font-medium text-gray-800">
+              class="w-full border p-2 rounded-2xl mt-1 bg-white font-medium text-gray-800">
               <!-- Dynamically populated -->
             </select>
           </div>
@@ -1158,14 +1166,14 @@
           <div id="transferTargetWrapper" class="hidden mt-3">
             <label class="text-xs font-semibold text-gray-600">Transfer To Account</label>
             <select id="txTargetAccount"
-              class="w-full border p-2 rounded-lg mt-1 bg-white font-medium text-gray-800"></select>
+              class="w-full border p-2 rounded-2xl mt-1 bg-white font-medium text-gray-800"></select>
           </div>
 
           <!-- Payment Type Dropdown -->
           <div>
             <label class="text-xs font-semibold text-gray-600">Payment Type</label>
             <select id="txPaymentMethod" onchange="toggleCheckNumberField()"
-              class="w-full border p-2 rounded-lg mt-1 bg-white">
+              class="w-full border p-2 rounded-2xl mt-1 bg-white">
               <option value="bank_transfer">Bank Transfer</option>
               <option value="cash">Cash</option>
               <option value="check">Check</option>
@@ -1181,7 +1189,7 @@
             <div class="relative mt-1">
               <input type="text" id="txCheckNumber" placeholder="e.g., 1042"
                 oninput="checkClearButtonVisibility('txCheckNumber', 'clear-txCheckNumber')"
-                class="w-full border pl-2 pr-8 py-2 rounded-lg font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-300" />
+                class="w-full border pl-2 pr-8 py-2 rounded-2xl font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-300" />
               <button type="button" id="clear-txCheckNumber"
                 onclick="clearAndFocusInput('txCheckNumber', 'clear-txCheckNumber')"
                 class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 w-5 h-5 items-center justify-center text-lg leading-none text-slate-400 hover:text-slate-600 transition-colors"
@@ -1193,11 +1201,11 @@
           <div class="grid grid-cols-2 gap-2">
             <div>
               <label class="text-xs font-semibold text-gray-600">Date</label>
-              <input type="date" id="txDate" required class="w-full border p-2 rounded-lg mt-1" />
+              <input type="date" id="txDate" required class="w-full border p-2 rounded-2xl mt-1" />
             </div>
             <div>
               <label class="text-xs font-semibold text-gray-600">Status</label>
-              <select id="txStatus" class="w-full border p-2 rounded-lg mt-1 bg-white">
+              <select id="txStatus" class="w-full border p-2 rounded-2xl mt-1 bg-white">
                 <option value="pending">Pending</option>
                 <option value="reconciled">Cleared</option>
               </select>
@@ -1210,15 +1218,16 @@
             <div class="relative mt-1">
               <input type="text" id="txPayee" autocomplete="off"
                 oninput="checkClearButtonVisibility('txPayee', 'clear-txPayee')"
-                class="w-full border pl-2 pr-8 py-2 rounded-lg font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-300"
+                class="w-full border pl-2 pr-8 py-2 rounded-2xl font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-300"
                 placeholder="e.g., Walmart" />
               <button type="button" id="clear-txPayee"
                 onclick="clearAndFocusInput('txPayee', 'clear-txPayee', () => handleAutocompleteTyping('payee', ''))"
                 class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 w-5 h-5 items-center justify-center text-lg leading-none text-slate-400 hover:text-slate-600 transition-colors"
                 aria-label="Clear payee">&times;</button>
             </div>
+            <!-- Suggestion container up-rounded to rounded-2xl -->
             <div id="payee-suggestions-custom"
-              class="absolute left-0 right-0 z-50 hidden max-h-40 overflow-y-auto rounded-lg border border-slate-200 bg-white shadow-lg mt-1 text-sm">
+              class="absolute left-0 right-0 z-50 hidden max-h-40 overflow-y-auto rounded-2xl border border-slate-200 bg-white shadow-lg mt-1 text-sm">
             </div>
           </div>
 
@@ -1234,9 +1243,10 @@
 
             <!-- Typable multi-select wrapper container -->
             <div class="relative">
+              <!-- Form chip wrapper up-rounded to rounded-2xl to match layout cards -->
               <div onclick="document.getElementById('tx-labels-text-input').focus()"
                 ontouchstart="handleLabelTouchStart(event, 'tx-labels-text-input')"
-                class="flex flex-wrap items-center gap-1 min-h-[36px] p-1 rounded-xl border border-slate-200 bg-white focus-within:ring-2 focus-within:ring-blue-200 focus-within:border-blue-400 transition-all cursor-text">
+                class="flex flex-wrap items-center gap-1 min-h-9 p-1 rounded-2xl border border-slate-200 bg-white focus-within:ring-2 focus-within:ring-blue-200 focus-within:border-blue-400 transition-all cursor-text">
                 <!-- Dynamic color-coded label chips render inline here -->
                 <div id="selected-labels-preview" class="contents"></div>
                 <!-- Typable search input -->
@@ -1247,8 +1257,9 @@
               </div>
 
               <!-- Dynamic Floating Autocomplete Dropdown -->
+              <!-- Suggestion container up-rounded to rounded-2xl -->
               <div id="labels-autocomplete-dropdown"
-                class="hidden absolute left-0 right-0 mt-1 max-h-48 overflow-y-auto bg-white border border-slate-200 rounded-xl shadow-lg z-50">
+                class="hidden absolute left-0 right-0 mt-1 max-h-48 overflow-y-auto bg-white border border-slate-200 rounded-2xl shadow-lg z-50">
                 <!-- Javascript will inject matching label suggestions here -->
               </div>
             </div>
@@ -1260,15 +1271,16 @@
             <div class="relative mt-1">
               <input type="text" id="txDesc" autocomplete="off"
                 oninput="checkClearButtonVisibility('txDesc', 'clear-txDesc')"
-                class="w-full border pl-2 pr-8 py-2 rounded-lg font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-300"
+                class="w-full border pl-2 pr-8 py-2 rounded-2xl font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-300"
                 placeholder="e.g., Groceries or reimbursement" />
               <button type="button" id="clear-txDesc"
                 onclick="clearAndFocusInput('txDesc', 'clear-txDesc', () => handleAutocompleteTyping('desc', ''))"
                 class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 w-5 h-5 items-center justify-center text-lg leading-none text-slate-400 hover:text-slate-600 transition-colors"
                 aria-label="Clear description">&times;</button>
             </div>
+            <!-- Suggestion container up-rounded to rounded-2xl -->
             <div id="desc-suggestions-custom"
-              class="absolute left-0 right-0 z-50 hidden max-h-40 overflow-y-auto rounded-lg border border-slate-200 bg-white shadow-lg mt-1 text-sm">
+              class="absolute left-0 right-0 z-50 hidden max-h-40 overflow-y-auto rounded-2xl border border-slate-200 bg-white shadow-lg mt-1 text-sm">
             </div>
           </div>
 
@@ -1279,7 +1291,7 @@
             <div class="grid grid-cols-2 gap-2 mt-1">
               <!-- Choose one or more existing images without forcing the camera picker. Multiple screenshots get stitched into one tall image. -->
               <label
-                class="flex items-center justify-center gap-1.5 bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-700 text-xs font-semibold py-2 px-3 rounded-lg cursor-pointer text-center">
+                class="flex items-center justify-center gap-1.5 bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-700 text-xs font-semibold py-2 px-3 rounded-2xl cursor-pointer text-center">
                 <span>📁 Choose File(s)</span>
                 <input type="file" id="txReceiptFile" accept="*/*" multiple class="hidden"
                   onchange="handleImageInput(this)" />
@@ -1287,7 +1299,7 @@
 
               <!-- Explicit camera action for mobile devices. -->
               <label
-                class="flex items-center justify-center gap-1.5 bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-700 text-xs font-semibold py-2 px-3 rounded-lg cursor-pointer text-center">
+                class="flex items-center justify-center gap-1.5 bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-700 text-xs font-semibold py-2 px-3 rounded-2xl cursor-pointer text-center">
                 <span>📷 Take Photo</span>
                 <input type="file" id="txReceiptCamera" accept="image/*" capture="environment" class="hidden"
                   onchange="handleImageInput(this)" />
@@ -1307,11 +1319,11 @@
           <!-- Submit Buttons -->
           <div class="pt-2 space-y-2">
             <button type="submit" id="txSubmitBtn"
-              class="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold shadow">
+              class="w-full bg-blue-600 text-white py-2 rounded-2xl font-semibold shadow">
               Save Transaction
             </button>
             <button type="button" id="txDeleteBtn" onclick="handleDeleteTxFromModal()"
-              class="w-full bg-red-50 text-red-600 border border-red-200 py-2 rounded-lg font-semibold shadow-sm hidden">
+              class="w-full bg-red-50 text-red-600 border border-red-200 py-2 rounded-2xl font-semibold shadow-sm hidden">
               Delete Transaction
             </button>
           </div>
@@ -1378,8 +1390,8 @@
         <div class="relative shrink-0">
           <input type="text" id="label-search-input" oninput="filterLabelTreeUI()"
             placeholder="Search labels... (e.g., 'gro')"
-            class="w-full border border-slate-200 bg-white pl-9 pr-3 py-2.5 rounded-xl text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-200 shadow-sm" />
-          <span class="absolute left-3 top-3 text-slate-400 text-sm">🔎</span>
+            class="w-full border border-slate-200 bg-white pl-9 pr-3 py-2.5 rounded-2xl text-sm font-semibold text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-200 shadow-sm" />
+          <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm select-none">🔎</span>
         </div>
 
         <!-- Expand/Collapse Controls (v1.4.0-dev.6) -->
@@ -4143,7 +4155,7 @@
             <div class="relative">
               <div onclick="document.getElementById('split-labels-text-input-${index}').focus()" 
                   ontouchstart="handleLabelTouchStart(event, 'split-labels-text-input-${index}', ${index})"
-                  class="flex flex-wrap items-center gap-1 min-h-[32px] p-1 rounded-lg border border-slate-200 bg-white focus-within:ring-2 focus-within:ring-blue-100 focus-within:border-blue-300 transition-all cursor-text">
+                  class="flex flex-wrap items-center gap-1 min-h-[32px] p-1 rounded-2xl border border-slate-200 bg-white focus-within:ring-2 focus-within:ring-blue-100 focus-within:border-blue-300 transition-all cursor-text">
                 <!-- Color-coded pills container -->
                 <div id="split-labels-preview-${index}" class="contents">
                   ${tagsHtml}
@@ -4159,7 +4171,7 @@
               
               <!-- Local suggestions dropdown -->
               <div id="split-labels-dropdown-${index}"
-                class="hidden absolute left-0 right-0 mt-1 max-h-40 overflow-y-auto bg-white border border-slate-200 rounded-xl shadow-lg z-50">
+                class="hidden absolute left-0 right-0 mt-1 max-h-40 overflow-y-auto bg-white border border-slate-200 rounded-2xl shadow-lg z-50">
               </div>
             </div>
           </div>
