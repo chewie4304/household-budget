@@ -302,7 +302,8 @@
               <div class="flex items-center justify-between border-b border-slate-100 bg-slate-50/50 px-4 py-3.5">
                 <div class="flex items-center gap-2">
                   <span class="cursor-grab text-slate-300 hover:text-slate-500 font-extrabold select-none">⠿</span>
-                  <h3 class="font-bold text-sm text-slate-800">Planned Transactions</h3>
+                  <!-- Upscaled title header for Planned Transactions desktop cockpit card -->
+                  <h3 class="font-black text-base text-slate-800">Planned Transactions</h3>
                 </div>
                 <div class="flex items-center gap-1.5">
                   <button onclick="toggleWidgetCollapse('planned-transactions')"
@@ -906,7 +907,8 @@
         <div class="flex justify-between items-center pb-2 border-b border-slate-100 shrink-0">
           <div class="flex items-center gap-2">
             <span class="text-lg">📅</span>
-            <h3 class="font-extrabold text-base text-slate-800">Planned Transactions</h3>
+            <!-- Upscaled title header for Planned Transactions mobile modal drawer -->
+            <h3 class="font-black text-lg text-slate-800">Planned Transactions</h3>
           </div>
           <button type="button" onclick="togglePlannedTxModal(false)"
             class="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
@@ -4550,32 +4552,36 @@
 
       // --- RENDER PLANNED TRANSACTIONS ---
       function renderPlannedTransactions() {
-        const desktopContainer = document.getElementById('planned-transactions-body');
-        const mobileContainer = document.getElementById('mobile-planned-tx-list');
+        const desktopContainer = document.getElementById("planned-transactions-body");
+        const mobileContainer = document.getElementById("mobile-planned-tx-list");
 
         const itemsHtml = plannedTransactions.map(plan => {
-          const isIncome = plan.type === 'income';
-          const amountColor = isIncome ? 'text-emerald-600' : 'text-slate-900';
-          const amountPrefix = isIncome ? '+' : '';
+          const isIncome = plan.type === "income";
+          const amountColor = isIncome ? "text-emerald-600" : "text-slate-900";
+          const amountPrefix = isIncome ? "+" : "";
 
           return `
             <div class="flex items-center justify-between border-b border-slate-100 pb-2.5 last:border-0 last:pb-0 gap-3">
               <div class="min-w-0 flex-1">
-                <p class="truncate text-xs font-bold text-slate-800">${escapeHtml(plan.payee)}</p>
-                <p class="text-[10px] text-slate-400 font-semibold uppercase mt-0.5">Due: ${plan.dueDate} • ${plan.frequency}</p>
+                <!-- Upscaled planned transaction title payee text -->
+                <p class="truncate text-sm font-black text-slate-800">${escapeHtml(plan.payee)}</p>
+                <!-- Stacked metadata styled to match ledger typography and tracking rules -->
+                <p class="text-xs font-extrabold text-slate-400 uppercase tracking-widest mt-1">Due: ${plan.dueDate} • ${plan.frequency}</p>
               </div>
               <div class="flex items-center gap-3 shrink-0">
-                <span class="text-xs font-extrabold ${amountColor} text-right min-w-[65px] block">
+                <!-- Aligned amount font elements with standard visual weight layouts -->
+                <span class="text-sm font-black ${amountColor} text-right min-w-[70px] block">
                   ${amountPrefix}$${plan.amount.toFixed(2)}
                 </span>
-                <button onclick="postPlannedTransaction('${escapeHtml(plan.payee)}', ${plan.amount}, '${plan.type}')" 
-                        class="bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold px-3 py-1.5 rounded-lg text-[10px] transition shrink-0">
-                  Post  
+                <!-- Tap-friendly Post trigger rounded to rounded-xl to match secondary buttons hierarchy -->
+                <button onclick="postPlannedTransaction('${escapeHtml(plan.payee)}', ${plan.amount}, '${plan.type}')"
+                  class="bg-blue-50 hover:bg-blue-100 text-blue-700 font-black px-3 py-1.5 rounded-xl text-xs transition shrink-0 shadow-sm">
+                  Post
                 </button>
               </div>
             </div>
-    `;
-        }).join('');
+          `;
+        }).join("");
 
         const emptyState = `<p class="text-xs text-slate-400 italic py-2 text-center">No upcoming transactions scheduled.</p>`;
 
