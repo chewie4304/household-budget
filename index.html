@@ -1850,18 +1850,60 @@
     }
     // --- Load Label Tree & Natures from Local Storage and Supabase ---
     async function loadLabelTree() {
+      // Helper to resolve stringified JSON layers recursively to guarantee an object
+      function ensureObject(val) {
+        let temp = val;
+        while (typeof temp === "string" && temp.trim().startsWith("{")) {
+          try {
+            temp = JSON.parse(temp);
+          } catch (e) {
+            break;
+          }
+        }
+        return temp;
+      }
+
       try {
-        // ... [existing loading code] ...
+        const storedTree = localStorage.getItem('household-budget-label-tree');
+        if (storedTree) {
+          let parsed = JSON.parse(storedTree);
+          parsed = ensureObject(parsed);
+          labelTree = migrateTreeRecursive(parsed);
+        } else {
+          labelTree = JSON.parse(JSON.stringify(DEFAULT_LABEL_TREE));
+        }
+
         const storedNatures = localStorage.getItem('household-budget-label-natures');
         if (storedNatures) {
-          labelNatures = JSON.parse(storedNatures);
+          let parsed = JSON.parse(storedNatures);
+          parsed = ensureObject(parsed);
+          labelNatures = parsed;
         } else {
           labelNatures = { ...DEFAULT_LABEL_NATURES };
         }
 
-        // ... [existing database fetch copy code] ...
+        const { data, error } = await sb.from('settings').select('*');
+        if (!error && data) {
+          const dbTree = data.find(r => r.key === 'household-budget-label-tree')?.value;
+          const dbNatures = data.find(r => r.key === 'household-budget-label-natures')?.value;
 
-        // Self-Healing: Clean up any old "Must" natures in active state memory and map them to "Need"
+          if (dbTree) {
+            let parsedTree = ensureObject(dbTree);
+            if (parsedTree && typeof parsedTree === 'object' && Object.keys(parsedTree).length > 0) {
+              labelTree = migrateTreeRecursive(parsedTree);
+              localStorage.setItem('household-budget-label-tree', JSON.stringify(labelTree));
+            }
+          }
+
+          if (dbNatures) {
+            let parsedNatures = ensureObject(dbNatures);
+            if (parsedNatures && typeof parsedNatures === 'object' && Object.keys(parsedNatures).length > 0) {
+              labelNatures = parsedNatures;
+              localStorage.setItem('household-budget-label-natures', JSON.stringify(labelNatures));
+            }
+          }
+        }
+
         for (const [key, val] of Object.entries(labelNatures)) {
           if (val === 'Must') {
             labelNatures[key] = 'Need';

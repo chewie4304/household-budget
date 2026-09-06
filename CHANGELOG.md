@@ -10,6 +10,9 @@ All notable changes to this project will be documented in this file.
 ### Changed
 - **Consolidated Expense Natures:** Merged the legacy "Must" category into "Need" for a streamlined, three-tiered budget taxonomy (Need, Want, N/A).
 
+### Fixed
+- Self-Healing Config Parser: Integrated recursive JSON parsing inside loadLabelTree to safeguard against stringified settings in Supabase and restore the missing label tree after clearing browser storage.
+
 ## [1.6.6] - 2026-09-04
 
 ### Added
