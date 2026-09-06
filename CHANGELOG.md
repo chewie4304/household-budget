@@ -4,15 +4,16 @@ All notable changes to this project will be documented in this file.
 
 ## [unreleased]
 
+## [1.6.7] - 2026-09-05
+
 ### Added
-- **(v1.6.7-dev)** Started development cycle for targeted UI polish & contrast improvements.
-- **Programmatic Write Locks:** Implemented a robust isConfigLoadedFromCloud gatekeeper inside loadLabelTree, saveLabelTree, and saveLabelNatures to permanently prevent un-synced default configurations from overwriting cloud database tables on cache clears.
+- **Programmatic Write Locks:** Implemented a defensive `isConfigLoadedFromCloud` write lock inside `loadLabelTree`, `saveLabelTree`, and `saveLabelNatures` to permanently prevent un-synced default configurations from overwriting cloud database tables on cache clears.
 
 ### Changed
 - **Consolidated Expense Natures:** Merged the legacy "Must" category into "Need" for a streamlined, three-tiered budget taxonomy (Need, Want, N/A).
 
 ### Fixed
-- **Self-Healing Config Parser:** Integrated recursive JSON parsing inside loadLabelTree to safeguard against stringified settings in Supabase and restore the missing label tree after clearing browser storage.
+- **Robust Config Parsing:** Integrated recursive JSON parsing inside `loadLabelTree` to safeguard against stringified settings in Supabase and restore the missing label tree after clearing browser storage.
 
 ## [1.6.6] - 2026-09-04
 
