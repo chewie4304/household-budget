@@ -1481,6 +1481,9 @@
     let labelNaturesBackup = null;
     let activeTxLabelsBackup = null;
 
+    // --- Database Write Lock Gate ---
+    let isConfigLoadedFromCloud = false;
+
     // --- Label Picker Edit Mode Logic ---
     let pickerEditMode = false;
     let labelTree = {};
@@ -1850,12 +1853,15 @@
     }
     // --- Load Label Tree & Natures from Local Storage and Supabase ---
     async function loadLabelTree() {
-      // Helper to resolve stringified JSON layers recursively to guarantee an object
       function ensureObject(val) {
         let temp = val;
-        while (typeof temp === "string" && temp.trim().startsWith("{")) {
+        while (typeof temp === "string") {
           try {
-            temp = JSON.parse(temp);
+            const parsed = JSON.parse(temp);
+            if (parsed === temp) {
+              break;
+            }
+            temp = parsed;
           } catch (e) {
             break;
           }
@@ -1868,7 +1874,11 @@
         if (storedTree) {
           let parsed = JSON.parse(storedTree);
           parsed = ensureObject(parsed);
-          labelTree = migrateTreeRecursive(parsed);
+          if (parsed && typeof parsed === 'object') {
+            labelTree = migrateTreeRecursive(parsed);
+          } else {
+            labelTree = JSON.parse(JSON.stringify(DEFAULT_LABEL_TREE));
+          }
         } else {
           labelTree = JSON.parse(JSON.stringify(DEFAULT_LABEL_TREE));
         }
@@ -1877,13 +1887,22 @@
         if (storedNatures) {
           let parsed = JSON.parse(storedNatures);
           parsed = ensureObject(parsed);
-          labelNatures = parsed;
+          if (parsed && typeof parsed === 'object') {
+            labelNatures = parsed;
+          } else {
+            labelNatures = { ...DEFAULT_LABEL_NATURES };
+          }
         } else {
           labelNatures = { ...DEFAULT_LABEL_NATURES };
         }
 
         const { data, error } = await sb.from('settings').select('*');
-        if (!error && data) {
+        if (error) throw error;
+
+        // Release database write lock: Supabase connection verified successfully!
+        isConfigLoadedFromCloud = true;
+
+        if (data) {
           const dbTree = data.find(r => r.key === 'household-budget-label-tree')?.value;
           const dbNatures = data.find(r => r.key === 'household-budget-label-natures')?.value;
 
@@ -1904,6 +1923,10 @@
           }
         }
 
+        if (!labelTree || typeof labelTree !== 'object' || Object.keys(labelTree).length === 0) {
+          labelTree = JSON.parse(JSON.stringify(DEFAULT_LABEL_TREE));
+        }
+
         for (const [key, val] of Object.entries(labelNatures)) {
           if (val === 'Must') {
             labelNatures[key] = 'Need';
@@ -1911,9 +1934,16 @@
         }
       } catch (err) {
         console.warn("Error loading configurations from Supabase, using local cache fallback:", err);
+        if (!labelTree || typeof labelTree !== 'object' || Object.keys(labelTree).length === 0) {
+          labelTree = JSON.parse(JSON.stringify(DEFAULT_LABEL_TREE));
+        }
       }
     }
     async function saveLabelTree() {
+      if (!isConfigLoadedFromCloud) {
+        console.warn("saveLabelTree blocked: cloud write lock is active.");
+        return;
+      }
       try {
         localStorage.setItem('household-budget-label-tree', JSON.stringify(labelTree));
         await sb.from('settings').upsert({ key: 'household-budget-label-tree', value: labelTree });
@@ -1922,6 +1952,10 @@
       }
     }
     async function saveLabelNatures() {
+      if (!isConfigLoadedFromCloud) {
+        console.warn("saveLabelNatures blocked: cloud write lock is active.");
+        return;
+      }
       try {
         localStorage.setItem('household-budget-label-natures', JSON.stringify(labelNatures));
         await sb.from('settings').upsert({ key: 'household-budget-label-natures', value: labelNatures });
@@ -6344,6 +6378,10 @@
 
     // Permanently saves all edits, additions, and deletions to localStorage and exits edit mode
     function saveCategoryEdits() {
+      if (!isConfigLoadedFromCloud) {
+        showAppMessage("Database write lock active: Cannot overwrite configurations until cloud connection is synced.");
+        return;
+      }
       saveLabelTree();
       saveLabelNatures();
       labelTreeBackup = null;
