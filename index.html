@@ -6953,29 +6953,28 @@ This action can be undone by cancelling your edits.`,
         }
       }
 
-      // 🛡️ DUP-CHECK: SCAN EXISTING TRANSACTIONS WITHIN A WEEK WINDOW (Now handles creations & edits!)
+      // 🛡️ DUP-CHECK: SCAN EXISTING TRANSACTIONS WITHIN A WEEK WINDOW (Now handles creations & edits globally!)
       const signedAmount = txType === "expense" ? -Math.abs(amount) : Math.abs(amount);
+
       const potentialDuplicate = transactions.find(function (tx) {
         // EXCLUDE the active transaction being updated/edited itself from triggering the flag
         if (editId && String(tx.id) === String(editId)) return false;
 
-        // 1. Account must match
-        const sameAccount = tx.account_id === targetAccountId;
-
-        // 2. Signed amount must match (expenses are negative, income is positive)
+        // 1. Signed amount must match (expenses are negative, income is positive)
         const sameAmount = Math.abs(parseFloat(tx.amount || 0) - signedAmount) < 0.005;
 
-        // 3. Date must be within 7 days of the targeted transaction date
+        // 2. Date must be within 7 days of the targeted transaction date
         const newDateObj = new Date(date + "T00:00:00");
         const txDateObj = new Date(tx.date + "T00:00:00");
         const diffDays = Math.round(Math.abs(newDateObj - txDateObj) / (1000 * 60 * 60 * 24));
         const withinWeek = diffDays <= 7;
 
-        return sameAccount && sameAmount && withinWeek;
+        return sameAmount && withinWeek;
       });
 
       if (potentialDuplicate) {
-        const activeAccName = accounts.find(a => a.id === targetAccountId)?.name || 'this account';
+        // Lookup the actual account where the matching duplicate is located
+        const duplicateAccName = accounts.find(a => a.id === potentialDuplicate.account_id)?.name || 'another account';
         const formattedDate = new Date(`${potentialDuplicate.date}T00:00:00`).toLocaleDateString('en-US', {
           month: 'short',
           day: 'numeric',
@@ -6987,11 +6986,11 @@ This action can be undone by cancelling your edits.`,
         // Intercept the submission and prompt the user for confirmation
         openCustomConfirm({
           title: 'Potential Duplicate Found',
-          message: `A similar ${isExpense ? 'expense' : 'income'} is already logged in this account within a week of your selected date:\n\n` +
+          message: `A similar ${isExpense ? 'expense' : 'income'} is already logged within a week of your selected date:\n\n` +
             `• Payee/Payer: ${potentialDuplicate.payee || 'Transaction'}\n` +
             `• Amount: $${absAmount}\n` +
             `• Date: ${formattedDate}\n` +
-            `• Account: ${activeAccName}\n\n` +
+            `• Account: ${duplicateAccName}\n\n` +
             `Are you sure this is a different transaction and should be saved?`,
           confirmLabel: editId ? 'Yes, Update Anyway' : 'Yes, Save Anyway',
           onConfirm: async () => {
