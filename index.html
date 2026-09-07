@@ -5839,12 +5839,44 @@
     }
 
     function toggleNodeExpanded(pathId) {
+      const isExpanding = !pickerExpandedNodes.has(pathId);
+
       if (pickerExpandedNodes.has(pathId)) {
         pickerExpandedNodes.delete(pathId);
       } else {
         pickerExpandedNodes.add(pathId);
       }
+
       renderLabelTreeUI();
+
+      if (isExpanding) {
+        // Wait for the DOM redraw to complete, then scroll the expanded content smoothly into view
+        setTimeout(() => {
+          const container = document.getElementById("label-tree-container");
+          if (container) {
+            const allNodeEls = Array.from(container.querySelectorAll("[data-node-path]"));
+            const prefix = `${pathId}-`;
+
+            // Find all active DOM child elements belonging to this expanded parent
+            const childEls = allNodeEls.filter(el => {
+              const path = el.getAttribute("data-node-path") || "";
+              return path.startsWith(prefix);
+            });
+
+            if (childEls.length > 0) {
+              // Scroll to the last newly revealed child to guarantee the entire branch fits inside the container
+              const lastChild = childEls[childEls.length - 1];
+              lastChild.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            } else {
+              // Fallback to scrolling the parent category itself if there are no sub-categories
+              const parentEl = allNodeEls.find(el => el.getAttribute("data-node-path") === pathId);
+              if (parentEl) {
+                parentEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+              }
+            }
+          }
+        }, 80); // 80ms gives mobile PWA viewports plenty of time to repaint layout transitions
+      }
     }
 
     function toggleLabelChecked(serializedPath) {
@@ -6053,29 +6085,29 @@
 
       // Build Row HTML
       let nodeHtml = `
-    <div ${indentStyle} class="py-1">
-      <div ${dragAttributes} class="flex items-center gap-2 group hover:bg-slate-50/80 px-2 py-1 rounded-xl transition-colors">
-        ${dragHandle}
-        ${chevron}
-        ${!pickerEditMode ? `
-          <input type="checkbox" ${isChecked ? "checked" : ""}
-            id="chk-${pathId}"
-            onclick="toggleLabelChecked('${pathId}')"
-            class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer" />
-        ` : ""}
-        <span ${isFolder ? `onclick="toggleNodeExpanded('${pathId}')"` : ""}
-          class="text-xs font-semibold text-slate-700 flex items-center gap-1 select-none ${isFolder ? 'cursor-pointer hover:text-blue-600 transition-colors' : ''}">
-          ${icon ? `<span>${icon}</span>` : ""}
-          <span>${nodeName}</span>
-        </span>
-        ${pickerEditMode ? managementActions : ""}
-      </div>
-      <!-- FIXED: Avoid strict array-to-string comparison with bracket-less root finder -->
-      ${((!pickerEditMode && isChecked) || pickerEditMode) && currentPathArray.indexOf("Expenses") === 0
+        <div data-node-path="${pathId}" ${indentStyle} class="py-1">
+          <div ${dragAttributes} class="flex items-center gap-2 group hover:bg-slate-50/80 px-2 py-1 rounded-xl transition-colors">
+            ${dragHandle}
+            ${chevron}
+            ${!pickerEditMode ? `
+              <input type="checkbox" ${isChecked ? "checked" : ""}
+                id="chk-${pathId}"
+                onclick="toggleLabelChecked('${pathId}')"
+                class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer" />
+            ` : ""}
+            <span ${isFolder ? `onclick="toggleNodeExpanded('${pathId}')"` : ""}
+              class="text-xs font-semibold text-slate-700 flex items-center gap-1 select-none ${isFolder ? 'cursor-pointer hover:text-blue-600 transition-colors' : ''}">
+              ${icon ? `<span>${icon}</span>` : ""}
+              <span>${nodeName}</span>
+            </span>
+            ${pickerEditMode ? managementActions : ""}
+          </div>
+          <!-- FIXED: Avoid strict array-to-string comparison with bracket-less root finder -->
+          ${((!pickerEditMode && isChecked) || pickerEditMode) && currentPathArray.indexOf("Expenses") === 0
           ? renderNatureToggleRow(pathId, currentNature, pickerEditMode)
           : ""}
-    </div>
-  `;
+        </div>
+      `;
 
       // Recursively paint child branches if folder is expanded
       if (isFolder && isExpanded) {
