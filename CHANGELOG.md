@@ -7,6 +7,7 @@ All notable changes to this project will be documented in this file.
 ### Changed
 - **Global Duplicate Transaction Guard:** Removed the account-matching constraint from the duplicate transaction save scanner, allowing the validation engine to capture double-entries across different accounts. Improved warning dialogs to dynamically display the actual account name hosting the duplicate.
 - **Interactive Label Tree Auto-Scroll:** Added a smart scroll-with-expansion engine inside `toggleNodeExpanded` that recursively identifies the deepest nested child element of a branch and smoothly scrolls it into view using a custom dataset mapper, preventing expanded categories from running off-screen.
+- **Interactive Label Tree Auto-Scroll:** Added a smart scroll-with-expansion engine inside `toggleNodeExpanded` that smoothly scrolls the newly expanded parent category directly to the top of the picker window using a relative container offset mapper, keeping parent categories perfectly framed.
 
 ## [1.6.7] - 2026-09-05
 

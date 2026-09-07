@@ -5850,32 +5850,26 @@
       renderLabelTreeUI();
 
       if (isExpanding) {
-        // Wait for the DOM redraw to complete, then scroll the expanded content smoothly into view
+        // Wait for the DOM redraw to complete, then scroll the expanded parent to the top
         setTimeout(() => {
           const container = document.getElementById("label-tree-container");
           if (container) {
-            const allNodeEls = Array.from(container.querySelectorAll("[data-node-path]"));
-            const prefix = `${pathId}-`;
+            // Look up the parent element we just expanded
+            const parentEl = container.querySelector(`[data-node-path="${pathId}"]`);
+            if (parentEl) {
+              // Calculate the exact top of the parent element relative to the container's viewport
+              const containerRect = container.getBoundingClientRect();
+              const parentRect = parentEl.getBoundingClientRect();
+              const relativeTop = parentRect.top - containerRect.top + container.scrollTop;
 
-            // Find all active DOM child elements belonging to this expanded parent
-            const childEls = allNodeEls.filter(el => {
-              const path = el.getAttribute("data-node-path") || "";
-              return path.startsWith(prefix);
-            });
-
-            if (childEls.length > 0) {
-              // Scroll to the last newly revealed child to guarantee the entire branch fits inside the container
-              const lastChild = childEls[childEls.length - 1];
-              lastChild.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-            } else {
-              // Fallback to scrolling the parent category itself if there are no sub-categories
-              const parentEl = allNodeEls.find(el => el.getAttribute("data-node-path") === pathId);
-              if (parentEl) {
-                parentEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-              }
+              // Smoothly scroll the container so the parent element sits flush at the very top edge
+              container.scrollTo({
+                top: relativeTop,
+                behavior: 'smooth'
+              });
             }
           }
-        }, 80); // 80ms gives mobile PWA viewports plenty of time to repaint layout transitions
+        }, 80); // 80ms provides optimal time for PWAs and browsers to repaint the DOM layout
       }
     }
 
