@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ## [unreleased]
 
+## [1.6.10] - 2026-10-08
+
+### Fixed
+- **Recurring Suggestion Rendering:** Fixed escaped template interpolations in `renderPlannedTransactions` so detected suggestions display their payee, due date, frequency, and amount instead of literal code.
+
+### Changed
+- **Service Worker Cache Version:** Bumped the cache name to `home-wealth-v1.6.10` so the updated app shell replaces the previous cached version.
+
 ## [1.6.9] - 2026-10-08
 
 ### Added
@@ -20,7 +28,7 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 - **Predicted Pattern Rendering:** Corrected mangled template interpolations in `renderPlannedTransactions` that displayed literal `\({formattedDate}` and `\({p.isIncome ...}` text in the "Detected Recurring Patterns" suggestions.
 - **Apostrophe Payees in Suggestions:** Approve and Dismiss buttons on recurring suggestions failed for payees containing apostrophes (e.g., Kohl's, Woodman's) because the value broke the inline `onclick` string. Encoded values now escape apostrophes, and `dismissPredictedTransaction` decodes its key.
-- **Stale Service Worker Cache:** Bumped the service worker cache name to `home-wealth-v1.6.11` so updated code is served instead of cached HTML.
+- **Stale Service Worker Cache:** Bumped the service worker cache name to `home-wealth-v1.6.9` so updated code is served instead of cached HTML.
 - **Chronological Planned Transactions Sorting:** Integrated timestamp-based date sorting (`getDueTimestamp`) into `renderPlannedTransactions` so both predicted recurring pattern suggestions and approved planned items are ordered chronologically, presenting the nearest upcoming due dates at the top.
 
 ## [1.6.8] - 2026-09-24

@@ -4896,7 +4896,7 @@
         <div class="slim-scroll space-y-2 pr-1.5 overscroll-contain touch-pan-y focus:outline-none" style="max-height: 205px; overflow-y: auto;">
           ${predictions.map(p => {
           const encoded = encodeURIComponent(JSON.stringify(p));
-          const formattedDate = new Date(`\${p.dueDate}T00:00:00`).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+          const formattedDate = new Date(`${p.dueDate}T00:00:00`).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
           const absAmt = Math.abs(p.amount).toFixed(2);
           const payeeName = typeof escapeHtml === 'function' ? escapeHtml(p.payee) : p.payee;
           const isIncomeClass = p.isIncome ? 'text-emerald-600' : 'text-slate-700';
@@ -4905,22 +4905,22 @@
           return `
               <div class="flex items-center justify-between bg-white p-2.5 rounded-xl border border-indigo-100 shadow-xs gap-2">
                 <div class="min-w-0 flex-1">
-                  <div class="text-xs font-bold text-slate-800 truncate">\${payeeName}</div>
+                  <div class="text-xs font-bold text-slate-800 truncate">${payeeName}</div>
                   <div class="text-[10px] font-semibold text-indigo-600 mt-0.5">
-                    Expected: \${formattedDate}
+                    Expected: ${formattedDate}
                   </div>
                   <div class="text-[10px] font-semibold text-indigo-400">
-                    \${p.frequency}
+                    ${p.frequency}
                   </div>
                 </div>
                 <div class="flex items-center gap-1.5 shrink-0">
-                  <span class="text-xs font-black \${isIncomeClass}">
-                    \\({signPrefix}\\)\${absAmt}
+                  <span class="text-xs font-black ${isIncomeClass}">
+                    ${signPrefix}$${absAmt}
                   </span>
-                  <button type="button" onclick="approvePredictedTransaction('\${encoded.replace(/'/g, '%27')}')" class="px-2 py-1 bg-emerald-600 text-white font-bold text-[10px] rounded-lg shadow-xs hover:bg-emerald-700 transition shrink-0">
+                  <button type="button" onclick="approvePredictedTransaction('${encoded.replace(/'/g, '%27')}')" class="px-2 py-1 bg-emerald-600 text-white font-bold text-[10px] rounded-lg shadow-xs hover:bg-emerald-700 transition shrink-0">
                     Approve
                   </button>
-                  <button type="button" onclick="dismissPredictedTransaction('\${encodeURIComponent(p.dedupeKey).replace(/'/g, '%27')}')" class="px-2 py-1 bg-slate-100 text-slate-500 font-bold text-[10px] rounded-lg hover:bg-slate-200 transition shrink-0">
+                  <button type="button" onclick="dismissPredictedTransaction('${encodeURIComponent(p.dedupeKey).replace(/'/g, '%27')}')" class="px-2 py-1 bg-slate-100 text-slate-500 font-bold text-[10px] rounded-lg hover:bg-slate-200 transition shrink-0">
                     Dismiss
                   </button>
                 </div>
