@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 
 ## [unreleased]
 
+### Added
+- **Recurring Transaction Pattern Scanner:** Built an intelligent pattern detection engine (`detectRecurringPatterns`) that scans transaction histories for interval cadences and category triggers (like mortgage and payroll), presenting user-approvable suggestions inside the Planned Transaction drawer.
+
+### Changed
+- **Search Fields No Longer Persist:** `saveViewState`, `restoreViewState`, and `applySavedViewState` no longer save or restore account and transaction search text, so the search fields start empty on every launch. The last-used tab is still restored.
+
+### Fixed
+- **Predicted Pattern Rendering:** Corrected mangled template interpolations in `renderPlannedTransactions` that displayed literal `\({formattedDate}` and `\({p.isIncome ...}` text in the "Detected Recurring Patterns" suggestions.
+- **Apostrophe Payees in Suggestions:** Approve and Dismiss buttons on recurring suggestions failed for payees containing apostrophes (e.g., Kohl's, Woodman's) because the value broke the inline `onclick` string. Encoded values now escape apostrophes, and `dismissPredictedTransaction` decodes its key.
+- **Stale Service Worker Cache:** Bumped the service worker cache name to `home-wealth-v1.6.11` so updated code is served instead of cached HTML.
+
 ## [1.6.8] - 2026-09-24
 
 ### Added

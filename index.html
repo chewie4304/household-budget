@@ -1549,11 +1549,13 @@
     let cropper = null;
 
     // --- PLANNED TRANSACTIONS STATE ---
-    let plannedTransactions = [
-      { id: 'plan-1', payee: 'Landmark Credit Union (Car Loan)', amount: 345.00, dueDate: 'Sep 5', frequency: 'Monthly', type: 'expense' },
-      { id: 'plan-2', payee: 'Netflix Subscription', amount: 15.49, dueDate: 'Sep 12', frequency: 'Monthly', type: 'expense' },
-      { id: 'plan-3', payee: 'Bi-Weekly Paycheck', amount: 2450.00, dueDate: 'Sep 15', frequency: 'Bi-Weekly', type: 'income' }
-    ];
+    let plannedTransactions =
+      JSON.parse(localStorage.getItem('household-budget-planned-tx') || '[]');
+
+    // 🔮 Global Dismissed Predictions Set
+    let dismissedPredictions = new Set(
+      JSON.parse(localStorage.getItem('household-budget-dismissed-predictions') || '[]')
+    );
 
     let appMessageTimer = null;
     let pendingClearedBalanceEdit = null;
@@ -2135,8 +2137,8 @@
       const transactionSearch = document.getElementById('transaction-search');
       const state = {
         view: currentViewState,
-        accountSearch: accountSearch ? accountSearch.value : '',
-        transactionSearch: transactionSearch ? transactionSearch.value : '',
+        accountSearch: '',
+        transactionSearch: '',
         currentAccountId: activeAccountId || null
       };
       localStorage.setItem('household-budget-view-state', JSON.stringify(state));
@@ -2145,11 +2147,6 @@
     function restoreViewState() {
       const saved = getSavedViewState();
       if (!saved.view) return;
-
-      const accountSearch = document.getElementById('account-search');
-      const transactionSearch = document.getElementById('transaction-search');
-      if (accountSearch) accountSearch.value = saved.accountSearch || '';
-      if (transactionSearch) transactionSearch.value = saved.transactionSearch || '';
 
       currentViewState = saved.view;
       if (saved.currentAccountId) {
@@ -2160,10 +2157,6 @@
     function applySavedViewState() {
       const saved = getSavedViewState();
       const isTransactionsView = saved.view === 'home-transactions';
-      const accountSearch = document.getElementById('account-search');
-      const transactionSearch = document.getElementById('transaction-search');
-      if (accountSearch) accountSearch.value = saved.accountSearch || '';
-      if (transactionSearch) transactionSearch.value = saved.transactionSearch || '';
 
       // 🌟 Always land on the primary Home cockpit tabs on launch (disregarding deep detailed ledgers)
       if (isTransactionsView) {
@@ -4614,43 +4607,245 @@
       });
     }
 
+    // 🔮 PATTERN SCANNER & PREDICTION ENGINE (Tailored for Home Wealth Schema)
+    function detectRecurringPatterns() {
+      if (typeof transactions === 'undefined' || !transactions || transactions.length === 0) {
+        return [];
+      }
+
+      // Ensure dismissedPredictions exists
+      if (typeof dismissedPredictions === 'undefined' || !dismissedPredictions) {
+        dismissedPredictions = new Set(
+          JSON.parse(localStorage.getItem('household-budget-dismissed-predictions') || '[]')
+        );
+      }
+
+      const predictions = [];
+      const grouped = {};
+
+      // Group historical transactions by normalized Payee / Description
+      transactions.forEach(tx => {
+        const payeeName = (tx.payee || tx.description || '').trim();
+        if (!payeeName) return;
+        const key = payeeName.toLowerCase();
+        if (!grouped[key]) grouped[key] = [];
+        grouped[key].push(tx);
+      });
+
+      // Track existing planned items to avoid duplicate suggestions
+      const existingPlannedKeys = new Set(
+        (plannedTransactions || []).map(pt => `${(pt.payee || '').trim().toLowerCase()}_${Math.abs(pt.amount || 0)}`)
+      );
+
+      Object.entries(grouped).forEach(([key, txList]) => {
+        // Sort chronologically
+        txList.sort((a, b) => new Date(a.date) - new Date(b.date));
+        const latestTx = txList[txList.length - 1];
+        const amount = parseFloat(latestTx.amount || 0);
+        const payee = latestTx.payee || latestTx.description || 'Transaction';
+
+        // Extract tags/categories using Home Wealth helper
+        const tagsText = (typeof getTransactionTags === 'function' ? getTransactionTags(latestTx) : (latestTx.tags || [])).join(' ').toLowerCase();
+        const lowerPayee = payee.toLowerCase();
+        const lowerDesc = (latestTx.description || '').toLowerCase();
+        const combinedSearchText = `${lowerPayee} ${lowerDesc} ${tagsText}`;
+
+        const dedupeKey = `${key}_${Math.abs(amount)}`;
+
+        // Skip if user dismissed or already approved as a planned transaction
+        if (dismissedPredictions.has(dedupeKey) || existingPlannedKeys.has(dedupeKey)) {
+          return;
+        }
+
+        let isPatternFound = false;
+        let frequency = 'Monthly';
+        let nextDate = null;
+
+        // RULE 1: Multi-Occurrence Cadence Analysis (e.g., Wages every 10–20 days or ~30 days)
+        if (txList.length >= 2) {
+          const intervals = [];
+          for (let i = 1; i < txList.length; i++) {
+            const d1 = new Date(txList[i - 1].date + 'T00:00:00');
+            const d2 = new Date(txList[i].date + 'T00:00:00');
+            const diffDays = Math.round((d2 - d1) / (1000 * 60 * 60 * 24));
+            if (diffDays > 0) intervals.push(diffDays);
+          }
+
+          if (intervals.length > 0) {
+            const avgInterval = intervals.reduce((a, b) => a + b, 0) / intervals.length;
+
+            if (avgInterval >= 10 && avgInterval <= 20) {
+              frequency = 'Semi-Monthly';
+              const lastDate = new Date(latestTx.date + 'T00:00:00');
+              lastDate.setDate(lastDate.getDate() + 15);
+              nextDate = lastDate.toISOString().slice(0, 10);
+              isPatternFound = true;
+            } else if (avgInterval >= 21 && avgInterval <= 38) {
+              frequency = 'Monthly';
+              const lastDate = new Date(latestTx.date + 'T00:00:00');
+              lastDate.setMonth(lastDate.getMonth() + 1);
+              nextDate = lastDate.toISOString().slice(0, 10);
+              isPatternFound = true;
+            }
+          }
+        }
+
+        // RULE 2: Smart Category & Keyword Detection (Single or Multi-Occurrence)
+        if (!isPatternFound) {
+          const isSingleRuleMatch =
+            combinedSearchText.includes('housing') ||
+            combinedSearchText.includes('mortgage') ||
+            combinedSearchText.includes('rent') ||
+            combinedSearchText.includes('utilities') ||
+            combinedSearchText.includes('bills') ||
+            combinedSearchText.includes('insurance') ||
+            combinedSearchText.includes('wages') ||
+            combinedSearchText.includes('payroll') ||
+            combinedSearchText.includes('paycheck') ||
+            combinedSearchText.includes('basd');
+
+          if (isSingleRuleMatch) {
+            const isSemiMonthly = combinedSearchText.includes('wages') || combinedSearchText.includes('payroll') || combinedSearchText.includes('basd') || combinedSearchText.includes('paycheck');
+            frequency = isSemiMonthly ? 'Semi-Monthly' : 'Monthly';
+            const lastDate = new Date(latestTx.date + 'T00:00:00');
+            if (frequency === 'Semi-Monthly') {
+              lastDate.setDate(lastDate.getDate() + 15);
+            } else {
+              lastDate.setMonth(lastDate.getMonth() + 1);
+            }
+            nextDate = lastDate.toISOString().slice(0, 10);
+            isPatternFound = true;
+          }
+        }
+
+        if (isPatternFound && nextDate) {
+          predictions.push({
+            dedupeKey: dedupeKey,
+            payee: payee,
+            amount: amount,
+            dueDate: nextDate,
+            frequency: frequency,
+            isIncome: amount > 0
+          });
+        }
+      });
+
+      return predictions;
+    }
+
+
+    // Approval & Dismissal Handlers
+    function approvePredictedTransaction(encodedPred) {
+      const pred = JSON.parse(decodeURIComponent(encodedPred));
+      plannedTransactions.push({
+        id: `pt_${Date.now()}`,
+        payee: pred.payee,
+        amount: pred.amount,
+        dueDate: pred.dueDate,
+        frequency: pred.frequency,
+        category: pred.category
+      });
+
+      localStorage.setItem('household-budget-planned-tx', JSON.stringify(plannedTransactions));
+      if (typeof showAppMessage === 'function') {
+        showAppMessage(`Approved "${pred.payee}" as a recurring planned transaction!`);
+      }
+      renderPlannedTransactions();
+    }
+
+    function dismissPredictedTransaction(encodedKey) {
+      dismissedPredictions.add(decodeURIComponent(encodedKey));
+      localStorage.setItem('household-budget-dismissed-predictions', JSON.stringify(Array.from(dismissedPredictions)));
+      if (typeof showAppMessage === 'function') {
+        showAppMessage('Pattern suggestion dismissed.');
+      }
+      renderPlannedTransactions();
+    }
+
     // --- RENDER PLANNED TRANSACTIONS ---
     function renderPlannedTransactions() {
       const desktopContainer = document.getElementById("planned-transactions-body");
       const mobileContainer = document.getElementById("mobile-planned-tx-list");
 
-      const itemsHtml = plannedTransactions.map(plan => {
-        const isIncome = plan.type === "income";
+      // 1. Detect recurring pattern predictions
+      const predictions = detectRecurringPatterns();
+
+      let predictionHtml = '';
+      if (predictions.length > 0) {
+        predictionHtml = `
+          <div class="mb-4 p-3 bg-indigo-50/80 rounded-2xl border border-indigo-100 shadow-sm">
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-xs font-black text-indigo-900 tracking-wider uppercase flex items-center gap-1.5">
+                Detected Recurring Patterns
+              </span>
+              <span class="text-[10px] font-bold text-indigo-600 bg-indigo-100/70 px-2 py-0.5 rounded-full">
+                ${predictions.length} Suggestion${predictions.length > 1 ? 's' : ''}
+              </span>
+            </div>
+            <div class="space-y-2">
+              ${predictions.map(p => {
+              const encoded = encodeURIComponent(JSON.stringify(p));
+              const formattedDate = new Date(`${p.dueDate}T00:00:00`).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+              const absAmt = Math.abs(p.amount).toFixed(2);
+              return `
+                  <div class="flex items-center justify-between bg-white p-2.5 rounded-xl border border-indigo-100 shadow-xs">
+                    <div>
+                      <div class="text-xs font-bold text-slate-800">${escapeHtml(p.payee)}</div>
+                      <div class="text-[10px] font-semibold text-indigo-600">
+                        Expected: ${formattedDate} • ${p.frequency}
+                      </div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                      <span class="text-xs font-black ${p.isIncome ? 'text-emerald-600' : 'text-slate-700'}">
+                        ${p.isIncome ? '+' : ''}$${absAmt}
+                      </span>
+                      <button type="button" onclick="approvePredictedTransaction('${encoded.replace(/'/g, '%27')}')" class="px-2 py-1 bg-emerald-600 text-white font-bold text-[10px] rounded-lg shadow-xs hover:bg-emerald-700 transition">
+                        Approve
+                      </button>
+                      <button type="button" onclick="dismissPredictedTransaction('${encodeURIComponent(p.dedupeKey).replace(/'/g, '%27')}')" class="px-2 py-1 bg-slate-100 text-slate-500 font-bold text-[10px] rounded-lg hover:bg-slate-200 transition">
+                        Dismiss
+                      </button>
+                    </div>
+                  </div>
+                `;
+            }).join('')}
+            </div>
+          </div>
+        `;
+      }
+
+      // 2. Render manually scheduled planned transactions
+      const itemsHtml = (plannedTransactions || []).map(plan => {
+        const isIncome = plan.type === "income" || (plan.amount > 0);
         const amountColor = isIncome ? "text-emerald-600" : "text-slate-900";
         const amountPrefix = isIncome ? "+" : "";
+        const absAmount = Math.abs(plan.amount).toFixed(2);
 
         return `
-            <div class="flex items-center justify-between border-b border-slate-100 pb-2.5 last:border-0 last:pb-0 gap-3">
-              <div class="min-w-0 flex-1">
-                <!-- Upscaled planned transaction title payee text -->
-                <p class="truncate text-sm font-black text-slate-800">${escapeHtml(plan.payee)}</p>
-                <!-- Stacked metadata styled to match ledger typography and tracking rules -->
-                <p class="text-xs font-extrabold text-slate-400 uppercase tracking-widest mt-1">Due: ${plan.dueDate} • ${plan.frequency}</p>
-              </div>
-              <div class="flex items-center gap-3 shrink-0">
-                <!-- Aligned amount font elements with standard visual weight layouts -->
-                <span class="text-sm font-black ${amountColor} text-right min-w-[70px] block">
-                  ${amountPrefix}$${plan.amount.toFixed(2)}
-                </span>
-                <!-- Tap-friendly Post trigger rounded to rounded-xl to match secondary buttons hierarchy -->
-                <button onclick="postPlannedTransaction('${escapeHtml(plan.payee)}', ${plan.amount}, '${plan.type}')"
-                  class="bg-blue-50 hover:bg-blue-100 text-blue-700 font-black px-3 py-1.5 rounded-xl text-xs transition shrink-0 shadow-sm">
-                  Post
-                </button>
-              </div>
+          <div class="flex items-center justify-between border-b border-slate-100 pb-2.5 last:border-0 last:pb-0 gap-3">
+            <div class="min-w-0 flex-1">
+              <p class="truncate text-sm font-black text-slate-800">${escapeHtml(plan.payee)}</p>
+              <p class="text-xs font-extrabold text-slate-400 uppercase tracking-widest mt-1">Due: ${plan.dueDate} • ${plan.frequency}</p>
             </div>
-          `;
+            <div class="flex items-center gap-3 shrink-0">
+              <span class="text-sm font-black ${amountColor} text-right min-w-[70px] block">
+                ${amountPrefix}$${absAmount}
+              </span>
+              <button onclick="postPlannedTransaction('${escapeHtml(plan.payee)}', ${Math.abs(plan.amount)}, '${plan.type || (isIncome ? 'income' : 'expense')}')"
+                class="bg-blue-50 hover:bg-blue-100 text-blue-700 font-black px-3 py-1.5 rounded-xl text-xs transition shrink-0 shadow-sm">
+                Post
+              </button>
+            </div>
+          </div>
+        `;
       }).join("");
 
       const emptyState = `<p class="text-xs text-slate-400 italic py-2 text-center">No upcoming transactions scheduled.</p>`;
 
-      if (desktopContainer) desktopContainer.innerHTML = itemsHtml || emptyState;
-      if (mobileContainer) mobileContainer.innerHTML = itemsHtml || emptyState;
+      const combinedHtml = (predictionHtml + itemsHtml) || emptyState;
+
+      if (desktopContainer) desktopContainer.innerHTML = combinedHtml;
+      if (mobileContainer) mobileContainer.innerHTML = combinedHtml;
     }
 
     // Phase 4: Modals & Dynamic Form Controls
