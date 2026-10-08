@@ -4,10 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ## [unreleased]
 
+## [1.6.9] - 2026-10-08
+
 ### Added
 - **Recurring Transaction Pattern Scanner:** Built an intelligent pattern detection engine (`detectRecurringPatterns`) that scans transaction histories for interval cadences and category triggers (like mortgage and payroll), presenting user-approvable suggestions inside the Planned Transaction drawer.
+- **Manual Planned Transaction Management:** Added a form to create planned transactions with a payee, amount, type, due date, and frequency, plus confirmed removal of saved items from local storage.
 
 ### Changed
+- **Planned Transaction Remove Control:** Matched the planned-item remove button to the transaction-card `×` control while retaining its accessible remove label and confirmation dialog.
 - **Search Fields No Longer Persist:** `saveViewState`, `restoreViewState`, and `applySavedViewState` no longer save or restore account and transaction search text, so the search fields start empty on every launch. The last-used tab is still restored.
 - **Planned Transactions UI Refinement:** Removed the dot separator between the due date and frequency in the Planned Transactions drawer cards, moving the frequency indicator onto its own dedicated line for cleaner vertical alignment and improved readability on mobile devices.
 - **Planned Transactions Drawer Scrolling:** Scheduled planned transactions now sit in a fixed-height area showing about three items, with the rest scrollable.
