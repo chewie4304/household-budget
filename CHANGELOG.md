@@ -4,6 +4,25 @@ All notable changes to this project will be documented in this file.
 
 ## [unreleased]
 
+## [1.6.9] - 2026-10-08
+
+### Added
+- **Recurring Transaction Pattern Scanner:** Built an intelligent pattern detection engine (`detectRecurringPatterns`) that scans transaction histories for interval cadences and category triggers (like mortgage and payroll), presenting user-approvable suggestions inside the Planned Transaction drawer.
+- **Manual Planned Transaction Management:** Added a form to create planned transactions with a payee, amount, type, due date, and frequency, plus confirmed removal of saved items from local storage.
+
+### Changed
+- **Planned Transaction Remove Control:** Matched the planned-item remove button to the transaction-card `×` control while retaining its accessible remove label and confirmation dialog.
+- **Search Fields No Longer Persist:** `saveViewState`, `restoreViewState`, and `applySavedViewState` no longer save or restore account and transaction search text, so the search fields start empty on every launch. The last-used tab is still restored.
+- **Planned Transactions UI Refinement:** Removed the dot separator between the due date and frequency in the Planned Transactions drawer cards, moving the frequency indicator onto its own dedicated line for cleaner vertical alignment and improved readability on mobile devices.
+- **Planned Transactions Drawer Scrolling:** Scheduled planned transactions now sit in a fixed-height area showing about three items, with the rest scrollable.
+- **Slim Scrollbar Styling:** Added a `.slim-scroll` style (thin, rounded, slate-toned thumb) and applied it to the scrollable lists in the Planned Transactions drawer.
+
+### Fixed
+- **Predicted Pattern Rendering:** Corrected mangled template interpolations in `renderPlannedTransactions` that displayed literal `\({formattedDate}` and `\({p.isIncome ...}` text in the "Detected Recurring Patterns" suggestions.
+- **Apostrophe Payees in Suggestions:** Approve and Dismiss buttons on recurring suggestions failed for payees containing apostrophes (e.g., Kohl's, Woodman's) because the value broke the inline `onclick` string. Encoded values now escape apostrophes, and `dismissPredictedTransaction` decodes its key.
+- **Stale Service Worker Cache:** Bumped the service worker cache name to `home-wealth-v1.6.11` so updated code is served instead of cached HTML.
+- **Chronological Planned Transactions Sorting:** Integrated timestamp-based date sorting (`getDueTimestamp`) into `renderPlannedTransactions` so both predicted recurring pattern suggestions and approved planned items are ordered chronologically, presenting the nearest upcoming due dates at the top.
+
 ## [1.6.8] - 2026-09-24
 
 ### Added
