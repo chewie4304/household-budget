@@ -10,6 +10,8 @@ All notable changes to this project will be documented in this file.
 ### Changed
 - **Search Fields No Longer Persist:** `saveViewState`, `restoreViewState`, and `applySavedViewState` no longer save or restore account and transaction search text, so the search fields start empty on every launch. The last-used tab is still restored.
 - **Planned Transactions UI Refinement:** Removed the dot separator between the due date and frequency in the Planned Transactions drawer cards, moving the frequency indicator onto its own dedicated line for cleaner vertical alignment and improved readability on mobile devices.
+- **Planned Transactions Drawer Scrolling:** Scheduled planned transactions now sit in a fixed-height area showing about three items, with the rest scrollable.
+- **Slim Scrollbar Styling:** Added a `.slim-scroll` style (thin, rounded, slate-toned thumb) and applied it to the scrollable lists in the Planned Transactions drawer.
 
 ### Fixed
 - **Predicted Pattern Rendering:** Corrected mangled template interpolations in `renderPlannedTransactions` that displayed literal `\({formattedDate}` and `\({p.isIncome ...}` text in the "Detected Recurring Patterns" suggestions.
