@@ -4771,7 +4771,7 @@
       const getDueTimestamp = (dateStr) => {
         if (!dateStr) return 0;
         const str = String(dateStr).trim();
-        if (/^\d{4}-\d{2}-\d{2}\$/.test(str)) {
+        if (/^\d{4}-\d{2}-\d{2}$/.test(str)) {
           return new Date(`${str}T00:00:00`).getTime();
         }
         const parsed = new Date(str).getTime();
@@ -4841,7 +4841,8 @@
           <div class="flex items-center justify-between border-b border-slate-100 pb-2.5 last:border-0 last:pb-0 gap-3">
             <div class="min-w-0 flex-1">
               <p class="truncate text-sm font-black text-slate-800">${escapeHtml(plan.payee)}</p>
-              <p class="text-xs font-extrabold text-slate-400 uppercase tracking-widest mt-1">Due: ${plan.dueDate} • ${plan.frequency}</p>
+              <p class="text-xs font-extrabold text-slate-400 uppercase tracking-widest mt-1">Due: ${plan.dueDate}</p>
+              <p class="text-xs font-extrabold text-slate-400 uppercase tracking-widest mt-1">${plan.frequency}</p>
             </div>
             <div class="flex items-center gap-3 shrink-0">
               <span class="text-sm font-black ${amountColor} text-right min-w-[70px] block">
