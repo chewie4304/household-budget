@@ -4767,8 +4767,20 @@
       const desktopContainer = document.getElementById("planned-transactions-body");
       const mobileContainer = document.getElementById("mobile-planned-tx-list");
 
-      // 1. Detect recurring pattern predictions
+      // Helper to parse due dates safely into timestamps for sorting
+      const getDueTimestamp = (dateStr) => {
+        if (!dateStr) return 0;
+        const str = String(dateStr).trim();
+        if (/^\d{4}-\d{2}-\d{2}\$/.test(str)) {
+          return new Date(`${str}T00:00:00`).getTime();
+        }
+        const parsed = new Date(str).getTime();
+        return Number.isNaN(parsed) ? 0 : parsed;
+      };
+
+      // 1. Detect recurring pattern predictions and sort chronologically (nearest date first)
       const predictions = detectRecurringPatterns();
+      predictions.sort((a, b) => getDueTimestamp(a.dueDate) - getDueTimestamp(b.dueDate));
 
       let predictionHtml = '';
       if (predictions.length > 0) {
@@ -4776,7 +4788,7 @@
           <div class="mb-4 p-3 bg-indigo-50/80 rounded-2xl border border-indigo-100 shadow-sm">
             <div class="flex items-center justify-between mb-2">
               <span class="text-xs font-black text-indigo-900 tracking-wider uppercase flex items-center gap-1.5">
-                Detected Recurring Patterns
+                <span>🔮</span> Detected Recurring Patterns
               </span>
               <span class="text-[10px] font-bold text-indigo-600 bg-indigo-100/70 px-2 py-0.5 rounded-full">
                 ${predictions.length} Suggestion${predictions.length > 1 ? 's' : ''}
@@ -4785,24 +4797,24 @@
             <div class="space-y-2">
               ${predictions.map(p => {
               const encoded = encodeURIComponent(JSON.stringify(p));
-              const formattedDate = new Date(`${p.dueDate}T00:00:00`).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+              const formattedDate = new Date(`\${p.dueDate}T00:00:00`).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
               const absAmt = Math.abs(p.amount).toFixed(2);
               return `
                   <div class="flex items-center justify-between bg-white p-2.5 rounded-xl border border-indigo-100 shadow-xs">
                     <div>
-                      <div class="text-xs font-bold text-slate-800">${escapeHtml(p.payee)}</div>
+                      <div class="text-xs font-bold text-slate-800">\${escapeHtml(p.payee)}</div>
                       <div class="text-[10px] font-semibold text-indigo-600">
-                        Expected: ${formattedDate} • ${p.frequency}
+                        Expected: \\({formattedDate} • \\){p.frequency}
                       </div>
                     </div>
                     <div class="flex items-center gap-2">
-                      <span class="text-xs font-black ${p.isIncome ? 'text-emerald-600' : 'text-slate-700'}">
-                        ${p.isIncome ? '+' : ''}$${absAmt}
+                      <span class="text-xs font-black \${p.isIncome ? 'text-emerald-600' : 'text-slate-700'}">
+                        \\({p.isIncome ? '+' : ''}\\)\${absAmt}
                       </span>
-                      <button type="button" onclick="approvePredictedTransaction('${encoded.replace(/'/g, '%27')}')" class="px-2 py-1 bg-emerald-600 text-white font-bold text-[10px] rounded-lg shadow-xs hover:bg-emerald-700 transition">
+                      <button type="button" onclick="approvePredictedTransaction('\${encoded.replace(/'/g, '%27')}')" class="px-2 py-1 bg-emerald-600 text-white font-bold text-[10px] rounded-lg shadow-xs hover:bg-emerald-700 transition">
                         Approve
                       </button>
-                      <button type="button" onclick="dismissPredictedTransaction('${encodeURIComponent(p.dedupeKey).replace(/'/g, '%27')}')" class="px-2 py-1 bg-slate-100 text-slate-500 font-bold text-[10px] rounded-lg hover:bg-slate-200 transition">
+                      <button type="button" onclick="dismissPredictedTransaction('\${encodeURIComponent(p.dedupeKey).replace(/'/g, '%27')}')" class="px-2 py-1 bg-slate-100 text-slate-500 font-bold text-[10px] rounded-lg hover:bg-slate-200 transition">
                         Dismiss
                       </button>
                     </div>
@@ -4814,8 +4826,12 @@
         `;
       }
 
-      // 2. Render manually scheduled planned transactions
-      const itemsHtml = (plannedTransactions || []).map(plan => {
+      // 2. Sort manually scheduled planned transactions chronologically (nearest date first)
+      const sortedPlanned = [...(plannedTransactions || [])].sort((a, b) => {
+        return getDueTimestamp(a.dueDate) - getDueTimestamp(b.dueDate);
+      });
+
+      const itemsHtml = sortedPlanned.map(plan => {
         const isIncome = plan.type === "income" || (plan.amount > 0);
         const amountColor = isIncome ? "text-emerald-600" : "text-slate-900";
         const amountPrefix = isIncome ? "+" : "";
