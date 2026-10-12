@@ -262,7 +262,8 @@
 
   <!-- Add Manual Planned Transaction Modal -->
   <div id="manual-planned-tx-modal"
-    class="fixed inset-0 bg-black/50 hidden flex items-end sm:items-center justify-center p-0 sm:p-4" style="z-index: 80;">
+    class="fixed inset-0 bg-black/50 hidden flex items-end sm:items-center justify-center p-0 sm:p-4"
+    style="z-index: 80;">
     <div class="bg-white w-full max-w-md rounded-t-2xl sm:rounded-2xl p-6 space-y-4 shadow-2xl">
       <div class="flex justify-between items-center pb-2 border-b border-slate-100">
         <h3 class="font-black text-lg text-slate-800">Add Planned Transaction</h3>
@@ -1951,7 +1952,11 @@
       }
       return 'bg-slate-50 text-slate-700 border border-slate-200';
     }
-    // --- Load Label Tree & Natures from Local Storage and Supabase ---
+
+    /// =================================
+    /// --- SUPABASE Helper Functions ---
+    /// =================================
+
     async function loadLabelTree() {
       function ensureObject(val) {
         let temp = val;
@@ -2063,6 +2068,54 @@
         console.warn("Unable to save label natures configuration to storage:", err);
       }
     }
+
+    // --- SUPABASE CLOUD SYNC FOR PLANNED TRANSACTIONS ---
+
+    async function savePlannedTransactionsCloud(txList) {
+      plannedTransactions = txList || [];
+      // 1. Save to localStorage for instant offline access
+      localStorage.setItem('household-budget-planned-tx', JSON.stringify(plannedTransactions));
+
+      // 2. Sync to Supabase settings table if client is connected
+      if (typeof supabaseClient !== 'undefined' && supabaseClient) {
+        try {
+          const { error } = await supabaseClient
+            .from('settings')
+            .upsert(
+              { key: 'household-budget-planned-tx', value: plannedTransactions },
+              { onConflict: 'key' }
+            );
+          if (error) console.warn('Supabase planned tx sync warning:', error.message);
+        } catch (err) {
+          console.error('Failed to sync planned transactions to Supabase:', err);
+        }
+      }
+    }
+
+    async function saveDismissedPredictionsCloud(dismissedKeys) {
+      dismissedPredictions = dismissedKeys || [];
+      // 1. Save to localStorage
+      localStorage.setItem('household-budget-dismissed-predictions', JSON.stringify(dismissedPredictions));
+
+      // 2. Sync to Supabase settings table
+      if (typeof supabaseClient !== 'undefined' && supabaseClient) {
+        try {
+          const { error } = await supabaseClient
+            .from('settings')
+            .upsert(
+              { key: 'household-budget-dismissed-predictions', value: dismissedPredictions },
+              { onConflict: 'key' }
+            );
+          if (error) console.warn('Supabase dismissed predictions sync warning:', error.message);
+        } catch (err) {
+          console.error('Failed to sync dismissed predictions to Supabase:', err);
+        }
+      }
+    }
+
+    /// ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    /// --- SUPABASE Helper Functions ---
+    /// ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
     // --- CURRENCY ROUNDING & MATH EVALUATION ---
     function roundCurrency(value) {
@@ -2542,6 +2595,20 @@
     async function fetchData() {
       const { data: accData, error: accError } = await sb.from('accounts').select('*').order('created_at', { ascending: true });
       const { data: txData, error: txError } = await sb.from('transactions').select('*').order('date', { ascending: false });
+
+      if (settingsData && Array.isArray(settingsData)) {
+        const plannedTxSetting = settingsData.find(s => s.key === 'household-budget-planned-tx');
+        if (plannedTxSetting && plannedTxSetting.value) {
+          plannedTransactions = Array.isArray(plannedTxSetting.value) ? plannedTxSetting.value : JSON.parse(plannedTxSetting.value);
+          localStorage.setItem('household-budget-planned-tx', JSON.stringify(plannedTransactions));
+        }
+
+        const dismissedSetting = settingsData.find(s => s.key === 'household-budget-dismissed-predictions');
+        if (dismissedSetting && dismissedSetting.value) {
+          dismissedPredictions = Array.isArray(dismissedSetting.value) ? dismissedSetting.value : JSON.parse(dismissedSetting.value);
+          localStorage.setItem('household-budget-dismissed-predictions', JSON.stringify(dismissedPredictions));
+        }
+      }
 
       if (accError) console.error("Error fetching accounts:", accError);
       if (txError) console.error("Error fetching transactions:", txError);
@@ -4833,30 +4900,52 @@
 
 
     // Approval & Dismissal Handlers
-    function approvePredictedTransaction(encodedPred) {
-      const pred = JSON.parse(decodeURIComponent(encodedPred));
-      plannedTransactions.push({
-        id: `pt_${Date.now()}`,
-        payee: pred.payee,
-        amount: pred.amount,
-        dueDate: pred.dueDate,
-        frequency: pred.frequency,
-        category: pred.category
-      });
+    async function approvePredictedTransaction(encodedStr) {
+      try {
+        const prediction = JSON.parse(decodeURIComponent(encodedStr));
+        const newPlanned = {
+          id: 'pt_' + +new Date(),
+          payee: prediction.payee,
+          amount: prediction.amount,
+          type: prediction.isIncome ? 'income' : 'expense',
+          dueDate: prediction.dueDate,
+          frequency: prediction.frequency
+        };
 
-      localStorage.setItem('household-budget-planned-tx', JSON.stringify(plannedTransactions));
-      if (typeof showAppMessage === 'function') {
-        showAppMessage(`Approved "${pred.payee}" as a recurring planned transaction!`);
+        if (!Array.isArray(plannedTransactions)) plannedTransactions = [];
+        plannedTransactions.push(newPlanned);
+
+        // Track dismissed prediction so it disappears from suggestions
+        if (!Array.isArray(dismissedPredictions)) dismissedPredictions = [];
+        if (prediction.dedupeKey && !dismissedPredictions.includes(prediction.dedupeKey)) {
+          dismissedPredictions.push(prediction.dedupeKey);
+          await saveDismissedPredictionsCloud(dismissedPredictions);
+        }
+
+        // 🌟 Sync to LocalStorage + Supabase Cloud
+        await savePlannedTransactionsCloud(plannedTransactions);
+
+        renderPlannedTransactions();
+
+        if (typeof showAppMessage === 'function') {
+          showAppMessage(`Approved "${prediction.payee}" as a planned item.`);
+        }
+      } catch (err) {
+        console.error('Error approving predicted transaction:', err);
       }
-      renderPlannedTransactions();
     }
 
-    function dismissPredictedTransaction(encodedKey) {
-      dismissedPredictions.add(decodeURIComponent(encodedKey));
-      localStorage.setItem('household-budget-dismissed-predictions', JSON.stringify(Array.from(dismissedPredictions)));
-      if (typeof showAppMessage === 'function') {
-        showAppMessage('Pattern suggestion dismissed.');
+    async function dismissPredictedTransaction(encodedKey) {
+      const dedupeKey = decodeURIComponent(encodedKey);
+      if (!Array.isArray(dismissedPredictions)) dismissedPredictions = [];
+
+      if (!dismissedPredictions.includes(dedupeKey)) {
+        dismissedPredictions.push(dedupeKey);
+
+        // 🌟 Sync to LocalStorage + Supabase Cloud
+        await saveDismissedPredictionsCloud(dismissedPredictions);
       }
+
       renderPlannedTransactions();
     }
 
@@ -4883,18 +4972,18 @@
       let predictionHtml = '';
       if (predictions.length > 0) {
         predictionHtml = `
-      <div class="mb-4 p-3 bg-indigo-50/80 rounded-2xl border border-indigo-100 shadow-sm">
-        <div class="flex items-center justify-between mb-2">
-          <span class="text-xs font-black text-indigo-900 tracking-wider uppercase flex items-center gap-1.5">
-            <span>🔮</span> Detected Recurring Patterns
-          </span>
-          <span class="text-[10px] font-bold text-indigo-600 bg-indigo-100/70 px-2 py-0.5 rounded-full">
-            ${predictions.length} Suggestion${predictions.length > 1 ? 's' : ''}
-          </span>
-        </div>
-        <!-- 🌟 Locked to 205px height (3 items max) with explicit inline scroll styles -->
-        <div class="slim-scroll space-y-2 pr-1.5 overscroll-contain touch-pan-y focus:outline-none" style="max-height: 205px; overflow-y: auto;">
-          ${predictions.map(p => {
+          <div class="mb-4 p-3 bg-indigo-50/80 rounded-2xl border border-indigo-100 shadow-sm">
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-xs font-black text-indigo-900 tracking-wider uppercase flex items-center gap-1.5">
+                <span>🔮</span> Detected Recurring Patterns
+              </span>
+              <span class="text-[10px] font-bold text-indigo-600 bg-indigo-100/70 px-2 py-0.5 rounded-full">
+                ${predictions.length} Suggestion${predictions.length > 1 ? 's' : ''}
+              </span>
+            </div>
+            <!-- 🌟 Locked to 205px height (3 items max) with explicit inline scroll styles -->
+            <div class="slim-scroll space-y-2 pr-1.5 overscroll-contain touch-pan-y focus:outline-none" style="max-height: 205px; overflow-y: auto;">
+              ${predictions.map(p => {
           const encoded = encodeURIComponent(JSON.stringify(p));
           const formattedDate = new Date(`${p.dueDate}T00:00:00`).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
           const absAmt = Math.abs(p.amount).toFixed(2);
@@ -4903,33 +4992,33 @@
           const signPrefix = p.isIncome ? '+' : '';
 
           return `
-              <div class="flex items-center justify-between bg-white p-2.5 rounded-xl border border-indigo-100 shadow-xs gap-2">
-                <div class="min-w-0 flex-1">
-                  <div class="text-xs font-bold text-slate-800 truncate">${payeeName}</div>
-                  <div class="text-[10px] font-semibold text-indigo-600 mt-0.5">
-                    Expected: ${formattedDate}
+                  <div class="flex items-center justify-between bg-white p-2.5 rounded-xl border border-indigo-100 shadow-xs gap-2">
+                    <div class="min-w-0 flex-1">
+                      <div class="text-xs font-bold text-slate-800 truncate">${payeeName}</div>
+                      <div class="text-[10px] font-semibold text-indigo-600 mt-0.5">
+                        Expected: ${formattedDate}
+                      </div>
+                      <div class="text-[10px] font-semibold text-indigo-400">
+                        ${p.frequency}
+                      </div>
+                    </div>
+                    <div class="flex items-center gap-1.5 shrink-0">
+                      <span class="text-xs font-black ${isIncomeClass}">
+                        ${signPrefix}$${absAmt}
+                      </span>
+                      <button type="button" onclick="approvePredictedTransaction('${encoded.replace(/'/g, '%27')}')" class="px-2 py-1 bg-emerald-600 text-white font-bold text-[10px] rounded-lg shadow-xs hover:bg-emerald-700 transition shrink-0">
+                        Approve
+                      </button>
+                      <button type="button" onclick="dismissPredictedTransaction('${encodeURIComponent(p.dedupeKey).replace(/'/g, '%27')}')" class="px-2 py-1 bg-slate-100 text-slate-500 font-bold text-[10px] rounded-lg hover:bg-slate-200 transition shrink-0">
+                        Dismiss
+                      </button>
+                    </div>
                   </div>
-                  <div class="text-[10px] font-semibold text-indigo-400">
-                    ${p.frequency}
-                  </div>
-                </div>
-                <div class="flex items-center gap-1.5 shrink-0">
-                  <span class="text-xs font-black ${isIncomeClass}">
-                    ${signPrefix}$${absAmt}
-                  </span>
-                  <button type="button" onclick="approvePredictedTransaction('${encoded.replace(/'/g, '%27')}')" class="px-2 py-1 bg-emerald-600 text-white font-bold text-[10px] rounded-lg shadow-xs hover:bg-emerald-700 transition shrink-0">
-                    Approve
-                  </button>
-                  <button type="button" onclick="dismissPredictedTransaction('${encodeURIComponent(p.dedupeKey).replace(/'/g, '%27')}')" class="px-2 py-1 bg-slate-100 text-slate-500 font-bold text-[10px] rounded-lg hover:bg-slate-200 transition shrink-0">
-                    Dismiss
-                  </button>
-                </div>
-              </div>
-            `;
+                `;
         }).join('')}
-        </div>
-      </div>
-    `;
+            </div>
+          </div>
+        `;
       }
 
       // 2. Sort manually scheduled planned transactions chronologically (nearest date first)
@@ -4945,26 +5034,26 @@
         const payeeName = typeof escapeHtml === 'function' ? escapeHtml(plan.payee) : plan.payee;
 
         return `
-      <div class="flex items-center justify-between border-b border-slate-100 pb-2.5 last:border-0 last:pb-0 gap-3">
-        <div class="min-w-0 flex-1">
-          <p class="truncate text-sm font-black text-slate-800">${payeeName}</p>
-          <p class="text-xs font-extrabold text-slate-400 uppercase tracking-widest mt-1">Due: ${plan.dueDate}</p>
-          <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">${plan.frequency}</p>
-        </div>
-        <div class="flex items-center gap-3 shrink-0">
-          <span class="text-sm font-black ${amountColor} text-right min-w-[70px] block">
-            ${amountPrefix}$${absAmount}
-          </span>
-          <button onclick="postPlannedTransaction('${payeeName}', ${Math.abs(plan.amount)}, '${plan.type || (isIncome ? 'income' : 'expense')}')"
-            class="bg-blue-50 hover:bg-blue-100 text-blue-700 font-black px-3 py-1.5 rounded-xl text-xs transition shrink-0 shadow-sm">
-            Post
-          </button>
-          <button type="button" onclick="removePlannedTransaction(${plannedTransactions.indexOf(plan)})"
-            aria-label="Remove ${payeeName} from Planned Transactions" title="Remove planned transaction"
-            class="text-red-400 hover:text-red-600 text-base font-bold px-1 transition shrink-0">&times;</button>
-        </div>
-      </div>
-    `;
+          <div class="flex items-center justify-between border-b border-slate-100 pb-2.5 last:border-0 last:pb-0 gap-3">
+            <div class="min-w-0 flex-1">
+              <p class="truncate text-sm font-black text-slate-800">${payeeName}</p>
+              <p class="text-xs font-extrabold text-slate-400 uppercase tracking-widest mt-1">Due: ${plan.dueDate}</p>
+              <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">${plan.frequency}</p>
+            </div>
+            <div class="flex items-center gap-3 shrink-0">
+              <span class="text-sm font-black ${amountColor} text-right min-w-[70px] block">
+                ${amountPrefix}$${absAmount}
+              </span>
+              <button onclick="postPlannedTransaction('${payeeName}', ${Math.abs(plan.amount)}, '${plan.type || (isIncome ? 'income' : 'expense')}')"
+                class="bg-blue-50 hover:bg-blue-100 text-blue-700 font-black px-3 py-1.5 rounded-xl text-xs transition shrink-0 shadow-sm">
+                Post
+              </button>
+              <button type="button" onclick="removePlannedTransaction(${plannedTransactions.indexOf(plan)})"
+                aria-label="Remove ${payeeName} from Planned Transactions" title="Remove planned transaction"
+                class="text-red-400 hover:text-red-600 text-base font-bold px-1 transition shrink-0">&times;</button>
+            </div>
+          </div>
+        `;
       }).join("");
 
       const emptyState = `<p class="text-xs text-slate-400 italic py-2 text-center">No upcoming transactions scheduled.</p>`;
@@ -4980,30 +5069,20 @@
       if (mobileContainer) mobileContainer.innerHTML = combinedHtml;
     }
 
-    function removePlannedTransaction(index) {
-      const plannedItem = plannedTransactions[index];
-      if (!plannedItem) return;
-
+    async function deletePlannedTransaction(id) {
       openCustomConfirm({
-        title: 'Remove Planned Transaction?',
-        message: `Remove "${plannedItem.payee || 'this item'}" from Planned Transactions?`,
-        confirmLabel: 'Remove',
-        onConfirm: () => {
-          const currentIndex = plannedTransactions.indexOf(plannedItem);
-          if (currentIndex < 0) return;
+        title: 'Delete Planned Transaction',
+        message: 'Remove this scheduled transaction from your planned list?',
+        confirmLabel: 'Delete',
+        onConfirm: async () => {
+          plannedTransactions = (plannedTransactions || []).filter(p => String(p['id']) !== String(id));
 
-          const updatedTransactions = [...plannedTransactions];
-          updatedTransactions.splice(currentIndex, 1);
-          try {
-            localStorage.setItem('household-budget-planned-tx', JSON.stringify(updatedTransactions));
-          } catch (error) {
-            showAppMessage('Could not remove the planned transaction. Check available browser storage.');
-            return;
+          await savePlannedTransactionsCloud(plannedTransactions);
+
+          if (typeof showAppMessage === 'function') {
+            showAppMessage('Planned transaction removed.');
           }
-
-          plannedTransactions = updatedTransactions;
           renderPlannedTransactions();
-          showAppMessage(`Removed "${plannedItem.payee || 'planned transaction'}".`);
         }
       });
     }
@@ -5031,42 +5110,49 @@
       }
     }
 
-    function handleManualPlannedTxSubmit(event) {
-      event.preventDefault();
+    async function handleManualPlannedTxSubmit(e) {
+      e.preventDefault();
 
-      const payee = document.getElementById('manualPlannedPayee')?.value.trim();
-      const amountInput = document.getElementById('manualPlannedAmount');
-      const type = document.getElementById('manualPlannedType')?.value;
-      const dueDate = document.getElementById('manualPlannedDueDate')?.value;
-      const frequency = document.getElementById('manualPlannedFrequency')?.value;
-      const amount = evaluateExpression(amountInput?.value.trim() || '');
+      const payee = (document.getElementById('manualPlannedPayee')?.value || '').trim();
+      const rawAmount = parseFloat(document.getElementById('manualPlannedAmount')?.value) || 0;
+      const type = document.getElementById('manualPlannedType')?.value || 'expense';
+      const dueDate = document.getElementById('manualPlannedDueDate')?.value || '';
+      const frequency = document.getElementById('manualPlannedFrequency')?.value || 'Monthly';
 
-      if (!payee || !dueDate || !Number.isFinite(amount) || amount <= 0) {
-        showAppMessage('Enter a description, a valid amount greater than zero, and a due date.');
+      if (!payee || !dueDate || rawAmount <= 0) {
+        if (typeof showAppMessage === 'function') {
+          showAppMessage('Please fill out all required fields with a valid amount.');
+        }
         return;
       }
 
-      const plannedItem = {
-        id: `pt_${Date.now()}`,
-        payee,
-        amount: roundCurrency(type === 'income' ? amount : -amount),
-        type,
-        dueDate,
-        frequency
+      const signedAmount = type === 'expense' ? -Math.abs(rawAmount) : Math.abs(rawAmount);
+
+      const newPlannedItem = {
+        id: 'pt_' + +new Date(),
+        payee: payee,
+        amount: signedAmount,
+        type: type,
+        dueDate: dueDate,
+        frequency: frequency
       };
 
-      plannedTransactions.push(plannedItem);
-      try {
-        localStorage.setItem('household-budget-planned-tx', JSON.stringify(plannedTransactions));
-      } catch (error) {
-        plannedTransactions.pop();
-        showAppMessage('Could not save the planned transaction. Check available browser storage.');
-        return;
+      if (!Array.isArray(plannedTransactions)) {
+        plannedTransactions = [];
+      }
+
+      plannedTransactions.push(newPlannedItem);
+
+      // 🌟 Sync to LocalStorage + Supabase Cloud
+      await savePlannedTransactionsCloud(plannedTransactions);
+
+      closeManualPlannedTxModal();
+
+      if (typeof showAppMessage === 'function') {
+        showAppMessage(`Added "${payee}" to Planned Transactions!`);
       }
 
       renderPlannedTransactions();
-      closeManualPlannedTxModal();
-      showAppMessage(`Added "${payee}" to Planned Transactions.`);
     }
 
     // Phase 4: Modals & Dynamic Form Controls

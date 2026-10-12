@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 ## [unreleased]
 
+## [1.6.11] - 2026-10-12
+
+### Added
+- **Multi-Device Supabase Sync for Planned Items:** Integrated `savePlannedTransactionsCloud` and `saveDismissedPredictionsCloud` to persist planned transactions and dismissed pattern suggestions directly in Supabase's `settings` table, ensuring seamless synchronization across local environments, mobile browsers, and desktop devices.
+- **Cloud Settings Hydration:** Updated `fetchData()` to retrieve and apply cloud-stored planned transactions and dismissed predictions during app startup.
+
+### Changed
+- **Service Worker Cache Version:** Bumped cache name to `home-wealth-v1.6.11` for app shell refreshment.
+
 ## [1.6.10] - 2026-10-08
 
 ### Fixed
