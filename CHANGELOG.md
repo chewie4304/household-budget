@@ -4,6 +4,20 @@ All notable changes to this project will be documented in this file.
 
 ## [unreleased]
 
+## [1.6.12] - 2026-10-12
+
+### Added
+- **Multi-Device Cloud Synchronization:** Integrated `savePlannedTransactionsCloud` and `saveDismissedPredictionsCloud` to persist planned transactions and dismissed pattern suggestions in Supabase's `settings` table using the active `sb` client instance.
+- **Real-Time Cross-Device Sync:** Added real-time subscription listeners in `index.html` so updates made on one device instantly reflect on all other active devices.
+
+### Fixed
+- **Dismissed Predictions State Bug:** Resolved runtime error where `dismissedPredictions` toggled between a `Set` and an `Array`, ensuring `.has()` calls function reliably during pattern detection.
+- **Planned Transaction Deletion:** Updated deletion handler to support legacy items without explicit IDs by removing items via array index fallback.
+- **Settings Hydration:** Fixed `fetchData()` to query the `settings` table on app startup and hydrate cloud-stored planned items.
+
+### Changed
+- **Service Worker Cache Version:** Bumped cache name to `home-wealth-v1.6.12` to force cache invalidation across desktop and mobile devices.
+
 ## [1.6.11] - 2026-10-12
 
 ### Added
