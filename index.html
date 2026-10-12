@@ -2596,43 +2596,51 @@
       const { data: accData, error: accError } = await sb.from('accounts').select('*').order('created_at', { ascending: true });
       const { data: txData, error: txError } = await sb.from('transactions').select('*').order('date', { ascending: false });
 
-      if (settingsData && Array.isArray(settingsData)) {
-        const plannedTxSetting = settingsData.find(s => s.key === 'household-budget-planned-tx');
-        if (plannedTxSetting && plannedTxSetting.value) {
-          plannedTransactions = Array.isArray(plannedTxSetting.value) ? plannedTxSetting.value : JSON.parse(plannedTxSetting.value);
-          localStorage.setItem('household-budget-planned-tx', JSON.stringify(plannedTransactions));
-        }
-
-        const dismissedSetting = settingsData.find(s => s.key === 'household-budget-dismissed-predictions');
-        if (dismissedSetting && dismissedSetting.value) {
-          dismissedPredictions = Array.isArray(dismissedSetting.value) ? dismissedSetting.value : JSON.parse(dismissedSetting.value);
-          localStorage.setItem('household-budget-dismissed-predictions', JSON.stringify(dismissedPredictions));
-        }
-      }
+      // 🌟 Query the Supabase settings table so settingsData exists
+      const { data: settingsData, error: settingsError } = await sb.from('settings').select('*');
 
       if (accError) console.error("Error fetching accounts:", accError);
       if (txError) console.error("Error fetching transactions:", txError);
+      if (settingsError) console.error("Error fetching settings:", settingsError);
 
       if (accData) {
-        // 🌟 Protect alert configurations from being clobbered during background data fetches!
         const storedAlerts = getStoredAccountAlerts();
-        accounts = accData.map(acc => {
-          const stored = storedAlerts[acc.id] || {};
+        accounts = accData['map'](acc => {
+          const stored = storedAlerts[acc['id']] || {};
           return {
             ...acc,
-            min_balance_alert: acc.min_balance_alert ?? stored.min_balance_alert ?? null,
-            max_balance_alert: acc.max_balance_alert ?? stored.max_balance_alert ?? null
+            min_balance_alert: acc['min_balance_alert'] ?? stored['min_balance_alert'] ?? null,
+            max_balance_alert: acc['max_balance_alert'] ?? stored['max_balance_alert'] ?? null
           };
         });
       }
+
       if (txData) transactions = txData;
 
-      // Always populate the accounts list & monthly summary so they're ready even if we land on a detail view
+      // 🌟 Hydrate Planned Transactions & Dismissed Predictions from Supabase
+      if (settingsData && Array.isArray(settingsData)) {
+        const plannedTxSetting = settingsData.find(s => s['key'] === 'household-budget-planned-tx');
+        if (plannedTxSetting && plannedTxSetting['value']) {
+          plannedTransactions = Array.isArray(plannedTxSetting['value'])
+            ? plannedTxSetting['value']
+            : (typeof plannedTxSetting['value'] === 'string' ? JSON.parse(plannedTxSetting['value']) : plannedTxSetting['value']);
+          localStorage.setItem('household-budget-planned-tx', JSON.stringify(plannedTransactions));
+        }
+
+        const dismissedSetting = settingsData.find(s => s['key'] === 'household-budget-dismissed-predictions');
+        if (dismissedSetting && dismissedSetting['value']) {
+          const parsedDismissed = Array.isArray(dismissedSetting['value'])
+            ? dismissedSetting['value']
+            : (typeof dismissedSetting['value'] === 'string' ? JSON.parse(dismissedSetting['value']) : dismissedSetting['value']);
+          dismissedPredictions = new Set(parsedDismissed);
+          localStorage.setItem('household-budget-dismissed-predictions', JSON.stringify(Array.from(dismissedPredictions)));
+        }
+      }
+
       renderAccounts();
 
-      // Re-render active view
       if (activeAccountId) {
-        showTransactionsView(activeAccountId, true); // Preserve scroll during background data updates
+        showTransactionsView(activeAccountId, true);
       }
     }
 
