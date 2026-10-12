@@ -2071,18 +2071,50 @@
 
     // --- SUPABASE CLOUD SYNC FOR PLANNED TRANSACTIONS ---
 
+    const PLANNED_TRANSACTIONS_SETTING_KEY = 'household-budget-planned-tx';
+    const DISMISSED_PREDICTIONS_SETTING_KEY = 'household-budget-dismissed-predictions';
+
+    function parseSettingsArray(value) {
+      let parsed = value;
+      if (typeof parsed === 'string') {
+        try {
+          parsed = JSON.parse(parsed);
+        } catch (err) {
+          console.warn('Unable to parse synced settings value:', err);
+          return [];
+        }
+      }
+      return Array.isArray(parsed) ? parsed : [];
+    }
+
+    function applySyncedSettings(settingsData) {
+      if (!Array.isArray(settingsData)) return;
+
+      const plannedSetting = settingsData.find(setting => setting['key'] === PLANNED_TRANSACTIONS_SETTING_KEY);
+      if (plannedSetting) {
+        plannedTransactions = parseSettingsArray(plannedSetting['value']);
+        localStorage.setItem(PLANNED_TRANSACTIONS_SETTING_KEY, JSON.stringify(plannedTransactions));
+      }
+
+      const dismissedSetting = settingsData.find(setting => setting['key'] === DISMISSED_PREDICTIONS_SETTING_KEY);
+      if (dismissedSetting) {
+        dismissedPredictions = new Set(parseSettingsArray(dismissedSetting['value']));
+        localStorage.setItem(DISMISSED_PREDICTIONS_SETTING_KEY, JSON.stringify(Array.from(dismissedPredictions)));
+      }
+    }
+
     async function savePlannedTransactionsCloud(txList) {
-      plannedTransactions = txList || [];
+      plannedTransactions = Array.isArray(txList) ? txList : [];
       // 1. Save to localStorage for instant offline access
-      localStorage.setItem('household-budget-planned-tx', JSON.stringify(plannedTransactions));
+      localStorage.setItem(PLANNED_TRANSACTIONS_SETTING_KEY, JSON.stringify(plannedTransactions));
 
       // 2. Sync to Supabase settings table if client is connected
-      if (typeof supabaseClient !== 'undefined' && supabaseClient) {
+      if (typeof sb !== 'undefined' && sb) {
         try {
-          const { error } = await supabaseClient
+          const { error } = await sb
             .from('settings')
             .upsert(
-              { key: 'household-budget-planned-tx', value: plannedTransactions },
+              { key: PLANNED_TRANSACTIONS_SETTING_KEY, value: plannedTransactions },
               { onConflict: 'key' }
             );
           if (error) console.warn('Supabase planned tx sync warning:', error.message);
@@ -2093,17 +2125,20 @@
     }
 
     async function saveDismissedPredictionsCloud(dismissedKeys) {
-      dismissedPredictions = dismissedKeys || [];
+      const keys = dismissedKeys instanceof Set
+        ? Array.from(dismissedKeys)
+        : parseSettingsArray(dismissedKeys);
+      dismissedPredictions = new Set(keys);
       // 1. Save to localStorage
-      localStorage.setItem('household-budget-dismissed-predictions', JSON.stringify(dismissedPredictions));
+      localStorage.setItem(DISMISSED_PREDICTIONS_SETTING_KEY, JSON.stringify(keys));
 
       // 2. Sync to Supabase settings table
-      if (typeof supabaseClient !== 'undefined' && supabaseClient) {
+      if (typeof sb !== 'undefined' && sb) {
         try {
-          const { error } = await supabaseClient
+          const { error } = await sb
             .from('settings')
             .upsert(
-              { key: 'household-budget-dismissed-predictions', value: dismissedPredictions },
+              { key: DISMISSED_PREDICTIONS_SETTING_KEY, value: keys },
               { onConflict: 'key' }
             );
           if (error) console.warn('Supabase dismissed predictions sync warning:', error.message);
@@ -2552,6 +2587,17 @@
             fetchAccounts();
             fetchData();
           })
+          .on('postgres_changes', { event: '*', schema: 'public', table: 'settings' }, (payload) => {
+            const isDelete = payload.eventType === 'DELETE';
+            const setting = isDelete ? payload.old : payload.new;
+            if (!setting || ![
+              PLANNED_TRANSACTIONS_SETTING_KEY,
+              DISMISSED_PREDICTIONS_SETTING_KEY
+            ].includes(setting['key'])) return;
+
+            applySyncedSettings([{ ...setting, value: isDelete ? [] : setting['value'] }]);
+            renderPlannedTransactions();
+          })
           .subscribe();
       } catch (err) {
         console.warn("Realtime subscription warning:", err);
@@ -2617,25 +2663,7 @@
 
       if (txData) transactions = txData;
 
-      // 🌟 Hydrate Planned Transactions & Dismissed Predictions from Supabase
-      if (settingsData && Array.isArray(settingsData)) {
-        const plannedTxSetting = settingsData.find(s => s['key'] === 'household-budget-planned-tx');
-        if (plannedTxSetting && plannedTxSetting['value']) {
-          plannedTransactions = Array.isArray(plannedTxSetting['value'])
-            ? plannedTxSetting['value']
-            : (typeof plannedTxSetting['value'] === 'string' ? JSON.parse(plannedTxSetting['value']) : plannedTxSetting['value']);
-          localStorage.setItem('household-budget-planned-tx', JSON.stringify(plannedTransactions));
-        }
-
-        const dismissedSetting = settingsData.find(s => s['key'] === 'household-budget-dismissed-predictions');
-        if (dismissedSetting && dismissedSetting['value']) {
-          const parsedDismissed = Array.isArray(dismissedSetting['value'])
-            ? dismissedSetting['value']
-            : (typeof dismissedSetting['value'] === 'string' ? JSON.parse(dismissedSetting['value']) : dismissedSetting['value']);
-          dismissedPredictions = new Set(parsedDismissed);
-          localStorage.setItem('household-budget-dismissed-predictions', JSON.stringify(Array.from(dismissedPredictions)));
-        }
-      }
+      applySyncedSettings(settingsData);
 
       renderAccounts();
 
@@ -4786,10 +4814,11 @@
         return [];
       }
 
-      // Ensure dismissedPredictions exists
-      if (typeof dismissedPredictions === 'undefined' || !dismissedPredictions) {
+      if (!(dismissedPredictions instanceof Set)) {
         dismissedPredictions = new Set(
-          JSON.parse(localStorage.getItem('household-budget-dismissed-predictions') || '[]')
+          Array.isArray(dismissedPredictions)
+            ? dismissedPredictions
+            : parseSettingsArray(localStorage.getItem(DISMISSED_PREDICTIONS_SETTING_KEY))
         );
       }
 
@@ -4924,9 +4953,9 @@
         plannedTransactions.push(newPlanned);
 
         // Track dismissed prediction so it disappears from suggestions
-        if (!Array.isArray(dismissedPredictions)) dismissedPredictions = [];
-        if (prediction.dedupeKey && !dismissedPredictions.includes(prediction.dedupeKey)) {
-          dismissedPredictions.push(prediction.dedupeKey);
+        if (!(dismissedPredictions instanceof Set)) dismissedPredictions = new Set(parseSettingsArray(dismissedPredictions));
+        if (prediction.dedupeKey && !dismissedPredictions.has(prediction.dedupeKey)) {
+          dismissedPredictions.add(prediction.dedupeKey);
           await saveDismissedPredictionsCloud(dismissedPredictions);
         }
 
@@ -4945,10 +4974,10 @@
 
     async function dismissPredictedTransaction(encodedKey) {
       const dedupeKey = decodeURIComponent(encodedKey);
-      if (!Array.isArray(dismissedPredictions)) dismissedPredictions = [];
+      if (!(dismissedPredictions instanceof Set)) dismissedPredictions = new Set(parseSettingsArray(dismissedPredictions));
 
-      if (!dismissedPredictions.includes(dedupeKey)) {
-        dismissedPredictions.push(dedupeKey);
+      if (!dismissedPredictions.has(dedupeKey)) {
+        dismissedPredictions.add(dedupeKey);
 
         // 🌟 Sync to LocalStorage + Supabase Cloud
         await saveDismissedPredictionsCloud(dismissedPredictions);
@@ -5056,7 +5085,7 @@
                 class="bg-blue-50 hover:bg-blue-100 text-blue-700 font-black px-3 py-1.5 rounded-xl text-xs transition shrink-0 shadow-sm">
                 Post
               </button>
-              <button type="button" onclick="removePlannedTransaction(${plannedTransactions.indexOf(plan)})"
+              <button type="button" onclick="deletePlannedTransaction(${plannedTransactions.indexOf(plan)})"
                 aria-label="Remove ${payeeName} from Planned Transactions" title="Remove planned transaction"
                 class="text-red-400 hover:text-red-600 text-base font-bold px-1 transition shrink-0">&times;</button>
             </div>
@@ -5077,13 +5106,13 @@
       if (mobileContainer) mobileContainer.innerHTML = combinedHtml;
     }
 
-    async function deletePlannedTransaction(id) {
+    async function deletePlannedTransaction(index) {
       openCustomConfirm({
         title: 'Delete Planned Transaction',
         message: 'Remove this scheduled transaction from your planned list?',
         confirmLabel: 'Delete',
         onConfirm: async () => {
-          plannedTransactions = (plannedTransactions || []).filter(p => String(p['id']) !== String(id));
+          plannedTransactions = (plannedTransactions || []).filter((_, itemIndex) => itemIndex !== index);
 
           await savePlannedTransactionsCloud(plannedTransactions);
 
