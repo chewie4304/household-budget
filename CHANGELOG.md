@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ## [unreleased]
 
+# [1.6.13] - 2026-10-13
+
+### Fixed
+- **Category Label Apostrophe Handling:** Escaped single quotes in inline string parameters across `renderLabelNode()` (`onclick`, drag, and touch event handlers) and label autocomplete dropdowns. This resolves a JavaScript syntax error when clicking or reordering categories containing apostrophes (e.g., *"Where'd it Go?"*).
+
+### Changed
+- **Service Worker Cache Version:** Bumped cache version name to `home-wealth-v1.6.13` in `sw.js` to force asset cache invalidation across mobile and desktop browsers.
+
 ## [1.6.12] - 2026-10-12
 
 ### Added
