@@ -6554,6 +6554,7 @@
     function renderLabelNode(nodeName, nodeValue, parentPathArray = [], query = "") {
       const currentPathArray = [...parentPathArray, nodeName];
       const pathId = currentPathArray.join("-");
+      const safePathId = pathId.replace(/'/g, "\\'");
       const isFolder = nodeValue && typeof nodeValue === "object" && Object.keys(nodeValue).length > 0;
 
       // Auto-expand directory if user is actively searching to reveal matching items
@@ -6570,7 +6571,7 @@
 
       // Icon formatting
       const chevron = isFolder
-        ? `<button type="button" onclick="toggleNodeExpanded('${pathId}')"
+        ? `<button type="button" onclick="toggleNodeExpanded('${safePathId}')"
         class="w-5 h-5 flex items-center justify-center text-slate-400 hover:text-slate-600 transition-transform ${isExpanded ? 'rotate-90' : ''}">
         ▶
       </button>`
@@ -6587,15 +6588,15 @@
 
       const managementActions = `
     <div class="flex items-center gap-1 ml-auto opacity-70 hover:opacity-100 transition-opacity">
-      <button type="button" onclick="handleRenameCategory('${pathId}')"
+      <button type="button" onclick="handleRenameCategory('${safePathId}')"
         class="p-1 text-slate-500 hover:text-blue-600 hover:bg-slate-100 rounded transition" title="Rename category">
         ✏
       </button>
-      <button type="button" onclick="handleDeleteCategory('${pathId}')"
+      <button type="button" onclick="handleDeleteCategory('${safePathId}')"
         class="p-1 text-slate-500 hover:text-red-600 hover:bg-slate-100 rounded transition" title="Delete category">
         🗑
       </button>
-      <button type="button" onclick="handleAddSubCategory('${pathId}')"
+      <button type="button" onclick="handleAddSubCategory('${safePathId}')"
         class="p-1 text-slate-500 hover:text-emerald-600 hover:bg-slate-100 rounded transition" title="Add nested sub-category">
         ➕
       </button>
@@ -6606,12 +6607,12 @@
       const dragAttributes = pickerEditMode ? `
       draggable="true"
       data-path-id="${pathId}"
-      ondragstart="handleLabelDragStart(event, '${pathId}')"
+      ondragstart="handleLabelDragStart(event, '${safePathId}')"
       ondragend="handleLabelDragEnd(event)"
-      ondragover="handleLabelDragOver(event, '${pathId}')"
+      ondragover="handleLabelDragOver(event, '${safePathId}')"
       ondragleave="handleLabelDragLeave(event)"
-      ondrop="handleLabelDrop(event, '${pathId}')"
-      ontouchstart="handleLabelTouchStartReorder(event, '${pathId}')"
+      ondrop="handleLabelDrop(event, '${safePathId}')"
+      ontouchstart="handleLabelTouchStartReorder(event, '${safePathId}')"
       ontouchmove="handleLabelTouchMoveReorder(event)"
       ontouchend="handleLabelTouchEndReorder(event)"
       ` : "";
@@ -6625,10 +6626,10 @@
             ${!pickerEditMode ? `
               <input type="checkbox" ${isChecked ? "checked" : ""}
                 id="chk-${pathId}"
-                onclick="toggleLabelChecked('${pathId}')"
+                onclick="toggleLabelChecked('${safePathId}')"
                 class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer" />
             ` : ""}
-            <span ${isFolder ? `onclick="toggleNodeExpanded('${pathId}')"` : ""}
+            <span ${isFolder ? `onclick="toggleNodeExpanded('${safePathId}')"` : ""}
               class="text-xs font-semibold text-slate-700 flex items-center gap-1 select-none ${isFolder ? 'cursor-pointer hover:text-blue-600 transition-colors' : ''}">
               ${icon ? `<span>${icon}</span>` : ""}
               <span>${nodeName}</span>
@@ -6763,6 +6764,7 @@
 
       dropdown.innerHTML = activeDropdownMatches.map((pathArray, idx) => {
         const pathStr = pathArray.join("-");
+        const safePathStr = pathStr.replace(/'/g, "\\'");
         const displayName = pathArray[pathArray.length - 1];
         const displayPath = pathArray.join(" ➔ ");
         const isHighlighted = idx === selectedDropdownIndex;
@@ -6772,7 +6774,7 @@
           : "text-slate-700 hover:bg-slate-50";
 
         return `
-          <div onclick="selectDropdownLabel('${pathStr}')" 
+          <div onclick="selectDropdownLabel('${safePathStr}')" 
                class="px-4 py-2.5 text-xs cursor-pointer flex flex-col gap-0.5 transition-colors ${highlightClass}">
             <span class="font-semibold text-slate-800">${displayName}</span>
             <span class="text-[10px] text-slate-400 font-medium">${displayPath}</span>
