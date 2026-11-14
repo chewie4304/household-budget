@@ -2,7 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
-## [unreleased]
+## [1.7.0] - 2026-11-14
+
+### Added
+- **Edit Planned Transactions:** Cards in the Planned Transactions widget include an Edit button that opens the saved planned transaction with its details populated. Saving updates the recurring plan and its future occurrences without posting a transaction.
+- **Recurring Planned Transaction Deletion Options:** Choose to skip only the current occurrence and advance the due date, or remove the entire recurring plan. The dialog notes that removing a plan does not suppress future pattern suggestions. One-time items retain their existing delete confirmation.
+- **Upcoming Transactions in Ledgers:** Planned items appear in yellow at the top of the master and matching account lists starting three days before their due date, without affecting balances. Upcoming items remain visible across selected months and respect search, label, and transaction-type filters. Post opens the prefilled transaction form; successfully posting advances recurring items or removes one-time items. Overdue items stay visible until posted. Older plans without a saved account appear in an account ledger only when matching transaction history identifies a single account.
+- **Full Planned Transaction Details:** The planned transaction editor now uses the regular transaction form, including accounts, transfers, payment details, status, labels, splits, descriptions, and attachments. Saved details are restored when posting, while existing planned items remain usable.
+
+### Fixed
+- **Recurring Pattern Over-Suggestion:** Rewrote `detectRecurringPatterns()` so the Planned Transactions widget only suggests genuinely recurring activity. A suggestion now requires at least three occurrences from/to the same account with similar amounts (within ±15% of the median) and consistently spaced intervals matching a weekly, semi-monthly, or monthly cadence. Removed the keyword/category trigger that promoted one-time charges after a single occurrence (e.g., anything tagged "Bills" or containing "rent" — which even substring-matched "current"), and the average-interval check that flagged any payee seen just twice within 10–38 days. Approved planned items are now matched by payee with amount tolerance so minor amount drift no longer resurfaces them as new suggestions.
+
+### Changed
+- **Service Worker Cache Version:** Bumped cache name to `home-wealth-v1.7.0` in `sw.js` to force asset cache invalidation across mobile and desktop browsers.
 
 # [1.6.13] - 2026-10-13
 
