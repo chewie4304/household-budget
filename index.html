@@ -260,73 +260,10 @@
     </div>
   </div>
 
-  <!-- Add Manual Planned Transaction Modal -->
-  <div id="manual-planned-tx-modal"
-    class="fixed inset-0 bg-black/50 hidden flex items-end sm:items-center justify-center p-0 sm:p-4"
-    style="z-index: 80;">
-    <div class="bg-white w-full max-w-md rounded-t-2xl sm:rounded-2xl p-6 space-y-4 shadow-2xl">
-      <div class="flex justify-between items-center pb-2 border-b border-slate-100">
-        <h3 class="font-black text-lg text-slate-800">Add Planned Transaction</h3>
-        <button type="button" onclick="closeManualPlannedTxModal()"
-          class="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
-      </div>
-
-      <form id="manual-planned-tx-form" onsubmit="handleManualPlannedTxSubmit(event)" class="space-y-3">
-        <div>
-          <label for="manualPlannedPayee" class="text-xs font-semibold text-gray-600">Payee / Description</label>
-          <input type="text" id="manualPlannedPayee" placeholder="e.g., Electric Bill, Salary" required
-            class="w-full border border-slate-200 p-2.5 rounded-2xl mt-1 text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-200" />
-        </div>
-
-        <div class="grid grid-cols-2 gap-2">
-          <div>
-            <label for="manualPlannedType" class="text-xs font-semibold text-gray-600">Type</label>
-            <select id="manualPlannedType"
-              class="w-full border border-slate-200 p-2.5 rounded-2xl mt-1 bg-white text-sm font-semibold text-slate-800">
-              <option value="expense">Expense (-)</option>
-              <option value="income">Income (+)</option>
-            </select>
-          </div>
-          <div>
-            <label for="manualPlannedAmount" class="text-xs font-semibold text-gray-600">Amount ($)</label>
-            <input type="text" id="manualPlannedAmount" placeholder="0.00" required inputmode="decimal"
-              oninput="restrictToMathInput(this)" onblur="handleMathEvaluation(this)"
-              class="w-full border border-slate-200 p-2.5 rounded-2xl mt-1 text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-200" />
-          </div>
-        </div>
-
-        <div class="grid grid-cols-2 gap-2">
-          <div>
-            <label for="manualPlannedDueDate" class="text-xs font-semibold text-gray-600">Due Date</label>
-            <input type="date" id="manualPlannedDueDate" required
-              class="w-full border border-slate-200 p-2 rounded-2xl mt-1 text-sm font-semibold text-slate-800" />
-          </div>
-          <div>
-            <label for="manualPlannedFrequency" class="text-xs font-semibold text-gray-600">Frequency</label>
-            <select id="manualPlannedFrequency"
-              class="w-full border border-slate-200 p-2.5 rounded-2xl mt-1 bg-white text-sm font-semibold text-slate-800">
-              <option value="Monthly">Monthly</option>
-              <option value="Semi-Monthly">Semi-Monthly</option>
-              <option value="Bi-Weekly">Bi-Weekly</option>
-              <option value="Weekly">Weekly</option>
-              <option value="Annually">Annually</option>
-              <option value="One-Time">One-Time</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="pt-2 flex gap-2">
-          <button type="button" onclick="closeManualPlannedTxModal()"
-            class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 py-2.5 rounded-2xl font-bold text-xs transition">
-            Cancel
-          </button>
-          <button type="submit"
-            class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-2xl font-bold text-xs shadow-md transition">
-            Save Planned Item
-          </button>
-        </div>
-      </form>
-    </div>
+  <div id="app-message" role="status" aria-live="polite"
+    class="hidden fixed top-4 left-4 right-4 sm:left-auto sm:max-w-md rounded-2xl bg-slate-800 text-white px-4 py-3 text-sm font-semibold shadow-xl"
+    style="z-index: 100;">
+    <span id="app-message-text"></span>
   </div>
 
   <!-- Unified Layout Grid Container -->
@@ -1068,6 +1005,33 @@
     </div>
   </div>
 
+  <!-- Recurring Planned Transaction Deletion Options -->
+  <div id="planned-delete-options-modal"
+    class="fixed inset-0 bg-black/50 hidden flex items-end sm:items-center justify-center p-0 sm:p-4"
+    style="z-index: 70;">
+    <div class="bg-white w-full max-w-sm rounded-t-2xl sm:rounded-2xl p-5 space-y-4 shadow-2xl">
+      <div class="flex justify-between items-center">
+        <h3 class="font-bold text-lg text-gray-800">Delete Planned Transaction</h3>
+        <button type="button" onclick="closePlannedDeleteOptions()" aria-label="Close"
+          class="text-gray-400 text-2xl">&times;</button>
+      </div>
+      <p class="text-gray-700 text-sm">Choose whether to skip this occurrence or remove the recurring plan.</p>
+      <p class="text-xs text-gray-500">Removing the plan does not prevent the app from suggesting the pattern again.</p>
+      <div class="space-y-2">
+        <button type="button" id="planned-delete-one" onclick="applyPlannedDeleteChoice('one')"
+          class="w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold text-sm">
+          Only this transaction
+        </button>
+        <button type="button" id="planned-delete-all" onclick="applyPlannedDeleteChoice('all')"
+          class="w-full px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-semibold text-sm">
+          All future recurring transactions
+        </button>
+        <button type="button" onclick="closePlannedDeleteOptions()"
+          class="w-full px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-semibold text-sm">Cancel</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Custom Prompt Modal -->
   <div id="custom-prompt-modal"
     class="fixed inset-0 bg-black/50 hidden flex items-end sm:items-center justify-center p-0 sm:p-4"
@@ -1312,7 +1276,7 @@
         <!-- Date & Status -->
         <div class="grid grid-cols-2 gap-2">
           <div>
-            <label class="text-xs font-semibold text-gray-600">Date</label>
+            <label id="tx-date-label" class="text-xs font-semibold text-gray-600">Date</label>
             <input type="date" id="txDate" required class="w-full border p-2 rounded-2xl mt-1" />
           </div>
           <div>
@@ -1322,6 +1286,18 @@
               <option value="reconciled">Cleared</option>
             </select>
           </div>
+        </div>
+
+        <div id="tx-frequency-field" class="hidden">
+          <label for="txFrequency" class="text-xs font-semibold text-gray-600">Frequency</label>
+          <select id="txFrequency" class="w-full border p-2 rounded-2xl mt-1 bg-white">
+            <option value="Monthly">Monthly</option>
+            <option value="Semi-Monthly">Semi-Monthly</option>
+            <option value="Bi-Weekly">Bi-Weekly</option>
+            <option value="Weekly">Weekly</option>
+            <option value="Annually">Annually</option>
+            <option value="One-Time">One-Time</option>
+          </select>
         </div>
 
         <!-- Dynamic Payer / Payee Field (Optional) -->
@@ -1636,6 +1612,10 @@
     let activeAccountId = null;
     let activeReceiptFiles = [];
     let activeReceiptUrls = [];
+    let planningTransaction = false;
+    let returnToPlannedDrawer = false;
+    let postingPlannedOccurrence = null;
+    let editingPlannedOccurrence = null;
     let accountAlertState = {};
     try {
       accountAlertState = JSON.parse(sessionStorage.getItem('household-budget-alert-state') || '{}');
@@ -1659,6 +1639,7 @@
     let appMessageTimer = null;
     let pendingClearedBalanceEdit = null;
     let pendingConfirmAction = null;
+    let pendingPlannedDeletion = null;
     let pendingAccountDeletion = null;
     let selectedSummaryMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
     // 🌟 Added dedicated ledger month state variable to decouple calendar selectors
@@ -2104,9 +2085,10 @@
     }
 
     async function savePlannedTransactionsCloud(txList) {
-      plannedTransactions = Array.isArray(txList) ? txList : [];
+      const nextTransactions = Array.isArray(txList) ? txList : [];
       // 1. Save to localStorage for instant offline access
-      localStorage.setItem(PLANNED_TRANSACTIONS_SETTING_KEY, JSON.stringify(plannedTransactions));
+      localStorage.setItem(PLANNED_TRANSACTIONS_SETTING_KEY, JSON.stringify(nextTransactions));
+      plannedTransactions = nextTransactions;
 
       // 2. Sync to Supabase settings table if client is connected
       if (typeof sb !== 'undefined' && sb) {
@@ -2117,11 +2099,16 @@
               { key: PLANNED_TRANSACTIONS_SETTING_KEY, value: plannedTransactions },
               { onConflict: 'key' }
             );
-          if (error) console.warn('Supabase planned tx sync warning:', error.message);
+          if (error) {
+            console.warn('Supabase planned tx sync warning:', error.message);
+            return false;
+          }
         } catch (err) {
           console.error('Failed to sync planned transactions to Supabase:', err);
+          return false;
         }
       }
+      return true;
     }
 
     async function saveDismissedPredictionsCloud(dismissedKeys) {
@@ -2382,6 +2369,100 @@
       return `${year}-${month}-${day}`;
     }
 
+    function plannedAccountId(plan) {
+      if (plan.account_id) return plan.account_id;
+      const payee = String(plan.payee || '').trim().toLowerCase();
+      if (!payee) return null;
+      const matchingAccounts = new Set(transactions.filter(tx =>
+        String(tx.payee || tx.description || '').trim().toLowerCase() === payee &&
+        Math.abs(Math.abs(Number(tx.amount)) - Math.abs(Number(plan.amount))) <=
+          Math.max(Math.abs(Number(plan.amount)) * 0.15, 1) &&
+        tx.account_id
+      ).map(tx => tx.account_id));
+      return matchingAccounts.size === 1 ? [...matchingAccounts][0] : null;
+    }
+
+    function upcomingPlannedItems(accountId, query, filters, matchAll, type) {
+      const limit = new Date();
+      limit.setHours(0, 0, 0, 0);
+      limit.setDate(limit.getDate() + 3);
+      const limitDate = getLocalDateString(limit);
+      return plannedTransactions.map((plan, index) => {
+        const sourceId = plannedAccountId(plan);
+        const isDestination = plan.type === 'transfer' && accountId && plan.destination_account_id === accountId;
+        const amount = isDestination ? Math.abs(Number(plan.amount)) : Number(plan.amount);
+        return { plan, index, sourceId, isDestination, amount };
+      }).filter(item => {
+        const { plan, sourceId, isDestination, amount } = item;
+        const dueDate = new Date(`${plan.dueDate}T00:00:00`);
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(plan.dueDate || '') ||
+          Number.isNaN(dueDate.getTime()) || getLocalDateString(dueDate) !== plan.dueDate || plan.dueDate > limitDate ||
+          !Number.isFinite(amount)) return false;
+        if (accountId && sourceId !== accountId && !isDestination) return false;
+        if (type && (plan.type === 'transfer' || (type === 'income' ? amount <= 0 : amount >= 0))) return false;
+        const account = accounts.find(acc => acc.id === (isDestination ? plan.destination_account_id : sourceId));
+        if (!matchesSearch({ ...plan, account_name: account?.name }, query)) return false;
+        if (filters.length) {
+          const tags = getTransactionTags(plan).map(tag => parseLabelString(tag).rawPath);
+          const matches = filter => tags.includes(parseLabelString(filter).rawPath);
+          if (!(matchAll ? filters.every(matches) : filters.some(matches))) return false;
+        }
+        return true;
+      }).sort((a, b) => a.plan.dueDate.localeCompare(b.plan.dueDate));
+    }
+
+    function renderUpcomingPlannedCard(item, showAccount) {
+      const { plan, index, sourceId, isDestination, amount } = item;
+      const account = accounts.find(acc => acc.id === (isDestination ? plan.destination_account_id : sourceId));
+      const title = plan.type === 'transfer'
+        ? `Transfer ${isDestination ? 'from' : 'to'} ${accounts.find(acc =>
+          acc.id === (isDestination ? sourceId : plan.destination_account_id))?.name || 'account'}`
+        : (plan.payee || plan.description || 'Transaction');
+      const overdue = plan.dueDate < getLocalDateString();
+      return `
+        <div class="bg-yellow-50 border border-yellow-300 shadow-sm p-4 rounded-2xl">
+          <div class="flex justify-between items-start gap-3">
+            <div class="min-w-0 flex-1">
+              <p class="font-black text-slate-900 text-lg">${escapeHtml(title)}</p>
+              ${showAccount ? `<p class="mt-1 text-xs font-extrabold text-yellow-800 uppercase tracking-widest">${escapeHtml(account?.name || 'Account not assigned')}</p>` : ''}
+              <p class="mt-1 text-xs font-extrabold text-yellow-800 uppercase tracking-widest">${overdue ? 'Overdue' : 'Upcoming'} · ${escapeHtml(plan.dueDate)} · Not posted</p>
+              ${plan.description && plan.description !== title ? `<p class="text-xs text-slate-600 mt-1">${escapeHtml(plan.description)}</p>` : ''}
+            </div>
+            <div class="flex flex-col items-end gap-3 shrink-0">
+              <span class="text-xl font-black text-slate-900">${amount > 0 ? '+' : ''}$${amount.toFixed(2)}</span>
+              <button type="button" onclick="postPlannedTransaction(${index})"
+                class="bg-yellow-200 hover:bg-yellow-300 text-yellow-900 font-black px-3 py-1.5 rounded-xl text-xs">Post</button>
+            </div>
+          </div>
+        </div>`;
+    }
+
+    function nextPlannedOccurrence(plan) {
+      const date = new Date(`${plan.dueDate}T00:00:00`);
+      if (Number.isNaN(date.getTime())) throw new Error('The planned due date is invalid.');
+      const next = { ...plan };
+      switch (plan.frequency) {
+        case 'One-Time': return null;
+        case 'Weekly': date.setDate(date.getDate() + 7); break;
+        case 'Bi-Weekly': date.setDate(date.getDate() + 14); break;
+        case 'Semi-Monthly': date.setDate(date.getDate() + 15); break;
+        case 'Monthly':
+        case 'Annually': {
+          const day = plan.recurrence_day || date.getDate();
+          next.recurrence_day = day;
+          const months = plan.frequency === 'Monthly' ? 1 : 12;
+          date.setDate(1);
+          date.setMonth(date.getMonth() + months);
+          const lastDay = new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
+          date.setDate(Math.min(day, lastDay));
+          break;
+        }
+        default: throw new Error(`Unsupported planned frequency: ${plan.frequency || '(missing)'}.`);
+      }
+      next.dueDate = getLocalDateString(date);
+      return next;
+    }
+
     // Phase 2: Data & API Layer (Supabase & Alerts)
     async function detectCheckNumberColumn() {
       try {
@@ -2546,6 +2627,16 @@
 
       // 🌟 CALL THE WIDGET ENGINE RENDER HERE!
       renderPlannedTransactions();
+      let lastUpcomingDate = getLocalDateString();
+      const refreshUpcomingDate = () => {
+        const today = getLocalDateString();
+        if (today !== lastUpcomingDate) {
+          lastUpcomingDate = today;
+          renderPlannedTransactions();
+        }
+      };
+      setInterval(refreshUpcomingDate, 60000);
+      document.addEventListener('visibilitychange', refreshUpcomingDate);
 
       // Dynamic autocomplete on typing
       const txDescInput = document.getElementById('txDesc');
@@ -2638,7 +2729,7 @@
       }
     }
 
-    async function fetchData() {
+    async function fetchData(skipPlannedSettings = false) {
       const { data: accData, error: accError } = await sb.from('accounts').select('*').order('created_at', { ascending: true });
       const { data: txData, error: txError } = await sb.from('transactions').select('*').order('date', { ascending: false });
 
@@ -2663,7 +2754,9 @@
 
       if (txData) transactions = txData;
 
-      applySyncedSettings(settingsData);
+      applySyncedSettings(skipPlannedSettings && Array.isArray(settingsData)
+        ? settingsData.filter(setting => setting.key !== PLANNED_TRANSACTIONS_SETTING_KEY)
+        : settingsData);
 
       renderAccounts();
 
@@ -3061,6 +3154,8 @@
       const filteredTransactions = baseTransactions
         .filter(tx => matchesSearch(tx, query))
         .sort(compareTransactions);
+      const upcoming = upcomingPlannedItems(null, query, globalActiveTagFilters,
+        globalActiveTagFiltersMatchAll, selectedSummaryTransactionType);
 
       const groupedTransactions = [];
       const seen = new Set();
@@ -3083,7 +3178,7 @@
 
       const finalTransactions = groupedTransactions;
 
-      if (finalTransactions.length === 0) {
+      if (finalTransactions.length === 0 && upcoming.length === 0) {
         list.innerHTML = `
           <div class="bg-white p-6 rounded-xl border border-gray-200 text-center space-y-2">
             <p class="text-gray-600 font-medium">${query ? 'No matching transactions found.' : selectedSummaryTransactionType === 'income' ? 'No income transactions found for this month.' : selectedSummaryTransactionType === 'expense' ? 'No expense transactions found for this month.' : 'No transactions found.'}</p>
@@ -3190,7 +3285,7 @@
         }
       }
 
-      list.innerHTML = txCardsHtml.join('');
+      list.innerHTML = upcoming.map(item => renderUpcomingPlannedCard(item, true)).join('') + txCardsHtml.join('');
     }
 
     function setAccountTypeFilter(filterValue) {
@@ -4222,8 +4317,10 @@
 
       // 🌟 SORT THE DYNAMIC FEED TO ALIGN WITH TRANSACTION VIEW
       filteredTx.sort(compareTransactions);
+      const upcoming = upcomingPlannedItems(activeAccountId, query, activeTagFilters,
+        activeTagFiltersMatchAll, selectedAccountTransactionType);
 
-      if (filteredTx.length === 0) {
+      if (filteredTx.length === 0 && upcoming.length === 0) {
         const emptyMessage = activeTagFilters.length > 0
           ? 'No transactions with this tag.'
           : selectedAccountTransactionType === 'income'
@@ -4240,7 +4337,7 @@
         return;
       }
 
-      list.innerHTML = filteredTx.map(tx => {
+      list.innerHTML = upcoming.map(item => renderUpcomingPlannedCard(item, false)).join('') + filteredTx.map(tx => {
         const amt = parseFloat(tx.amount || 0);
         const isPositive = amt >= 0;
         const status = tx.status || 'pending';
@@ -4822,114 +4919,118 @@
         );
       }
 
+      // --- Detection thresholds ---
+      // A charge must recur at least this many times before it can be suggested,
+      // so one-time transactions never produce a prediction.
+      const MIN_OCCURRENCES = 3;
+      // Amounts count as "similar" within ±15% of the cluster median (±$1 minimum).
+      const AMOUNT_TOLERANCE_PCT = 0.15;
+      const AMOUNT_TOLERANCE_MIN = 1;
+      // Recognized cadence windows (in days) between consecutive occurrences.
+      const FREQUENCY_WINDOWS = [
+        { name: 'Weekly', min: 5, max: 9, advance: d => d.setDate(d.getDate() + 7) },
+        { name: 'Semi-Monthly', min: 10, max: 20, advance: d => d.setDate(d.getDate() + 15) },
+        { name: 'Monthly', min: 21, max: 38, advance: d => d.setMonth(d.getMonth() + 1) }
+      ];
+
+      const medianOf = (values) => {
+        const sorted = [...values].sort((a, b) => a - b);
+        const mid = Math.floor(sorted.length / 2);
+        return sorted.length % 2 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+      };
+      const toleranceFor = (median) => Math.max(Math.abs(median) * AMOUNT_TOLERANCE_PCT, AMOUNT_TOLERANCE_MIN);
+
       const predictions = [];
       const grouped = {};
 
-      // Group historical transactions by normalized Payee / Description
+      // Group historical transactions by normalized Payee / Description AND account,
+      // so the same payee on a different account is evaluated independently.
       transactions.forEach(tx => {
         const payeeName = (tx.payee || tx.description || '').trim();
         if (!payeeName) return;
-        const key = payeeName.toLowerCase();
-        if (!grouped[key]) grouped[key] = [];
-        grouped[key].push(tx);
+        const payeeKey = payeeName.toLowerCase();
+        const accountKey = tx.account_id || tx.accountId || 'unknown';
+        const key = `${payeeKey}|${accountKey}`;
+        if (!grouped[key]) grouped[key] = { payeeKey, accountKey, txs: [] };
+        grouped[key].txs.push(tx);
       });
 
-      // Track existing planned items to avoid duplicate suggestions
-      const existingPlannedKeys = new Set(
-        (plannedTransactions || []).map(pt => `${(pt.payee || '').trim().toLowerCase()}_${Math.abs(pt.amount || 0)}`)
-      );
+      // Skip suggestions the user already approved as planned transactions
+      // (same payee with a similar amount, so minor amount drift won't resurface them).
+      const isAlreadyPlanned = (payeeKey, absAmount, tolerance) =>
+        (plannedTransactions || []).some(pt =>
+          (pt.payee || '').trim().toLowerCase() === payeeKey &&
+          Math.abs(Math.abs(pt.amount || 0) - absAmount) <= tolerance
+        );
 
-      Object.entries(grouped).forEach(([key, txList]) => {
-        // Sort chronologically
-        txList.sort((a, b) => new Date(a.date) - new Date(b.date));
-        const latestTx = txList[txList.length - 1];
-        const amount = parseFloat(latestTx.amount || 0);
-        const payee = latestTx.payee || latestTx.description || 'Transaction';
+      Object.values(grouped).forEach(({ payeeKey, accountKey, txs }) => {
+        // Bucket the group's transactions into similar-amount clusters so one-time
+        // charges at other amounts can neither create nor distort a suggestion.
+        const clusters = [];
+        [...txs]
+          .sort((a, b) => parseFloat(a.amount || 0) - parseFloat(b.amount || 0))
+          .forEach(tx => {
+            const amt = parseFloat(tx.amount || 0);
+            const cluster = clusters.find(c => {
+              const median = medianOf(c.amounts);
+              return Math.abs(amt - median) <= toleranceFor(median);
+            });
+            if (cluster) {
+              cluster.txs.push(tx);
+              cluster.amounts.push(amt);
+            } else {
+              clusters.push({ txs: [tx], amounts: [amt] });
+            }
+          });
 
-        // Extract tags/categories using Home Wealth helper
-        const tagsText = (typeof getTransactionTags === 'function' ? getTransactionTags(latestTx) : (latestTx.tags || [])).join(' ').toLowerCase();
-        const lowerPayee = payee.toLowerCase();
-        const lowerDesc = (latestTx.description || '').toLowerCase();
-        const combinedSearchText = `${lowerPayee} ${lowerDesc} ${tagsText}`;
+        clusters.forEach(cluster => {
+          if (cluster.txs.length < MIN_OCCURRENCES) return;
 
-        const dedupeKey = `${key}_${Math.abs(amount)}`;
-
-        // Skip if user dismissed or already approved as a planned transaction
-        if (dismissedPredictions.has(dedupeKey) || existingPlannedKeys.has(dedupeKey)) {
-          return;
-        }
-
-        let isPatternFound = false;
-        let frequency = 'Monthly';
-        let nextDate = null;
-
-        // RULE 1: Multi-Occurrence Cadence Analysis (e.g., Wages every 10–20 days or ~30 days)
-        if (txList.length >= 2) {
+          // Sort chronologically and measure the gaps between consecutive charges
+          const chronological = [...cluster.txs].sort((a, b) => new Date(a.date) - new Date(b.date));
           const intervals = [];
-          for (let i = 1; i < txList.length; i++) {
-            const d1 = new Date(txList[i - 1].date + 'T00:00:00');
-            const d2 = new Date(txList[i].date + 'T00:00:00');
+          for (let i = 1; i < chronological.length; i++) {
+            const d1 = new Date(chronological[i - 1].date + 'T00:00:00');
+            const d2 = new Date(chronological[i].date + 'T00:00:00');
             const diffDays = Math.round((d2 - d1) / (1000 * 60 * 60 * 24));
             if (diffDays > 0) intervals.push(diffDays);
           }
+          if (intervals.length < MIN_OCCURRENCES - 1) return;
 
-          if (intervals.length > 0) {
-            const avgInterval = intervals.reduce((a, b) => a + b, 0) / intervals.length;
+          // Require a recognizable cadence AND consistent spacing between every charge —
+          // an average alone can't distinguish a pattern from coincidental one-time charges.
+          const avgInterval = intervals.reduce((a, b) => a + b, 0) / intervals.length;
+          const cadence = FREQUENCY_WINDOWS.find(w => avgInterval >= w.min && avgInterval <= w.max);
+          if (!cadence || !intervals.every(i => i >= cadence.min && i <= cadence.max)) return;
 
-            if (avgInterval >= 10 && avgInterval <= 20) {
-              frequency = 'Semi-Monthly';
-              const lastDate = new Date(latestTx.date + 'T00:00:00');
-              lastDate.setDate(lastDate.getDate() + 15);
-              nextDate = lastDate.toISOString().slice(0, 10);
-              isPatternFound = true;
-            } else if (avgInterval >= 21 && avgInterval <= 38) {
-              frequency = 'Monthly';
-              const lastDate = new Date(latestTx.date + 'T00:00:00');
-              lastDate.setMonth(lastDate.getMonth() + 1);
-              nextDate = lastDate.toISOString().slice(0, 10);
-              isPatternFound = true;
-            }
+          const latestTx = chronological[chronological.length - 1];
+          const amount = parseFloat(latestTx.amount || 0);
+          const absAmount = Math.abs(amount);
+          const payee = latestTx.payee || latestTx.description || 'Transaction';
+          const tolerance = toleranceFor(medianOf(cluster.amounts));
+
+          const dedupeKey = `${payeeKey}|${accountKey}|${absAmount}`;
+          const legacyDedupeKey = `${payeeKey}_${absAmount}`;
+
+          // Skip if user dismissed or already approved as a planned transaction
+          if (dismissedPredictions.has(dedupeKey) || dismissedPredictions.has(legacyDedupeKey) || isAlreadyPlanned(payeeKey, absAmount, tolerance)) {
+            return;
           }
-        }
 
-        // RULE 2: Smart Category & Keyword Detection (Single or Multi-Occurrence)
-        if (!isPatternFound) {
-          const isSingleRuleMatch =
-            combinedSearchText.includes('housing') ||
-            combinedSearchText.includes('mortgage') ||
-            combinedSearchText.includes('rent') ||
-            combinedSearchText.includes('utilities') ||
-            combinedSearchText.includes('bills') ||
-            combinedSearchText.includes('insurance') ||
-            combinedSearchText.includes('wages') ||
-            combinedSearchText.includes('payroll') ||
-            combinedSearchText.includes('paycheck') ||
-            combinedSearchText.includes('basd');
+          const lastDate = new Date(latestTx.date + 'T00:00:00');
+          cadence.advance(lastDate);
+          const nextDate = lastDate.toISOString().slice(0, 10);
 
-          if (isSingleRuleMatch) {
-            const isSemiMonthly = combinedSearchText.includes('wages') || combinedSearchText.includes('payroll') || combinedSearchText.includes('basd') || combinedSearchText.includes('paycheck');
-            frequency = isSemiMonthly ? 'Semi-Monthly' : 'Monthly';
-            const lastDate = new Date(latestTx.date + 'T00:00:00');
-            if (frequency === 'Semi-Monthly') {
-              lastDate.setDate(lastDate.getDate() + 15);
-            } else {
-              lastDate.setMonth(lastDate.getMonth() + 1);
-            }
-            nextDate = lastDate.toISOString().slice(0, 10);
-            isPatternFound = true;
-          }
-        }
-
-        if (isPatternFound && nextDate) {
           predictions.push({
             dedupeKey: dedupeKey,
             payee: payee,
             amount: amount,
+            account_id: latestTx.account_id || latestTx.accountId || null,
             dueDate: nextDate,
-            frequency: frequency,
+            frequency: cadence.name,
             isIncome: amount > 0
           });
-        }
+        });
       });
 
       return predictions;
@@ -4944,6 +5045,7 @@
           id: 'pt_' + +new Date(),
           payee: prediction.payee,
           amount: prediction.amount,
+          account_id: prediction.account_id || null,
           type: prediction.isIncome ? 'income' : 'expense',
           dueDate: prediction.dueDate,
           frequency: prediction.frequency
@@ -5064,11 +5166,12 @@
       });
 
       const itemsHtml = sortedPlanned.map(plan => {
-        const isIncome = plan.type === "income" || (plan.amount > 0);
+        const isIncome = plan.type === "income" || (!plan.type && plan.amount > 0);
         const amountColor = isIncome ? "text-emerald-600" : "text-slate-900";
         const amountPrefix = isIncome ? "+" : "";
         const absAmount = Math.abs(plan.amount).toFixed(2);
-        const payeeName = typeof escapeHtml === 'function' ? escapeHtml(plan.payee) : plan.payee;
+        const displayName = plan.payee || plan.description || 'Transaction';
+        const payeeName = escapeHtml(displayName);
 
         return `
           <div class="flex items-center justify-between border-b border-slate-100 pb-2.5 last:border-0 last:pb-0 gap-3">
@@ -5081,10 +5184,16 @@
               <span class="text-sm font-black ${amountColor} text-right min-w-[70px] block">
                 ${amountPrefix}$${absAmount}
               </span>
-              <button onclick="postPlannedTransaction('${payeeName}', ${Math.abs(plan.amount)}, '${plan.type || (isIncome ? 'income' : 'expense')}')"
-                class="bg-blue-50 hover:bg-blue-100 text-blue-700 font-black px-3 py-1.5 rounded-xl text-xs transition shrink-0 shadow-sm">
-                Post
-              </button>
+              <div class="flex flex-col gap-1">
+                <button type="button" onclick="postPlannedTransaction(${plannedTransactions.indexOf(plan)})"
+                  class="bg-blue-50 hover:bg-blue-100 text-blue-700 font-black px-3 py-1.5 rounded-xl text-xs transition shrink-0 shadow-sm">
+                  Post
+                </button>
+                <button type="button" onclick="editPlannedTransaction(${plannedTransactions.indexOf(plan)})"
+                  class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-black px-3 py-1.5 rounded-xl text-xs transition shrink-0">
+                  Edit
+                </button>
+              </div>
               <button type="button" onclick="deletePlannedTransaction(${plannedTransactions.indexOf(plan)})"
                 aria-label="Remove ${payeeName} from Planned Transactions" title="Remove planned transaction"
                 class="text-red-400 hover:text-red-600 text-base font-bold px-1 transition shrink-0">&times;</button>
@@ -5104,92 +5213,87 @@
 
       if (desktopContainer) desktopContainer.innerHTML = combinedHtml;
       if (mobileContainer) mobileContainer.innerHTML = combinedHtml;
+      renderAllTransactions();
+      if (activeAccountId) renderTransactions();
     }
 
-    async function deletePlannedTransaction(index) {
+    function deletePlannedTransaction(index) {
+      const plan = plannedTransactions[index];
+      if (!plan) {
+        showAppMessage('This planned transaction is no longer available.');
+        return;
+      }
+      if (plan.frequency !== 'One-Time') {
+        pendingPlannedDeletion = { id: plan.id, index, payee: plan.payee, dueDate: plan.dueDate };
+        document.getElementById('planned-delete-options-modal').classList.remove('hidden');
+        return;
+      }
       openCustomConfirm({
         title: 'Delete Planned Transaction',
         message: 'Remove this scheduled transaction from your planned list?',
         confirmLabel: 'Delete',
         onConfirm: async () => {
-          plannedTransactions = (plannedTransactions || []).filter((_, itemIndex) => itemIndex !== index);
-
-          await savePlannedTransactionsCloud(plannedTransactions);
-
-          if (typeof showAppMessage === 'function') {
-            showAppMessage('Planned transaction removed.');
-          }
-          renderPlannedTransactions();
+          await updatePlannedDeletion({ id: plan.id, index, payee: plan.payee, dueDate: plan.dueDate }, 'all');
         }
       });
     }
 
-    function openManualPlannedTxModal() {
-      const modal = document.getElementById('manual-planned-tx-modal');
-      const form = document.getElementById('manual-planned-tx-form');
-      const dueDateInput = document.getElementById('manualPlannedDueDate');
-      if (!modal || !form || !dueDateInput) return;
-
-      form.reset();
-      const today = new Date();
-      dueDateInput.value = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
-      document.body.classList.add('overflow-hidden');
-      modal.classList.remove('hidden');
-      document.getElementById('manualPlannedPayee')?.focus();
+    function closePlannedDeleteOptions() {
+      pendingPlannedDeletion = null;
+      document.getElementById('planned-delete-options-modal').classList.add('hidden');
     }
 
-    function closeManualPlannedTxModal() {
-      const modal = document.getElementById('manual-planned-tx-modal');
-      const plannedDrawer = document.getElementById('planned-tx-modal');
-      modal?.classList.add('hidden');
-      if (!plannedDrawer || plannedDrawer.classList.contains('hidden')) {
-        document.body.classList.remove('overflow-hidden');
-      }
-    }
-
-    async function handleManualPlannedTxSubmit(e) {
-      e.preventDefault();
-
-      const payee = (document.getElementById('manualPlannedPayee')?.value || '').trim();
-      const rawAmount = parseFloat(document.getElementById('manualPlannedAmount')?.value) || 0;
-      const type = document.getElementById('manualPlannedType')?.value || 'expense';
-      const dueDate = document.getElementById('manualPlannedDueDate')?.value || '';
-      const frequency = document.getElementById('manualPlannedFrequency')?.value || 'Monthly';
-
-      if (!payee || !dueDate || rawAmount <= 0) {
-        if (typeof showAppMessage === 'function') {
-          showAppMessage('Please fill out all required fields with a valid amount.');
-        }
+    async function updatePlannedDeletion(occurrence, choice) {
+      const index = plannedTransactions.findIndex((plan, itemIndex) =>
+        (occurrence.id ? plan.id === occurrence.id :
+          itemIndex === occurrence.index && plan.payee === occurrence.payee) &&
+        plan.dueDate === occurrence.dueDate);
+      if (index < 0) {
+        showAppMessage('This planned occurrence has changed. Please reopen the delete options.');
         return;
       }
-
-      const signedAmount = type === 'expense' ? -Math.abs(rawAmount) : Math.abs(rawAmount);
-
-      const newPlannedItem = {
-        id: 'pt_' + +new Date(),
-        payee: payee,
-        amount: signedAmount,
-        type: type,
-        dueDate: dueDate,
-        frequency: frequency
-      };
-
-      if (!Array.isArray(plannedTransactions)) {
-        plannedTransactions = [];
+      try {
+        const updatedPlans = [...plannedTransactions];
+        const next = choice === 'one' ? nextPlannedOccurrence(updatedPlans[index]) : null;
+        if (next) updatedPlans[index] = next;
+        else updatedPlans.splice(index, 1);
+        const synced = await savePlannedTransactionsCloud(updatedPlans);
+        renderPlannedTransactions();
+        const message = next ? 'This occurrence was skipped.' : 'Planned transaction removed.';
+        showAppMessage(synced ? message : `${message} Saved locally, but cloud sync failed.`);
+      } catch (error) {
+        console.error('Could not update planned transaction:', error);
+        showAppMessage(`Could not update planned transaction: ${error.message}`);
       }
+    }
 
-      plannedTransactions.push(newPlannedItem);
-
-      // 🌟 Sync to LocalStorage + Supabase Cloud
-      await savePlannedTransactionsCloud(plannedTransactions);
-
-      closeManualPlannedTxModal();
-
-      if (typeof showAppMessage === 'function') {
-        showAppMessage(`Added "${payee}" to Planned Transactions!`);
+    async function applyPlannedDeleteChoice(choice) {
+      const occurrence = pendingPlannedDeletion;
+      if (!occurrence || !['one', 'all'].includes(choice)) return;
+      const buttons = ['planned-delete-one', 'planned-delete-all'].map(id => document.getElementById(id));
+      buttons.forEach(button => { button.disabled = true; });
+      try {
+        await updatePlannedDeletion(occurrence, choice);
+        closePlannedDeleteOptions();
+      } finally {
+        buttons.forEach(button => { button.disabled = false; });
       }
+    }
 
-      renderPlannedTransactions();
+    function openManualPlannedTxModal() {
+      const drawerWasOpen = !document.getElementById('planned-tx-modal').classList.contains('hidden');
+      if (!accounts.some(account => !account.is_archived)) {
+        showAppMessage("Please create an active account first before adding transactions.");
+        return;
+      }
+      if (drawerWasOpen) togglePlannedTxModal(false);
+      openTxModal();
+      planningTransaction = true;
+      returnToPlannedDrawer = drawerWasOpen;
+      document.getElementById('tx-modal-title').textContent = 'Add Planned Transaction';
+      document.getElementById('txSubmitBtn').textContent = 'Save Planned Item';
+      document.getElementById('tx-frequency-field').classList.remove('hidden');
+      document.getElementById('tx-date-label').textContent = 'Due Date';
     }
 
     // Phase 4: Modals & Dynamic Form Controls
@@ -5758,6 +5862,15 @@
 
       const form = document.getElementById('tx-form');
       form.reset();
+      form.querySelectorAll('.border-red-500').forEach(input =>
+        input.classList.remove('border-red-500', 'focus:ring-red-200'));
+      planningTransaction = false;
+      returnToPlannedDrawer = false;
+      postingPlannedOccurrence = null;
+      editingPlannedOccurrence = null;
+      document.getElementById('tx-frequency-field').classList.add('hidden');
+      document.getElementById('tx-date-label').textContent = 'Date';
+      document.getElementById('txSubmitBtn').disabled = false;
       const deleteBtn = document.getElementById('txDeleteBtn');
 
       activeReceiptFiles = [];
@@ -6011,6 +6124,10 @@
         modal.querySelector('div')?.scrollTo(0, 0);
       } else {
         modal.classList.add('hidden');
+        if (returnToPlannedDrawer) {
+          returnToPlannedDrawer = false;
+          togglePlannedTxModal(true);
+        }
       }
     }
 
@@ -6027,20 +6144,6 @@
         document.body.classList.remove('overflow-hidden');
         modal.classList.add('hidden');
       }
-    }
-
-    function postPlannedTransaction(payee, amount, type) {
-      togglePlannedTxModal(false); // Hide the mobile drawer if open
-      toggleTxModal(true);
-
-      document.getElementById('txPayee').value = payee;
-      document.getElementById('txAmount').value = amount.toFixed(2);
-      document.getElementById('txType').value = type;
-
-      // Cleanly refresh form elements and helper UI clear icons
-      handleTypeChange();
-      checkClearButtonVisibility('txPayee', 'clear-txPayee');
-      checkClearButtonVisibility('txAmount', 'clear-txAmount');
     }
 
     // --- Apply App Preset Logic ---
@@ -7358,18 +7461,19 @@ This action can be undone by cancelling your edits.`,
 
     // Phase 5: Event Handlers & Core Submission Flows
     async function handleTxSubmit(e) {
+      e.preventDefault();
+      const submitLabel = planningTransaction ? (editingPlannedOccurrence ? "Update Planned Item" : "Save Planned Item") :
+        (document.getElementById('editingTxId').value ? "Update Transaction" : "Save Transaction");
       // 🚫 Block saving if any invalid inputs exist
       if (e.target.querySelector('.border-red-500')) {
         showAppMessage("Please resolve all invalid fields before saving.");
         const submitBtn = document.getElementById('txSubmitBtn');
         if (submitBtn) {
           submitBtn.disabled = false;
-          submitBtn.textContent = document.getElementById('editingTxId').value ? "Update Transaction" : "Save Transaction";
+          submitBtn.textContent = submitLabel;
         }
         return;
       }
-
-      e.preventDefault();
 
       const submitBtn = document.getElementById('txSubmitBtn');
       submitBtn.disabled = true;
@@ -7402,12 +7506,21 @@ This action can be undone by cancelling your edits.`,
       const splitEnabled = document.getElementById('txSplitEnabled')?.checked && txType !== 'transfer';
       const splitDetails = splitEnabled ? getSplitRowsFromEditor() : [];
 
+      if (planningTransaction && (!Number.isFinite(amount) || amount <= 0 ||
+        (/[+\-*/()]/.test(txAmountVal) ? evaluateExpression(txAmountVal) === null :
+          !/^\d*\.?\d+$/.test(txAmountVal.trim())))) {
+        showAppMessage('Please enter a valid, positive amount.');
+        submitBtn.disabled = false;
+        submitBtn.textContent = submitLabel;
+        return;
+      }
+
       if (splitEnabled) {
         const splitTotal = splitDetails.reduce((sum, split) => sum + split.amount, 0);
         if (splitDetails.length < 2 || splitDetails.some(split => split.tags.length === 0 || split.amount <= 0) || Math.abs(splitTotal - Math.abs(amount)) > 0.005) {
           showAppMessage('Each split needs at least one tag, a positive amount, and all split amounts must equal the transaction total.');
           submitBtn.disabled = false;
-          submitBtn.textContent = editId ? "Update Transaction" : "Save Transaction";
+          submitBtn.textContent = submitLabel;
           return;
         }
       }
@@ -7417,7 +7530,92 @@ This action can be undone by cancelling your edits.`,
         if (!destinationAccountId || targetAccountId === destinationAccountId) {
           showAppMessage("Please select a different destination account for the transfer.");
           submitBtn.disabled = false;
-          submitBtn.textContent = "Save Transaction";
+          submitBtn.textContent = submitLabel;
+          return;
+        }
+      }
+
+      if (planningTransaction) {
+        try {
+          const editTarget = editingPlannedOccurrence;
+          const findEditingPlan = () => plannedTransactions.findIndex((plan, index) =>
+            (editTarget.id ? plan.id === editTarget.id : index === editTarget.index) &&
+            JSON.stringify(plan) === editTarget.snapshot);
+          if (editTarget && findEditingPlan() < 0) {
+            showAppMessage('This planned transaction has changed. Close the form and reopen it before saving.');
+            return;
+          }
+          const frequency = document.getElementById('txFrequency').value;
+          if (!frequency) {
+            showAppMessage('Please select a frequency for this planned transaction.');
+            return;
+          }
+          const uploadedReceiptUrls = await uploadReceiptFiles();
+          const planIndex = editTarget ? findEditingPlan() : -1;
+          if (editTarget && planIndex < 0) {
+            showAppMessage('This planned transaction has changed. Close the form and reopen it before saving.');
+            return;
+          }
+          const existingPlan = planIndex >= 0 ? plannedTransactions[planIndex] : null;
+          const plan = {
+            ...existingPlan,
+            id: existingPlan?.id || 'pt_' + crypto.randomUUID(),
+            payee: txType === 'transfer'
+              ? (accounts.find(account => account.id === destinationAccountId)?.name || 'Transfer')
+              : payee.trim(),
+            amount: txType === 'income' ? amount : -amount,
+            type: txType,
+            dueDate: date,
+            frequency,
+            account_id: targetAccountId,
+            destination_account_id: txType === 'transfer' ? destinationAccountId : null,
+            description,
+            payment_method,
+            check_number,
+            status,
+            tags,
+            split_details: splitDetails.length > 0 ? splitDetails : null,
+            receipt_url: [...activeReceiptUrls, ...uploadedReceiptUrls].join(', ')
+          };
+          if (existingPlan && existingPlan.dueDate !== date) delete plan.recurrence_day;
+          const updatedPlans = [...plannedTransactions];
+          if (existingPlan) updatedPlans[planIndex] = plan;
+          else updatedPlans.push(plan);
+          const synced = await savePlannedTransactionsCloud(updatedPlans);
+          renderPlannedTransactions();
+          toggleTxModal(false);
+          showAppMessage(synced ? 'Planned transaction saved.' :
+            'Planned transaction saved locally, but cloud sync failed.');
+        } catch (error) {
+          console.error('Error saving planned transaction:', error);
+          showAppMessage(`Could not save planned transaction: ${error.message}`);
+        } finally {
+          submitBtn.disabled = false;
+          submitBtn.textContent = submitLabel;
+        }
+        return;
+      }
+
+      let nextPlan;
+      let planIndex = -1;
+      if (postingPlannedOccurrence) {
+        planIndex = plannedTransactions.findIndex((plan, index) =>
+          (postingPlannedOccurrence.id ? plan.id === postingPlannedOccurrence.id :
+            index === postingPlannedOccurrence.index && plan.payee === postingPlannedOccurrence.payee) &&
+          plan.dueDate === postingPlannedOccurrence.dueDate);
+        if (planIndex < 0) {
+          showAppMessage('This planned occurrence has changed. Close the form and reopen it before posting.');
+          submitBtn.disabled = false;
+          submitBtn.textContent = submitLabel;
+          return;
+        }
+        try {
+          nextPlan = nextPlannedOccurrence(plannedTransactions[planIndex]);
+          if (nextPlan && !nextPlan.account_id) nextPlan.account_id = targetAccountId;
+        } catch (error) {
+          showAppMessage(error.message);
+          submitBtn.disabled = false;
+          submitBtn.textContent = submitLabel;
           return;
         }
       }
@@ -7426,6 +7624,16 @@ This action can be undone by cancelling your edits.`,
       async function proceedWithSave() {
         submitBtn.disabled = true;
         submitBtn.textContent = "Saving...";
+
+        if (postingPlannedOccurrence && !plannedTransactions.some((plan, index) =>
+          (postingPlannedOccurrence.id ? plan.id === postingPlannedOccurrence.id :
+            index === postingPlannedOccurrence.index && plan.payee === postingPlannedOccurrence.payee) &&
+          plan.dueDate === postingPlannedOccurrence.dueDate)) {
+          showAppMessage('This planned occurrence has changed. Close the form and reopen it before posting.');
+          submitBtn.disabled = false;
+          submitBtn.textContent = submitLabel;
+          return;
+        }
 
         let uploadedReceiptUrls;
         try {
@@ -7506,8 +7714,34 @@ This action can be undone by cancelling your edits.`,
         if (error) {
           showAppMessage("Error saving transaction: " + error.message);
         } else {
+          let plannedSyncFailed = false;
+          if (postingPlannedOccurrence) {
+            const occurrence = postingPlannedOccurrence;
+            const currentIndex = plannedTransactions.findIndex((plan, index) =>
+              (occurrence.id ? plan.id === occurrence.id :
+                index === occurrence.index && plan.payee === occurrence.payee) &&
+              plan.dueDate === occurrence.dueDate);
+            if (currentIndex < 0) {
+              showAppMessage('Transaction posted, but the planned item changed. Check its next due date.');
+              plannedSyncFailed = true;
+            } else {
+              const updatedPlans = [...plannedTransactions];
+              if (nextPlan) updatedPlans[currentIndex] = nextPlan;
+              else updatedPlans.splice(currentIndex, 1);
+              try {
+                plannedSyncFailed = !await savePlannedTransactionsCloud(updatedPlans);
+                if (plannedSyncFailed) showAppMessage('Transaction posted and plan updated locally, but cloud sync failed.');
+              } catch (saveError) {
+                console.error('Could not update posted planned transaction:', saveError);
+                showAppMessage('Transaction posted, but its planned item could not be updated. Check the planned list.');
+                plannedSyncFailed = true;
+              }
+            }
+            postingPlannedOccurrence = null;
+            renderPlannedTransactions();
+          }
           toggleTxModal(false);
-          await fetchData();
+          await fetchData(plannedSyncFailed);
           await fetchAccounts();
           renderAllTransactions();
           if (currentViewState === 'home-transactions') {
@@ -8367,24 +8601,85 @@ This action can be undone by cancelling your edits.`,
     }
 
     // --- PRE-FILL MODAL VIA DYNAMIC PLANNED ITEM ---
-    function postPlannedTransaction(payee, amount, type) {
-      // 1. Hide the mobile drawer if it was open
+    function postPlannedTransaction(index) {
+      openPlannedTransactionForm(index, false);
+    }
+
+    function editPlannedTransaction(index) {
+      openPlannedTransactionForm(index, true);
+    }
+
+    function openPlannedTransactionForm(index, editPlan) {
+      const plan = plannedTransactions[index];
+      if (!plan) {
+        showAppMessage('This planned transaction is no longer available.');
+        return;
+      }
+      if (!accounts.some(account => !account.is_archived)) {
+        showAppMessage('Please create an active account before opening this transaction.');
+        return;
+      }
       togglePlannedTxModal(false);
-
-      // 2. Fire the core transaction builder modal
       openTxModal();
-
-      // 3. Populate form fields dynamically with the scheduled item's data
-      document.getElementById('txPayee').value = payee;
-      document.getElementById('txAmount').value = amount.toFixed(2);
-      document.getElementById('txType').value = type;
-
-      // 4. Force a form layout recalculation (flips Payer/Payee labels and hides split rows)
+      if (editPlan) {
+        planningTransaction = true;
+        editingPlannedOccurrence = { id: plan.id, index, snapshot: JSON.stringify(plan) };
+        document.getElementById('tx-modal-title').textContent = 'Edit Planned Transaction';
+        document.getElementById('txSubmitBtn').textContent = 'Update Planned Item';
+        document.getElementById('tx-frequency-field').classList.remove('hidden');
+        document.getElementById('tx-date-label').textContent = 'Due Date';
+        document.getElementById('txFrequency').value = plan.frequency || '';
+      } else {
+        postingPlannedOccurrence = { id: plan.id, index, payee: plan.payee, dueDate: plan.dueDate };
+      }
+      const accountSelect = document.getElementById('txAccount');
+      let missingAccount = false;
+      const sourceAccountId = plannedAccountId(plan);
+      if (sourceAccountId) {
+        if ([...accountSelect.options].some(option => option.value === String(sourceAccountId))) {
+          accountSelect.value = sourceAccountId;
+        } else {
+          accountSelect.value = '';
+          missingAccount = true;
+        }
+      } else {
+        accountSelect.value = '';
+        missingAccount = true;
+      }
+      document.getElementById('txPayee').value = plan.type === 'transfer' ? '' : (plan.payee || '');
+      document.getElementById('txDesc').value = plan.description || '';
+      document.getElementById('txAmount').value = Math.abs(plan.amount).toFixed(2);
+      document.getElementById('txType').value = plan.type || (plan.amount > 0 ? 'income' : 'expense');
       handleTypeChange();
-
-      // 5. Evaluate the form's absolute-positioned UI clear buttons (×)
+      if (plan.destination_account_id) {
+        const destination = document.getElementById('txTargetAccount');
+        if ([...destination.options].some(option => option.value === String(plan.destination_account_id))) {
+          destination.value = plan.destination_account_id;
+        } else {
+          destination.value = '';
+          missingAccount = true;
+        }
+      }
+      if (plan.payment_method) document.getElementById('txPaymentMethod').value = plan.payment_method;
+      document.getElementById('txCheckNumber').value = plan.check_number || '';
+      document.getElementById('txDate').value = plan.dueDate || getLocalDateString();
+      document.getElementById('txStatus').value = plan.status || 'pending';
+      activeTxLabels = Array.isArray(plan.tags) ? [...plan.tags] : [];
+      renderSelectedLabelsPreview();
+      const splits = getSplitDetails(plan);
+      if (splits.length > 0 && plan.type !== 'transfer') {
+        document.getElementById('txSplitEnabled').checked = true;
+        renderSplitEditor(splits);
+        toggleSplitEditor();
+      }
+      activeReceiptUrls = plan.receipt_url ? plan.receipt_url.split(',').map(url => url.trim()).filter(Boolean) : [];
+      renderModalReceiptList();
+      toggleCheckNumberField();
       checkClearButtonVisibility('txPayee', 'clear-txPayee');
+      checkClearButtonVisibility('txDesc', 'clear-txDesc');
       checkClearButtonVisibility('txAmount', 'clear-txAmount');
+      checkClearButtonVisibility('txCheckNumber', 'clear-txCheckNumber');
+      if (missingAccount) showAppMessage(`A saved account is unavailable. Please select an active account before ${editPlan ? 'saving' : 'posting'}.`);
     }
 
     window.onload = init;    
