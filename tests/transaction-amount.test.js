@@ -106,23 +106,75 @@ test('handles prefilled amounts and cursor edits', () => {
   assert.equal(editor.edit('insertText', '3'), '3.00');
 });
 
-test('calculator buttons insert operators and preserve normal input handling', () => {
-  for (const operator of ['+', '-', '*', '/']) {
-    const editor = createEditor();
-    editor.edit('insertText', '4');
-    editor.context.insertTxAmountOperator(operator);
-    assert.equal(editor.input.value, `4.00${operator}`);
-    assert.equal(editor.input.focused, true);
-    assert.equal(editor.edit('insertText', '2'), `4.00${operator}2`);
-    assert.equal(editor.getUpdates(), 3);
-  }
+function createCalculator(initialValue = '') {
+  let updates = 0;
+  const element = () => ({
+    value: '',
+    textContent: '',
+    attributes: {},
+    selectionStart: 0,
+    selectionEnd: 0,
+    classList: {
+      values: new Set(['hidden']),
+      add(name) { this.values.add(name); },
+      remove(...names) { names.forEach(name => this.values.delete(name)); },
+      contains(name) { return this.values.has(name); }
+    },
+    focus() { this.focused = true; },
+    setAttribute(name, value) { this.attributes[name] = value; },
+    setSelectionRange(start, end) { this.selectionStart = start; this.selectionEnd = end; },
+    setRangeText(text, start, end) {
+      this.value = this.value.slice(0, start) + text + this.value.slice(end);
+      this.setSelectionRange(start + text.length, start + text.length);
+    }
+  });
+  const elements = Object.fromEntries(
+    ['txAmount', 'txCalculator', 'txCalculatorToggle', 'txCalculatorDisplay', 'txCalculatorError']
+      .map(id => [id, element()])
+  );
+  elements.txAmount.value = initialValue;
+  const context = vm.createContext({
+    document: { getElementById: id => elements[id] },
+    checkClearButtonVisibility() {},
+    updateSplitRemainder() { updates++; }
+  });
+  const currencyStart = html.indexOf('    function roundCurrency(');
+  const currencyEnd = html.indexOf('    // --- RESTRICT TYPING', currencyStart);
+  const evalStart = html.indexOf('    function evaluateExpression(');
+  const evalEnd = html.indexOf('    // Format the field', evalStart);
+  vm.runInContext(html.slice(currencyStart, currencyEnd) + html.slice(evalStart, evalEnd) + handlers, context);
+  return { context, elements, getUpdates: () => updates };
+}
+
+test('calculator applies a result and updates the amount and splits', () => {
+  const { context, elements, getUpdates } = createCalculator('4.00');
+  context.openTxCalculator();
+  assert.equal(elements.txCalculatorToggle.attributes['aria-expanded'], 'true');
+  context.insertTxCalculatorText('+');
+  context.insertTxCalculatorText('2');
+  context.applyTxCalculator();
+  assert.equal(elements.txAmount.value, '6.00');
+  assert.equal(getUpdates(), 1);
+  assert.equal(elements.txCalculator.classList.contains('hidden'), true);
+  assert.equal(elements.txCalculatorToggle.focused, true);
 });
 
-test('calculator buttons replace the selected portion of the amount', () => {
-  const editor = createEditor('12.34');
-  editor.input.setSelectionRange(2, 5);
-  editor.context.insertTxAmountOperator('+');
-  assert.equal(editor.input.value, '12+');
-  assert.equal(editor.input.selectionStart, 3);
-  assert.equal(editor.edit('insertText', '5'), '12+5');
+test('calculator handles invalid expressions, cancellation and editing', () => {
+  const { context, elements, getUpdates } = createCalculator('3.00');
+  context.openTxCalculator();
+  context.clearTxCalculator();
+  context.insertTxCalculatorText('5');
+  context.insertTxCalculatorText('/');
+  context.insertTxCalculatorText('0');
+  context.applyTxCalculator();
+  assert.equal(elements.txAmount.value, '3.00');
+  assert.equal(elements.txCalculatorError.classList.contains('hidden'), false);
+  assert.equal(getUpdates(), 0);
+  context.backspaceTxCalculator();
+  context.insertTxCalculatorText('2');
+  assert.equal(context.calculateTxCalculator(), true);
+  assert.equal(elements.txCalculatorDisplay.value, '2.50');
+  context.closeTxCalculator();
+  assert.equal(elements.txAmount.value, '3.00');
+  assert.equal(elements.txCalculatorToggle.attributes['aria-expanded'], 'false');
 });

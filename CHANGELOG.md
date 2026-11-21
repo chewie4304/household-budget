@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.7.3] - 2026-11-21
+
+### Changed
+- **Amount Calculator:** Replaced the operator row with an optional calculator opened from the Amount field. Enter numbers and calculations with the on-screen buttons or a physical keyboard; applying a result updates the transaction amount.
+- **Service Worker Cache Version:** Bumped cache name to `home-wealth-v1.7.3` to refresh the app shell.
+
 ## [1.7.2] - 2026-11-21
 
 ### Added

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'home-wealth-v1.7.2';
+const CACHE_NAME = 'home-wealth-v1.7.3';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',

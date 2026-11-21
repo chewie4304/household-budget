@@ -1201,29 +1201,59 @@
                   class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
               </label>
             </div>
-            <!-- Amount input with clear button -->
+            <!-- Amount input with clear and calculator buttons -->
             <div class="relative mt-1">
               <input type="text" id="txAmount" placeholder="0.00" required inputmode="decimal"
                 onbeforeinput="captureTxAmountEdit(event)"
                 oninput="handleTxAmountInput(event)"
-                onfocus="this.classList.remove('border-red-500', 'focus:ring-red-200')"
+                onfocus="this.classList.remove('border-red-500', 'focus:ring-red-200'); closeTxCalculator(false)"
                 onblur="resetTxAmountFormatting(); handleMathEvaluation(this, updateSplitRemainder)"
-                class="h-[42px] w-full border pl-2 pr-8 rounded-2xl font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-200" />
+                class="h-[42px] w-full border pl-2 pr-16 rounded-2xl font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-200" />
               <button type="button" id="clear-txAmount"
                 onclick="clearAndFocusInput('txAmount', 'clear-txAmount', () => { updateSplitRemainder(); })"
-                class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 w-5 h-5 items-center justify-center text-lg leading-none text-slate-400 hover:text-slate-600 transition-colors"
+                class="hidden absolute right-10 top-1/2 -translate-y-1/2 w-5 h-5 items-center justify-center text-lg leading-none text-slate-400 hover:text-slate-600 transition-colors"
                 aria-label="Clear amount">&times;</button>
+              <button type="button" id="txCalculatorToggle" onclick="openTxCalculator()"
+                aria-label="Open amount calculator" aria-controls="txCalculator" aria-expanded="false"
+                class="absolute right-1 top-1/2 -translate-y-1/2 w-9 h-9 flex items-center justify-center rounded-lg text-slate-500 hover:text-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-200">
+                <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="w-5 h-5">
+                  <rect x="4" y="2" width="16" height="20" rx="2"></rect>
+                  <path d="M7 6h10v3H7zM8 13h.01M12 13h.01M16 13h.01M8 17h.01M12 17h.01M16 17h.01" stroke-linecap="round"></path>
+                </svg>
+              </button>
             </div>
           </div>
-          <div class="col-span-2 grid grid-cols-4 gap-2" role="group" aria-label="Amount calculator operators">
-            <button type="button" aria-label="Add" onpointerdown="event.preventDefault()" onclick="insertTxAmountOperator('+')"
-              class="h-11 rounded-xl border border-slate-200 bg-slate-50 text-lg font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-200">+</button>
-            <button type="button" aria-label="Subtract" onpointerdown="event.preventDefault()" onclick="insertTxAmountOperator('-')"
-              class="h-11 rounded-xl border border-slate-200 bg-slate-50 text-lg font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-200">&minus;</button>
-            <button type="button" aria-label="Multiply" onpointerdown="event.preventDefault()" onclick="insertTxAmountOperator('*')"
-              class="h-11 rounded-xl border border-slate-200 bg-slate-50 text-lg font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-200">&times;</button>
-            <button type="button" aria-label="Divide" onpointerdown="event.preventDefault()" onclick="insertTxAmountOperator('/')"
-              class="h-11 rounded-xl border border-slate-200 bg-slate-50 text-lg font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-200">&divide;</button>
+          <div id="txCalculator" class="hidden col-span-2 rounded-xl border border-slate-200 bg-slate-50 p-3 space-y-2"
+            role="group" aria-label="Amount calculator" onkeydown="handleTxCalculatorKeydown(event)">
+            <label for="txCalculatorDisplay" class="text-xs font-semibold text-slate-600">Calculator</label>
+            <input id="txCalculatorDisplay" type="text" inputmode="none" autocomplete="off" placeholder="0"
+              oninput="restrictToMathInput(this); clearTxCalculatorError()"
+              class="w-full h-11 rounded-lg border border-slate-300 bg-white px-3 text-right font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-200" />
+            <p id="txCalculatorError" class="hidden text-xs text-red-600" role="alert"></p>
+            <div class="grid grid-cols-4 gap-2">
+              <button type="button" onclick="clearTxCalculator()" class="h-11 rounded-lg bg-slate-200 font-semibold">C</button>
+              <button type="button" aria-label="Backspace" onclick="backspaceTxCalculator()" class="h-11 rounded-lg bg-slate-200 font-semibold">&#9003;</button>
+              <button type="button" aria-label="Divide" onclick="insertTxCalculatorText('/')" class="h-11 rounded-lg bg-blue-100 font-semibold">&divide;</button>
+              <button type="button" aria-label="Multiply" onclick="insertTxCalculatorText('*')" class="h-11 rounded-lg bg-blue-100 font-semibold">&times;</button>
+              <button type="button" onclick="insertTxCalculatorText('7')" class="h-11 rounded-lg bg-white border font-semibold">7</button>
+              <button type="button" onclick="insertTxCalculatorText('8')" class="h-11 rounded-lg bg-white border font-semibold">8</button>
+              <button type="button" onclick="insertTxCalculatorText('9')" class="h-11 rounded-lg bg-white border font-semibold">9</button>
+              <button type="button" aria-label="Subtract" onclick="insertTxCalculatorText('-')" class="h-11 rounded-lg bg-blue-100 font-semibold">&minus;</button>
+              <button type="button" onclick="insertTxCalculatorText('4')" class="h-11 rounded-lg bg-white border font-semibold">4</button>
+              <button type="button" onclick="insertTxCalculatorText('5')" class="h-11 rounded-lg bg-white border font-semibold">5</button>
+              <button type="button" onclick="insertTxCalculatorText('6')" class="h-11 rounded-lg bg-white border font-semibold">6</button>
+              <button type="button" aria-label="Add" onclick="insertTxCalculatorText('+')" class="h-11 rounded-lg bg-blue-100 font-semibold">+</button>
+              <button type="button" onclick="insertTxCalculatorText('1')" class="h-11 rounded-lg bg-white border font-semibold">1</button>
+              <button type="button" onclick="insertTxCalculatorText('2')" class="h-11 rounded-lg bg-white border font-semibold">2</button>
+              <button type="button" onclick="insertTxCalculatorText('3')" class="h-11 rounded-lg bg-white border font-semibold">3</button>
+              <button type="button" aria-label="Calculate" onclick="calculateTxCalculator()" class="row-span-2 rounded-lg bg-blue-600 text-white font-semibold">=</button>
+              <button type="button" onclick="insertTxCalculatorText('0')" class="col-span-2 h-11 rounded-lg bg-white border font-semibold">0</button>
+              <button type="button" aria-label="Decimal point" onclick="insertTxCalculatorText('.')" class="h-11 rounded-lg bg-white border font-semibold">.</button>
+            </div>
+            <div class="flex gap-2">
+              <button type="button" onclick="closeTxCalculator()" class="flex-1 h-11 rounded-lg border border-slate-300 font-semibold text-slate-700">Cancel</button>
+              <button type="button" onclick="applyTxCalculator()" class="flex-1 h-11 rounded-lg bg-blue-600 font-semibold text-white">Use amount</button>
+            </div>
           </div>
         </div>
 
@@ -2254,16 +2284,91 @@
       updateSplitRemainder();
     }
 
-    function insertTxAmountOperator(operator) {
-      const input = document.getElementById('txAmount');
-      input.focus();
-      captureTxAmountEdit({ target: input });
-      input.setRangeText(operator, input.selectionStart, input.selectionEnd, 'end');
-      input.dispatchEvent(new InputEvent('input', {
-        bubbles: true,
-        inputType: 'insertText',
-        data: operator
-      }));
+    function clearTxCalculatorError() {
+      const error = document.getElementById('txCalculatorError');
+      error.textContent = '';
+      error.classList.add('hidden');
+    }
+
+    function openTxCalculator() {
+      const display = document.getElementById('txCalculatorDisplay');
+      display.value = document.getElementById('txAmount').value;
+      clearTxCalculatorError();
+      document.getElementById('txCalculator').classList.remove('hidden');
+      document.getElementById('txCalculatorToggle').setAttribute('aria-expanded', 'true');
+      display.focus();
+      display.setSelectionRange(display.value.length, display.value.length);
+    }
+
+    function closeTxCalculator(restoreFocus = true) {
+      document.getElementById('txCalculator').classList.add('hidden');
+      const toggle = document.getElementById('txCalculatorToggle');
+      toggle.setAttribute('aria-expanded', 'false');
+      clearTxCalculatorError();
+      if (restoreFocus) toggle.focus();
+    }
+
+    function insertTxCalculatorText(text) {
+      const display = document.getElementById('txCalculatorDisplay');
+      display.setRangeText(text, display.selectionStart, display.selectionEnd, 'end');
+      clearTxCalculatorError();
+      display.focus();
+    }
+
+    function clearTxCalculator() {
+      const display = document.getElementById('txCalculatorDisplay');
+      display.value = '';
+      display.setSelectionRange(0, 0);
+      clearTxCalculatorError();
+      display.focus();
+    }
+
+    function backspaceTxCalculator() {
+      const display = document.getElementById('txCalculatorDisplay');
+      const start = display.selectionStart;
+      const end = display.selectionEnd;
+      display.setRangeText('', start === end ? Math.max(0, start - 1) : start, end, 'end');
+      clearTxCalculatorError();
+      display.focus();
+    }
+
+    function calculateTxCalculator() {
+      const display = document.getElementById('txCalculatorDisplay');
+      const expression = display.value.trim();
+      const result = expression ? evaluateExpression(expression) : null;
+      const rounded = result === null ? null : roundCurrency(result);
+      if (rounded === null || !Number.isFinite(rounded)) {
+        const error = document.getElementById('txCalculatorError');
+        error.textContent = 'Enter a valid calculation.';
+        error.classList.remove('hidden');
+        return false;
+      }
+      display.value = rounded.toFixed(2);
+      display.setSelectionRange(display.value.length, display.value.length);
+      clearTxCalculatorError();
+      return true;
+    }
+
+    function applyTxCalculator() {
+      if (!calculateTxCalculator()) return;
+      const amount = document.getElementById('txAmount');
+      amount.value = document.getElementById('txCalculatorDisplay').value;
+      amount.classList.remove('border-red-500', 'focus:ring-red-200');
+      resetTxAmountFormatting();
+      checkClearButtonVisibility('txAmount', 'clear-txAmount');
+      updateSplitRemainder();
+      closeTxCalculator();
+    }
+
+    function handleTxCalculatorKeydown(event) {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        event.stopPropagation();
+        closeTxCalculator();
+      } else if (event.key === 'Enter' && event.target.id === 'txCalculatorDisplay') {
+        event.preventDefault();
+        calculateTxCalculator();
+      }
     }
     // --- TRANSACTION COMPARISON & FILTERING ---
     function isTransferPartnerTransaction(tx) {
@@ -6232,6 +6337,7 @@
         modal.classList.remove('hidden');
         modal.querySelector('div')?.scrollTo(0, 0);
       } else {
+        closeTxCalculator(false);
         modal.classList.add('hidden');
         if (returnToPlannedDrawer) {
           returnToPlannedDrawer = false;
