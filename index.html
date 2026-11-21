@@ -1204,14 +1204,26 @@
             <!-- Amount input with clear button -->
             <div class="relative mt-1">
               <input type="text" id="txAmount" placeholder="0.00" required inputmode="decimal"
-                oninput="restrictToMathInput(this); checkClearButtonVisibility('txAmount', 'clear-txAmount')"
+                onbeforeinput="captureTxAmountEdit(event)"
+                oninput="handleTxAmountInput(event)"
                 onfocus="this.classList.remove('border-red-500', 'focus:ring-red-200')"
+                onblur="resetTxAmountFormatting(); handleMathEvaluation(this, updateSplitRemainder)"
                 class="h-[42px] w-full border pl-2 pr-8 rounded-2xl font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-200" />
               <button type="button" id="clear-txAmount"
                 onclick="clearAndFocusInput('txAmount', 'clear-txAmount', () => { updateSplitRemainder(); })"
                 class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 w-5 h-5 items-center justify-center text-lg leading-none text-slate-400 hover:text-slate-600 transition-colors"
                 aria-label="Clear amount">&times;</button>
             </div>
+          </div>
+          <div class="col-span-2 grid grid-cols-4 gap-2" role="group" aria-label="Amount calculator operators">
+            <button type="button" aria-label="Add" onpointerdown="event.preventDefault()" onclick="insertTxAmountOperator('+')"
+              class="h-11 rounded-xl border border-slate-200 bg-slate-50 text-lg font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-200">+</button>
+            <button type="button" aria-label="Subtract" onpointerdown="event.preventDefault()" onclick="insertTxAmountOperator('-')"
+              class="h-11 rounded-xl border border-slate-200 bg-slate-50 text-lg font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-200">&minus;</button>
+            <button type="button" aria-label="Multiply" onpointerdown="event.preventDefault()" onclick="insertTxAmountOperator('*')"
+              class="h-11 rounded-xl border border-slate-200 bg-slate-50 text-lg font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-200">&times;</button>
+            <button type="button" aria-label="Divide" onpointerdown="event.preventDefault()" onclick="insertTxAmountOperator('/')"
+              class="h-11 rounded-xl border border-slate-200 bg-slate-50 text-lg font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-200">&divide;</button>
           </div>
         </div>
 
@@ -2148,6 +2160,111 @@
       // Instantly strips out any character that isn't a digit, decimal, operator, parenthesis, or space
       inputEl.value = inputEl.value.replace(/[^0-9+\-*/().\s]/g, '');
     }
+
+    let txAmountDigits = null;
+    let txAmountSnapshot = null;
+    let txAmountManual = false;
+
+    function resetTxAmountFormatting() {
+      txAmountDigits = null;
+      txAmountSnapshot = null;
+      txAmountManual = false;
+    }
+
+    function captureTxAmountEdit(event) {
+      const input = event.target;
+      txAmountSnapshot = {
+        value: input.value,
+        start: input.selectionStart,
+        end: input.selectionEnd,
+        data: event.dataTransfer?.getData('text/plain')
+      };
+      if (txAmountDigits && txAmountDigits.display !== input.value) {
+        txAmountDigits = null;
+        txAmountManual = false;
+      }
+    }
+
+    function handleTxAmountInput(event) {
+      const input = event.target;
+      const snapshot = txAmountSnapshot;
+      txAmountSnapshot = null;
+      const replacesAll = snapshot && snapshot.start === 0 && snapshot.end === snapshot.value.length;
+      if (!input.value || replacesAll) {
+        txAmountDigits = null;
+        txAmountManual = false;
+      }
+
+      let insertedText = event.data ?? (snapshot?.data || null);
+      if (insertedText == null && snapshot && /^insert/.test(event.inputType)) {
+        const prefix = snapshot.value.slice(0, snapshot.start);
+        const suffix = snapshot.value.slice(snapshot.end);
+        if (input.value.startsWith(prefix) && input.value.endsWith(suffix) &&
+          input.value.length >= prefix.length + suffix.length) {
+          insertedText = input.value.slice(prefix.length, input.value.length - suffix.length);
+        }
+      }
+      const insertingDigits = /^insert/.test(event.inputType) && /^\d+$/.test(insertedText || '');
+      const deleting = event.inputType === 'deleteContentBackward' || event.inputType === 'deleteContentForward';
+      const numericBefore = snapshot && (!snapshot.value || /^\d+(?:\.\d{0,2})?$/.test(snapshot.value));
+
+      if (snapshot && numericBefore && !txAmountManual && (insertingDigits || deleting)) {
+        const digits = txAmountDigits ? txAmountDigits.raw : snapshot.value.replace(/\D/g, '');
+        const digitOffset = position => Math.min(digits.length, snapshot.value.slice(0, position).replace(/\D/g, '').length);
+        let start = digitOffset(snapshot.start);
+        let end = digitOffset(snapshot.end);
+        if (deleting && snapshot.start === snapshot.end) {
+          if (event.inputType === 'deleteContentBackward') start = Math.max(0, start - 1);
+          else end = Math.min(digits.length, end + 1);
+        }
+        const inserted = insertingDigits ? insertedText : '';
+        const raw = digits.slice(0, start) + inserted + digits.slice(end);
+        if (raw) {
+          const padded = raw.padEnd(3, '0');
+          input.value = `${padded.slice(0, -2)}.${padded.slice(-2)}`;
+          txAmountDigits = { raw, display: input.value };
+          const offset = start + inserted.length;
+          let caret = input.value.length;
+          if (offset < raw.length) {
+            let count = 0;
+            caret = 0;
+            while (caret < input.value.length && count < offset) {
+              if (/\d/.test(input.value[caret])) count++;
+              caret++;
+            }
+          }
+          input.setSelectionRange(caret, caret);
+        } else {
+          input.value = '';
+          txAmountDigits = null;
+        }
+      } else {
+        if (snapshot && event.data === '.' && txAmountDigits &&
+          snapshot.start === snapshot.end &&
+          snapshot.end === snapshot.value.length) {
+          input.value = `${txAmountDigits.raw}.`;
+        }
+        txAmountDigits = null;
+        txAmountManual = !!input.value;
+        const sanitized = input.value.replace(/[^0-9+\-*/().\s]/g, '');
+        if (sanitized !== input.value) input.value = sanitized;
+      }
+
+      checkClearButtonVisibility('txAmount', 'clear-txAmount');
+      updateSplitRemainder();
+    }
+
+    function insertTxAmountOperator(operator) {
+      const input = document.getElementById('txAmount');
+      input.focus();
+      captureTxAmountEdit({ target: input });
+      input.setRangeText(operator, input.selectionStart, input.selectionEnd, 'end');
+      input.dispatchEvent(new InputEvent('input', {
+        bubbles: true,
+        inputType: 'insertText',
+        data: operator
+      }));
+    }
     // --- TRANSACTION COMPARISON & FILTERING ---
     function isTransferPartnerTransaction(tx) {
       return !!(tx && tx.transfer_id);
@@ -2641,15 +2758,6 @@
       // Dynamic autocomplete on typing
       const txDescInput = document.getElementById('txDesc');
       const txPayeeInput = document.getElementById('txPayee');
-      const txAmountInput = document.getElementById('txAmount');
-      if (txAmountInput) {
-        txAmountInput.addEventListener('blur', () => {
-          handleMathEvaluation(txAmountInput, () => {
-            updateSplitRemainder();
-          });
-        });
-      }
-
       if (txDescInput) {
         txDescInput.addEventListener('input', (e) => {
           handleAutocompleteTyping('desc', e.target.value);
@@ -5862,6 +5970,7 @@
 
       const form = document.getElementById('tx-form');
       form.reset();
+      resetTxAmountFormatting();
       form.querySelectorAll('.border-red-500').forEach(input =>
         input.classList.remove('border-red-500', 'focus:ring-red-200'));
       planningTransaction = false;
@@ -5891,7 +6000,7 @@
         document.getElementById('txDesc').value = tx.description || '';
         document.getElementById('txPayee').value = tx.payee || '';
         document.getElementById('txType').value = amt >= 0 ? 'income' : 'expense';
-        document.getElementById('txAmount').value = Math.abs(amt);
+        document.getElementById('txAmount').value = Math.abs(amt).toFixed(2);
         document.getElementById('txPaymentMethod').value = tx.payment_method || 'debit';
         document.getElementById('txCheckNumber').value = tx.check_number || '';
         document.getElementById('txDate').value = tx.date || getLocalDateString();
