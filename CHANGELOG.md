@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.7.2] - 2026-11-21
+
+### Added
+- **Amount Calculator Buttons:** Added addition, subtraction, multiplication, and division controls to the transaction form so calculator expressions can be entered with a mobile number pad.
+
+### Changed
+- **Service Worker Cache Version:** Bumped cache name to `home-wealth-v1.7.2` to refresh the app shell.
+
+## [1.7.1] - 2026-11-21
+
+### Changed
+- **Transaction Amount Entry:** Automatically format entered digits as dollars and cents while retaining support for explicit decimals and calculator expressions in the transaction and planned transaction form.
+- **Service Worker Cache Version:** Bumped cache name to `home-wealth-v1.7.1` to refresh the app shell.
+
 ## [1.7.0] - 2026-11-14
 
 ### Added
